@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -11,6 +12,12 @@ Route::get('/', function () {
 
 Route::get('products', [ProductController::class, 'index'])->name('products.index');
 Route::get('products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+
+Route::get('cart', [CartController::class, 'show'])->name('cart.show');
+Route::post('cart', [CartController::class, 'add'])->name('cart.add');
+Route::patch('cart/items/{product}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('cart/items/{product}', [CartController::class, 'destroy'])->name('cart.destroy');
+Route::delete('cart', [CartController::class, 'clear'])->name('cart.clear');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', function () {

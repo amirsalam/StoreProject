@@ -1,10 +1,12 @@
 import ProductCard from '@/components/product-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Container } from '@/components/ui/container';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import { type Product, type ProductType, type Review } from '@/types';
-import { Head, Link } from '@inertiajs/react';
-import { Star } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { Check, Loader2, ShieldCheck, ShoppingBag, Star } from 'lucide-react';
+import { useState } from 'react';
 
 const TYPE_LABEL: Record<ProductType, string> = {
     digital_download: 'Digital download',
@@ -36,11 +38,31 @@ export default function ProductShow({ product, reviews, relatedProducts, average
     const price = formatPrice(product.sale_price ?? product.price, product.currency);
     const oldPrice = onSale ? formatPrice(product.price, product.currency) : null;
 
+    const [adding, setAdding] = useState(false);
+    const [justAdded, setJustAdded] = useState(false);
+
+    const handleAddToCart = () => {
+        router.post(
+            route('cart.add'),
+            { product_id: product.id, quantity: 1 },
+            {
+                preserveScroll: true,
+                onStart: () => setAdding(true),
+                onFinish: () => setAdding(false),
+                onSuccess: () => {
+                    setJustAdded(true);
+                    setTimeout(() => setJustAdded(false), 2000);
+                },
+            },
+        );
+    };
+
     return (
         <StorefrontLayout>
             <Head title={product.title} />
 
-            <nav className="mb-6 text-sm text-muted-foreground">
+            <Container className="py-8 sm:py-12">
+                <nav className="mb-6 text-sm text-muted-foreground">
                 <Link href={route('products.index')} className="hover:underline">Products</Link>
                 {product.category && (
                     <>
@@ -123,10 +145,33 @@ export default function ProductShow({ product, reviews, relatedProducts, average
                         {product.license_type && (
                             <p className="mt-1 text-xs text-muted-foreground">License: {product.license_type}</p>
                         )}
-                        <Button className="mt-4 w-full" size="lg" disabled>
-                            Add to cart
+                        <Button
+                            className="mt-4 w-full"
+                            size="lg"
+                            onClick={handleAddToCart}
+                            disabled={adding}
+                        >
+                            {adding ? (
+                                <>
+                                    <Loader2 className="animate-spin" />
+                                    Adding…
+                                </>
+                            ) : justAdded ? (
+                                <>
+                                    <Check />
+                                    Added to cart
+                                </>
+                            ) : (
+                                <>
+                                    <ShoppingBag />
+                                    Add to cart
+                                </>
+                            )}
                         </Button>
-                        <p className="mt-2 text-center text-xs text-muted-foreground">Checkout coming soon</p>
+                        <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
+                            <ShieldCheck className="size-3.5" />
+                            Secure checkout via Stripe
+                        </p>
 
                         <dl className="mt-6 space-y-2 text-sm border-t pt-4">
                             <div className="flex justify-between">
@@ -158,6 +203,7 @@ export default function ProductShow({ product, reviews, relatedProducts, average
                     </div>
                 </section>
             )}
+            </Container>
         </StorefrontLayout>
     );
 }
