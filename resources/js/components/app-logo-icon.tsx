@@ -1,8 +1,13 @@
 import { SVGAttributes } from 'react';
 
 /**
- * StoreProject mark — a compact monogram with a hairline border.
- * Uses currentColor so it adopts text color in both themes.
+ * StoreProject mark — a friendly rounded shopping bag with a 4-point
+ * spark inside, signifying "premium digital goods marketplace".
+ *
+ * Renders in currentColor so it adopts the surrounding text color in any
+ * context (white-on-dark, dark-on-white, inverted CTA strip, etc.). For
+ * the colorful brand mark used on marketing surfaces, see <AppLogoMark />
+ * below.
  */
 export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
     return (
@@ -13,19 +18,69 @@ export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
             aria-hidden="true"
             {...props}
         >
-            <rect
-                x="1"
-                y="1"
-                width="22"
-                height="22"
-                rx="6"
+            {/* handles */}
+            <path
+                d="M8.5 8.25V6.5a3.5 3.5 0 0 1 7 0v1.75"
                 stroke="currentColor"
-                strokeOpacity="0.18"
-                strokeWidth="1"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+            />
+            {/* bag body */}
+            <path
+                d="M5.75 8.25h12.5l-1 11a2.25 2.25 0 0 1-2.24 2.05H8.99A2.25 2.25 0 0 1 6.75 19.25l-1-11Z"
+                fill="currentColor"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+            />
+            {/* spark — drawn in the wrapper color (foreground) so it reads
+                as a cutout in the bag. Works in both light/dark when this
+                icon is rendered inside the standard bg-foreground box. */}
+            <path
+                d="M12 12l.62 1.65 1.65.62-1.65.62L12 16.54l-.62-1.65-1.65-.62 1.65-.62L12 12Z"
+                className="fill-foreground"
+            />
+        </svg>
+    );
+}
+
+/**
+ * Brand-colored variant used on marketing surfaces (landing hero, CTA
+ * strip, social cards). Renders with the indigo→fuchsia gradient
+ * regardless of surrounding text color.
+ */
+export function AppLogoMark(props: SVGAttributes<SVGElement>) {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            {...props}
+        >
+            <defs>
+                <linearGradient id="sp-brand-grad" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#6366F1" />
+                    <stop offset="55%" stopColor="#A855F7" />
+                    <stop offset="100%" stopColor="#EC4899" />
+                </linearGradient>
+            </defs>
+            <path
+                d="M8.5 8.25V6.5a3.5 3.5 0 0 1 7 0v1.75"
+                stroke="url(#sp-brand-grad)"
+                strokeWidth="1.75"
+                strokeLinecap="round"
             />
             <path
-                d="M7.25 16.5V7.5h4.6c2.04 0 3.4 1.05 3.4 2.78 0 1.45-1.05 2.32-2.32 2.46l2.62 3.76h-2.06l-2.4-3.58H9v3.58H7.25Zm1.75-5h2.78c1.13 0 1.78-.43 1.78-1.3 0-.87-.65-1.3-1.78-1.3H9v2.6Z"
-                fill="currentColor"
+                d="M5.75 8.25h12.5l-1 11a2.25 2.25 0 0 1-2.24 2.05H8.99A2.25 2.25 0 0 1 6.75 19.25l-1-11Z"
+                fill="url(#sp-brand-grad)"
+                stroke="url(#sp-brand-grad)"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+            />
+            <path
+                d="M12 12l.62 1.65 1.65.62-1.65.62L12 16.54l-.62-1.65-1.65-.62 1.65-.62L12 12Z"
+                fill="white"
             />
         </svg>
     );
