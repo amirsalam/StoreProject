@@ -2,18 +2,12 @@ import ProductCard from '@/components/product-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
+import { useTranslate } from '@/hooks/use-translate';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import { type Product, type ProductType, type Review } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { Check, Loader2, ShieldCheck, ShoppingBag, Star } from 'lucide-react';
 import { useState } from 'react';
-
-const TYPE_LABEL: Record<ProductType, string> = {
-    digital_download: 'Digital download',
-    subscription: 'Subscription',
-    api_access: 'API access',
-    license: 'License',
-};
 
 interface ProductShowProps {
     product: Product;
@@ -34,12 +28,15 @@ function formatPrice(amount: string | null | undefined, currency = 'USD') {
 }
 
 export default function ProductShow({ product, reviews, relatedProducts, averageRating, reviewsCount }: ProductShowProps) {
+    const { t } = useTranslate();
     const onSale = product.sale_price !== null && parseFloat(product.sale_price ?? '0') < parseFloat(product.price);
     const price = formatPrice(product.sale_price ?? product.price, product.currency);
     const oldPrice = onSale ? formatPrice(product.price, product.currency) : null;
 
     const [adding, setAdding] = useState(false);
     const [justAdded, setJustAdded] = useState(false);
+
+    const typeLabel = (type: ProductType) => t(`product.types.${type}`);
 
     const handleAddToCart = () => {
         router.post(
@@ -63,7 +60,7 @@ export default function ProductShow({ product, reviews, relatedProducts, average
 
             <Container className="py-8 sm:py-12">
                 <nav className="mb-6 text-sm text-muted-foreground">
-                <Link href={route('products.index')} className="hover:underline">Products</Link>
+                <Link href={route('products.index')} className="hover:underline">{t('nav.products')}</Link>
                 {product.category && (
                     <>
                         <span className="mx-2">/</span>
@@ -89,14 +86,14 @@ export default function ProductShow({ product, reviews, relatedProducts, average
 
                     <div className="space-y-3">
                         <div className="flex items-center gap-2">
-                            <Badge variant="secondary">{TYPE_LABEL[product.type]}</Badge>
+                            <Badge variant="secondary">{typeLabel(product.type)}</Badge>
                             {product.version && <span className="text-xs text-muted-foreground">v{product.version}</span>}
                         </div>
                         <h1 className="text-3xl font-semibold tracking-tight">{product.title}</h1>
                         {reviewsCount > 0 && (
                             <div className="flex items-center gap-2 text-sm">
                                 <RatingStars value={averageRating} />
-                                <span className="text-muted-foreground">{averageRating} ({reviewsCount} reviews)</span>
+                                <span className="text-muted-foreground">{averageRating} ({reviewsCount} {t('product.reviews').toLowerCase()})</span>
                             </div>
                         )}
                         {product.short_description && (
@@ -113,21 +110,21 @@ export default function ProductShow({ product, reviews, relatedProducts, average
                     )}
 
                     <section className="space-y-4 pt-4 border-t">
-                        <h2 className="text-xl font-semibold">Reviews</h2>
+                        <h2 className="text-xl font-semibold">{t('product.reviews')}</h2>
                         {reviews.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No reviews yet.</p>
+                            <p className="text-sm text-muted-foreground">{t('product.no_reviews')}</p>
                         ) : (
                             <ul className="space-y-4">
                                 {reviews.map((review) => (
                                     <li key={review.id} className="rounded-lg border bg-card p-4">
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="text-sm font-medium">{review.user?.name ?? 'Anonymous'}</span>
+                                            <span className="text-sm font-medium">{review.user?.name ?? '—'}</span>
                                             <RatingStars value={review.rating} />
                                         </div>
                                         {review.title && <p className="font-medium mb-1">{review.title}</p>}
                                         {review.comment && <p className="text-sm text-muted-foreground">{review.comment}</p>}
                                         {review.is_verified_purchase && (
-                                            <Badge variant="outline" className="mt-2 text-xs">Verified purchase</Badge>
+                                            <Badge variant="outline" className="mt-2 text-xs">{t('product.verified_purchase')}</Badge>
                                         )}
                                     </li>
                                 ))}
@@ -143,7 +140,7 @@ export default function ProductShow({ product, reviews, relatedProducts, average
                             {oldPrice && <span className="text-muted-foreground line-through">{oldPrice}</span>}
                         </div>
                         {product.license_type && (
-                            <p className="mt-1 text-xs text-muted-foreground">License: {product.license_type}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{t('product.license_label', { type: product.license_type })}</p>
                         )}
                         <Button
                             className="mt-4 w-full"
@@ -154,38 +151,38 @@ export default function ProductShow({ product, reviews, relatedProducts, average
                             {adding ? (
                                 <>
                                     <Loader2 className="animate-spin" />
-                                    Adding…
+                                    {t('product.adding')}
                                 </>
                             ) : justAdded ? (
                                 <>
                                     <Check />
-                                    Added to cart
+                                    {t('product.added')}
                                 </>
                             ) : (
                                 <>
                                     <ShoppingBag />
-                                    Add to cart
+                                    {t('product.add_to_cart')}
                                 </>
                             )}
                         </Button>
                         <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
                             <ShieldCheck className="size-3.5" />
-                            Secure checkout via Stripe
+                            {t('product.secure_checkout')}
                         </p>
 
                         <dl className="mt-6 space-y-2 text-sm border-t pt-4">
                             <div className="flex justify-between">
-                                <dt className="text-muted-foreground">Type</dt>
-                                <dd>{TYPE_LABEL[product.type]}</dd>
+                                <dt className="text-muted-foreground">{t('product.type')}</dt>
+                                <dd>{typeLabel(product.type)}</dd>
                             </div>
                             {product.version && (
                                 <div className="flex justify-between">
-                                    <dt className="text-muted-foreground">Version</dt>
+                                    <dt className="text-muted-foreground">{t('product.version')}</dt>
                                     <dd>{product.version}</dd>
                                 </div>
                             )}
                             <div className="flex justify-between">
-                                <dt className="text-muted-foreground">Sales</dt>
+                                <dt className="text-muted-foreground">{t('product.sales')}</dt>
                                 <dd>{product.sales_count}</dd>
                             </div>
                         </dl>
@@ -195,7 +192,7 @@ export default function ProductShow({ product, reviews, relatedProducts, average
 
             {relatedProducts.length > 0 && (
                 <section className="mt-12 space-y-4">
-                    <h2 className="text-xl font-semibold">Related products</h2>
+                    <h2 className="text-xl font-semibold">{t('product.related')}</h2>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         {relatedProducts.map((p) => (
                             <ProductCard key={p.id} product={p} />

@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
+import { useTranslate } from '@/hooks/use-translate';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import { cn } from '@/lib/utils';
 import { type ProductType } from '@/types';
@@ -27,13 +28,6 @@ interface CartIndexProps {
     currency: string;
 }
 
-const TYPE_LABEL: Record<ProductType, string> = {
-    digital_download: 'Digital download',
-    subscription: 'Subscription',
-    api_access: 'API access',
-    license: 'License',
-};
-
 const QUANTITY_LOCKED: ProductType[] = ['subscription', 'api_access', 'license'];
 
 function money(value: number, currency = 'USD') {
@@ -45,6 +39,7 @@ function money(value: number, currency = 'USD') {
 }
 
 export default function CartIndex({ items, subtotal, currency }: CartIndexProps) {
+    const { t } = useTranslate();
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
 
     const updateQty = (productId: number, quantity: number) => {
@@ -60,7 +55,7 @@ export default function CartIndex({ items, subtotal, currency }: CartIndexProps)
     };
 
     const clearAll = () => {
-        if (!confirm('Remove all items from your cart?')) return;
+        if (!confirm(t('cart.clear_confirm'))) return;
         router.delete(route('cart.clear'), { preserveScroll: true });
     };
 
@@ -68,22 +63,24 @@ export default function CartIndex({ items, subtotal, currency }: CartIndexProps)
 
     return (
         <StorefrontLayout>
-            <Head title="Your cart" />
+            <Head title={t('cart.title')} />
 
             <Container className="py-10 sm:py-16">
                 <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
                     <div>
-                        <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">Your cart</h1>
+                        <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">{t('cart.title')}</h1>
                         <p className="mt-1 text-sm text-muted-foreground">
                             {isEmpty
-                                ? 'Your cart is empty.'
-                                : `${items.length} ${items.length === 1 ? 'item' : 'items'} ready for checkout.`}
+                                ? t('cart.empty')
+                                : items.length === 1
+                                    ? t('cart.item_summary')
+                                    : t('cart.items_summary', { count: items.length })}
                         </p>
                     </div>
                     {!isEmpty && (
                         <Button variant="ghost" size="sm" onClick={clearAll}>
                             <Trash2 />
-                            Clear cart
+                            {t('cart.clear')}
                         </Button>
                     )}
                 </div>
@@ -128,15 +125,15 @@ export default function CartIndex({ items, subtotal, currency }: CartIndexProps)
                                                         {item.product.title}
                                                     </Link>
                                                     <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                                                        {TYPE_LABEL[item.product.type]}
+                                                        {t(`product.types.${item.product.type}`)}
                                                     </p>
                                                     {item.product.sale_price && (
                                                         <p className="text-xs text-muted-foreground">
                                                             <span className="line-through">
                                                                 {money(parseFloat(item.product.price), currency)}
                                                             </span>{' '}
-                                                            <span className="ml-1 text-emerald-600 dark:text-emerald-400">
-                                                                On sale
+                                                            <span className="ms-1 text-emerald-600 dark:text-emerald-400">
+                                                                {t('cart.on_sale')}
                                                             </span>
                                                         </p>
                                                     )}
@@ -154,7 +151,7 @@ export default function CartIndex({ items, subtotal, currency }: CartIndexProps)
                                                         </div>
                                                         {item.quantity > 1 && (
                                                             <div className="text-[11px] text-muted-foreground tabular-nums">
-                                                                {money(item.unit_price, currency)} ea
+                                                                {money(item.unit_price, currency)} {t('cart.each')}
                                                             </div>
                                                         )}
                                                     </div>
@@ -164,7 +161,7 @@ export default function CartIndex({ items, subtotal, currency }: CartIndexProps)
                                                         className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-destructive"
                                                     >
                                                         <Trash2 className="size-3" />
-                                                        Remove
+                                                        {t('cart.remove')}
                                                     </button>
                                                 </div>
                                             </div>
@@ -191,10 +188,11 @@ function QuantityStepper({
     locked: boolean;
     onChange: (q: number) => void;
 }) {
+    const { t } = useTranslate();
     if (locked) {
         return (
             <span className="inline-flex h-9 items-center justify-center rounded-md border border-border bg-muted/40 px-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                Qty 1
+                {t('cart.qty_locked')}
             </span>
         );
     }
@@ -202,11 +200,11 @@ function QuantityStepper({
         <div className="inline-flex h-9 items-center rounded-md border border-border bg-background">
             <button
                 type="button"
-                aria-label="Decrease quantity"
+                aria-label={t('cart.decrease_qty')}
                 onClick={() => onChange(Math.max(1, value - 1))}
                 disabled={value <= 1}
                 className={cn(
-                    'flex h-full w-8 items-center justify-center rounded-l-md text-muted-foreground transition-colors',
+                    'flex h-full w-8 items-center justify-center rounded-s-md text-muted-foreground transition-colors',
                     value > 1 ? 'hover:bg-muted hover:text-foreground' : 'opacity-50',
                 )}
             >
@@ -215,11 +213,11 @@ function QuantityStepper({
             <span className="flex h-full w-8 items-center justify-center font-mono text-sm tabular-nums">{value}</span>
             <button
                 type="button"
-                aria-label="Increase quantity"
+                aria-label={t('cart.increase_qty')}
                 onClick={() => onChange(value + 1)}
                 disabled={value >= 99}
                 className={cn(
-                    'flex h-full w-8 items-center justify-center rounded-r-md text-muted-foreground transition-colors',
+                    'flex h-full w-8 items-center justify-center rounded-e-md text-muted-foreground transition-colors',
                     value < 99 ? 'hover:bg-muted hover:text-foreground' : 'opacity-50',
                 )}
             >
@@ -230,63 +228,74 @@ function QuantityStepper({
 }
 
 function OrderSummary({ subtotal, currency }: { subtotal: number; currency: string }) {
+    const { t } = useTranslate();
     const tax = 0;
     const total = subtotal + tax;
+    const email = 'support@storeproject.test';
     return (
         <aside className="space-y-4">
             <div className="sticky top-24 space-y-4 rounded-xl border bg-card p-6 shadow-sm">
-                <h2 className="font-display text-base font-semibold tracking-tight">Order summary</h2>
+                <h2 className="font-display text-base font-semibold tracking-tight">{t('cart.order_summary')}</h2>
                 <dl className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                        <dt className="text-muted-foreground">Subtotal</dt>
+                        <dt className="text-muted-foreground">{t('cart.subtotal')}</dt>
                         <dd className="tabular-nums">{money(subtotal, currency)}</dd>
                     </div>
                     <div className="flex justify-between">
-                        <dt className="text-muted-foreground">Tax</dt>
-                        <dd className="tabular-nums text-muted-foreground">Calculated at checkout</dd>
+                        <dt className="text-muted-foreground">{t('cart.tax')}</dt>
+                        <dd className="tabular-nums text-muted-foreground">{t('cart.tax_value')}</dd>
                     </div>
                 </dl>
                 <div className="flex items-baseline justify-between border-t pt-4">
-                    <span className="font-display text-sm font-semibold">Total</span>
+                    <span className="font-display text-sm font-semibold">{t('cart.total')}</span>
                     <span className="font-display text-2xl font-semibold tabular-nums">
                         {money(total, currency)}
                     </span>
                 </div>
                 <Button size="lg" className="w-full" disabled>
-                    Continue to checkout
+                    {t('cart.continue_to_checkout')}
                     <ArrowRight />
                 </Button>
                 <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
                     <ShieldCheck className="size-3" />
-                    Stripe checkout — coming soon
+                    {t('cart.stripe_coming_soon')}
                 </p>
             </div>
 
-            <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-xs text-muted-foreground">
-                Need help? Email{' '}
-                <a href="mailto:support@storeproject.test" className="font-medium text-foreground hover:underline">
-                    support@storeproject.test
-                </a>{' '}
-                — we reply within an hour during business days.
-            </div>
+            <SupportHelp email={email} />
         </aside>
     );
 }
 
+function SupportHelp({ email }: { email: string }) {
+    const { t } = useTranslate();
+    // Split the raw translation string at the :email marker so we can render
+    // a real mailto link instead of plain text.
+    const raw = t('cart.support_help', { email: '__EMAIL_PLACEHOLDER__' });
+    const [before, after = ''] = raw.split('__EMAIL_PLACEHOLDER__');
+    return (
+        <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-xs text-muted-foreground">
+            {before}
+            <a href={`mailto:${email}`} className="font-medium text-foreground hover:underline">
+                {email}
+            </a>
+            {after}
+        </div>
+    );
+}
+
 function EmptyCart() {
+    const { t } = useTranslate();
     return (
         <div className="rounded-xl border border-dashed border-border/80 bg-muted/20 px-6 py-20 text-center">
             <div className="mx-auto mb-5 inline-flex size-12 items-center justify-center rounded-full border border-border/80 bg-background text-muted-foreground">
                 <ShoppingBag className="size-5" />
             </div>
-            <h2 className="font-display text-lg font-semibold tracking-tight">Your cart is empty</h2>
-            <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                Add a script, template, or license to get started. You can mix subscriptions and one-time products
-                in the same order.
-            </p>
+            <h2 className="font-display text-lg font-semibold tracking-tight">{t('cart.empty_state_title')}</h2>
+            <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">{t('cart.empty_state_body')}</p>
             <Button asChild className="mt-6">
                 <Link href={route('products.index')}>
-                    Browse products
+                    {t('cart.browse_products')}
                     <ArrowRight />
                 </Link>
             </Button>

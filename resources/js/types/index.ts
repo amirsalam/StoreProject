@@ -21,12 +21,20 @@ export interface NavItem {
     isActive?: boolean;
 }
 
+export type Locale = 'en' | 'ar' | 'fr' | 'es';
+
+export type TranslationDict = Record<string, unknown>;
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
     flash: { success: string | null; error: string | null };
     cart: { count: number; subtotal: number; currency: string };
+    locale: Locale;
+    direction: 'ltr' | 'rtl';
+    supportedLocales: Locale[];
+    translations: TranslationDict;
     [key: string]: unknown;
 }
 

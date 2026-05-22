@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -18,6 +19,8 @@ Route::post('cart', [CartController::class, 'add'])->name('cart.add');
 Route::patch('cart/items/{product}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('cart/items/{product}', [CartController::class, 'destroy'])->name('cart.destroy');
 Route::delete('cart', [CartController::class, 'clear'])->name('cart.clear');
+
+Route::patch('locale', [LocaleController::class, 'update'])->name('locale.update');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', function () {
