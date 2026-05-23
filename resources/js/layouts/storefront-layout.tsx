@@ -1,4 +1,4 @@
-import AppLogoIcon from '@/components/app-logo-icon';
+import BrandLockup from '@/components/brand-lockup';
 import LocaleSwitcher from '@/components/locale-switcher';
 import ThemeToggle from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
@@ -48,11 +48,8 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
             >
                 <Container className="flex h-14 items-center justify-between gap-6">
                     <div className="flex items-center gap-8">
-                        <Link href="/" className="flex items-center gap-2 font-display text-sm font-semibold tracking-tight">
-                            <span className="flex size-7 items-center justify-center rounded-md bg-foreground text-background">
-                                <AppLogoIcon className="size-4" />
-                            </span>
-                            <span>StoreProject</span>
+                        <Link href="/">
+                            <BrandLockup />
                         </Link>
                         <nav className="hidden items-center gap-1 md:flex">
                             {navLinks.map((link) => (
@@ -205,11 +202,8 @@ function SiteFooter() {
             <Container className="py-16">
                 <div className="grid gap-12 lg:grid-cols-[1.5fr_2fr]">
                     <div className="max-w-sm space-y-4">
-                        <Link href="/" className="inline-flex items-center gap-2 font-display text-sm font-semibold tracking-tight">
-                            <span className="flex size-7 items-center justify-center rounded-md bg-foreground text-background">
-                                <AppLogoIcon className="size-4" />
-                            </span>
-                            StoreProject
+                        <Link href="/">
+                            <BrandLockup />
                         </Link>
                         <p className="text-sm text-muted-foreground">{t('footer.tagline')}</p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">

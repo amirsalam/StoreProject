@@ -29,11 +29,12 @@ import {
 import { useState } from 'react';
 
 export default function Welcome() {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, branding } = usePage<SharedData>().props;
+    const brandTitle = branding?.title ?? 'StoreProject';
 
     return (
         <StorefrontLayout>
-            <Head title="StoreProject — Premium marketplace for makers" />
+            <Head title={`${brandTitle} — Premium marketplace for makers`} />
 
             <Hero authed={Boolean(auth?.user)} />
             <LogoCloud />

@@ -25,12 +25,19 @@ export type Locale = 'en' | 'ar' | 'fr' | 'es';
 
 export type TranslationDict = Record<string, unknown>;
 
+export interface BrandingSummary {
+    title: string;
+    logo_url: string | null;
+    has_custom_logo: boolean;
+}
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
     flash: { success: string | null; error: string | null };
     cart: { count: number; subtotal: number; currency: string };
+    branding: BrandingSummary;
     locale: Locale;
     direction: 'ltr' | 'rtl';
     supportedLocales: Locale[];

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\BrandingService;
 use App\Services\CartService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
@@ -62,6 +63,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
             ],
             'cart' => app(CartService::class)->summary(),
+            'branding' => app(BrandingService::class)->summary(),
             'locale' => App::getLocale(),
             'direction' => SetLocale::direction(App::getLocale()),
             'supportedLocales' => SetLocale::SUPPORTED,

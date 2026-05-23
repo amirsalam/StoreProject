@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\LocaleController;
@@ -33,6 +34,10 @@ Route::middleware(['auth', 'admin'])
     ->name('admin.')
     ->group(function () {
         Route::resource('products', AdminProductController::class)->except(['show']);
+
+        Route::get('branding', [AdminBrandingController::class, 'edit'])->name('branding.edit');
+        Route::post('branding', [AdminBrandingController::class, 'update'])->name('branding.update');
+        Route::delete('branding/logo', [AdminBrandingController::class, 'destroyLogo'])->name('branding.logo.destroy');
     });
 
 require __DIR__.'/settings.php';
