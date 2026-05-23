@@ -6,21 +6,12 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 
 const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Profile',
-        url: '/settings/profile',
-        icon: null,
-    },
-    {
-        title: 'Password',
-        url: '/settings/password',
-        icon: null,
-    },
-    {
-        title: 'Appearance',
-        url: '/settings/appearance',
-        icon: null,
-    },
+    { title: 'Profile', url: '/settings/profile', icon: null },
+    { title: 'Password', url: '/settings/password', icon: null },
+    { title: 'Two-factor', url: '/settings/two-factor', icon: null },
+    { title: 'Sessions', url: '/settings/sessions', icon: null },
+    { title: 'Activity', url: '/settings/activity', icon: null },
+    { title: 'Appearance', url: '/settings/appearance', icon: null },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
@@ -53,8 +44,8 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
                 <Separator className="my-6 md:hidden" />
 
-                <div className="flex-1 md:max-w-2xl">
-                    <section className="max-w-xl space-y-12">{children}</section>
+                <div className="flex-1 md:max-w-3xl">
+                    <section className="max-w-3xl space-y-12">{children}</section>
                 </div>
             </div>
         </div>
