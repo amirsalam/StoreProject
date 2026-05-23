@@ -62,7 +62,7 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Admin · Products" />
 
-            <div className="px-4 py-6 space-y-6">
+            <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 {flash?.success && (
                     <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300">
                         {flash.success}
@@ -83,18 +83,18 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
                     </Button>
                 </div>
 
-                <form onSubmit={submitSearch} className="flex flex-wrap gap-2">
+                <form onSubmit={submitSearch} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <Input
                         type="search"
                         placeholder="Search by title or slug…"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-64"
+                        className="w-full sm:w-64"
                     />
                     <select
                         value={filters.status}
                         onChange={(e) => applyFilter({ status: e.target.value })}
-                        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-auto"
                     >
                         <option value="">All statuses</option>
                         {statuses.map((s) => (
@@ -106,7 +106,7 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
                     <select
                         value={filters.type}
                         onChange={(e) => applyFilter({ type: e.target.value as ProductType | '' })}
-                        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-auto"
                     >
                         <option value="">All types</option>
                         {types.map((t) => (
@@ -120,7 +120,8 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
                     </Button>
                 </form>
 
-                <div className="overflow-hidden rounded-lg border bg-card">
+                {/* Desktop / tablet: data table */}
+                <div className="hidden overflow-hidden rounded-lg border bg-card md:block">
                     <table className="w-full text-sm">
                         <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
                             <tr>
@@ -190,6 +191,77 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile: stacked card list */}
+                <div className="space-y-3 md:hidden">
+                    {products.data.length === 0 ? (
+                        <div className="rounded-lg border border-dashed bg-card p-8 text-center text-sm text-muted-foreground">
+                            No products match these filters.
+                        </div>
+                    ) : (
+                        products.data.map((product) => (
+                            <div
+                                key={product.id}
+                                className="rounded-lg border bg-card p-4 shadow-sm"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="truncate font-medium">{product.title}</div>
+                                        <div className="truncate font-mono text-[11px] text-muted-foreground">
+                                            {product.slug}
+                                        </div>
+                                    </div>
+                                    <StatusBadge status={product.status} />
+                                </div>
+
+                                <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                                    <div>
+                                        <dt className="text-muted-foreground">Type</dt>
+                                        <dd className="mt-0.5 truncate">{typeLabel(product.type, types)}</dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-muted-foreground">Price</dt>
+                                        <dd className="mt-0.5 tabular-nums">
+                                            {product.sale_price ? (
+                                                <>
+                                                    <span className="font-medium">${product.sale_price}</span>
+                                                    <span className="ms-1 text-[10px] text-muted-foreground line-through">
+                                                        ${product.price}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <span>${product.price}</span>
+                                            )}
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-muted-foreground">Sales</dt>
+                                        <dd className="mt-0.5 tabular-nums">{product.sales_count}</dd>
+                                    </div>
+                                </dl>
+
+                                <div className="mt-3 flex items-center justify-end gap-1 border-t pt-3">
+                                    <Button asChild size="sm" variant="ghost" className="h-9">
+                                        <Link href={route('admin.products.edit', product.id)}>
+                                            <Pencil />
+                                            <span className="ms-1">Edit</span>
+                                        </Link>
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => handleDelete(product)}
+                                        disabled={processing}
+                                        className="h-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    >
+                                        <Trash2 />
+                                        <span className="ms-1">Delete</span>
+                                    </Button>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
 
                 {products.last_page > 1 && (

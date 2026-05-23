@@ -74,7 +74,7 @@ export default function ProductShow({ product, reviews, relatedProducts, average
                 )}
             </nav>
 
-            <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+            <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:gap-8 xl:grid-cols-[1fr_380px]">
                 <div className="space-y-6">
                     <div className="aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-muted to-muted/40 flex items-center justify-center text-2xl text-muted-foreground">
                         {product.thumbnail ? (

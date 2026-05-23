@@ -94,7 +94,7 @@ export default function CartIndex({ items, subtotal, currency }: CartIndexProps)
                 {isEmpty ? (
                     <EmptyCart />
                 ) : (
-                    <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+                    <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:gap-8 xl:grid-cols-[1fr_400px]">
                         <ul className="overflow-hidden rounded-xl border bg-card divide-y">
                             {items.map((item) => {
                                 const locked = QUANTITY_LOCKED.includes(item.product.type);

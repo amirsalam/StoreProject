@@ -161,11 +161,16 @@
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
+        /* Block stray elements from triggering page-level horizontal scroll. */
+        overflow-x: hidden;
     }
 
     body {
         @apply bg-background text-foreground;
         font-feature-settings: 'rlig' 1, 'calt' 1;
+        /* Same guard at body level — both layers belt-and-braces. */
+        overflow-x: clip;
+        min-height: 100dvh;
     }
 
     /* Tighter, more confident headings */

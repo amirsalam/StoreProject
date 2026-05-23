@@ -1,9 +1,26 @@
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 
+/**
+ * Responsive content container.
+ *
+ * Caps content width with a graceful step-up on wider screens:
+ *   • default → max-w-6xl  (≈ 1152px) for laptops
+ *   • xl      → max-w-7xl  (≈ 1280px) for desktops
+ *   • 2xl     → 1400px            for ultra-wide / 4K so we use the real estate
+ *
+ * Horizontal padding scales with viewport for comfortable gutters.
+ */
 export const Container = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
     ({ className, ...props }, ref) => (
-        <div ref={ref} className={cn('mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8', className)} {...props} />
+        <div
+            ref={ref}
+            className={cn(
+                'mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 xl:max-w-7xl 2xl:max-w-[1400px]',
+                className,
+            )}
+            {...props}
+        />
     ),
 );
 Container.displayName = 'Container';

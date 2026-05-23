@@ -63,7 +63,7 @@ export default function AdminProductsEdit({ product, categories, statuses, types
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit · ${product.title}`} />
 
-            <div className="px-4 py-6 max-w-3xl mx-auto space-y-6">
+            <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">Edit product</h1>
                     <p className="text-sm text-muted-foreground">{product.title}</p>
