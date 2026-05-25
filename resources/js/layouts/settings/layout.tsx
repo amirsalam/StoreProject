@@ -10,6 +10,7 @@ const sidebarNavItems: NavItem[] = [
     { title: 'Password', url: '/settings/password', icon: null },
     { title: 'Two-factor', url: '/settings/two-factor', icon: null },
     { title: 'Sessions', url: '/settings/sessions', icon: null },
+    { title: 'API tokens', url: '/settings/api-tokens', icon: null },
     { title: 'Activity', url: '/settings/activity', icon: null },
     { title: 'Appearance', url: '/settings/appearance', icon: null },
 ];

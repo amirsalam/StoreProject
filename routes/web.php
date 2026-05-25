@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProductController;
@@ -38,6 +39,9 @@ Route::middleware(['auth', 'admin'])
         Route::get('branding', [AdminBrandingController::class, 'edit'])->name('branding.edit');
         Route::post('branding', [AdminBrandingController::class, 'update'])->name('branding.update');
         Route::delete('branding/logo', [AdminBrandingController::class, 'destroyLogo'])->name('branding.logo.destroy');
+
+        Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+        Route::patch('users/{user}/role', [AdminUserController::class, 'updateRole'])->name('users.role.update');
     });
 
 require __DIR__.'/settings.php';

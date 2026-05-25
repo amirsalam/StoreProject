@@ -35,4 +35,27 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Socialite OAuth Providers
+    |--------------------------------------------------------------------------
+    |
+    | One stanza per supported "Continue with …" provider. Each callback
+    | URL defaults to /auth/{provider}/callback on APP_URL, override via
+    | env if you proxy OAuth through a different host (e.g. ngrok, a
+    | preview deploy, a staging domain).
+    */
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL').'/auth/google/callback'),
+    ],
+
+    'github' => [
+        'client_id' => env('GITHUB_CLIENT_ID'),
+        'client_secret' => env('GITHUB_CLIENT_SECRET'),
+        'redirect' => env('GITHUB_REDIRECT_URI', env('APP_URL').'/auth/github/callback'),
+    ],
+
 ];
