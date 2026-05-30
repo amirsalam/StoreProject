@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -89,5 +90,24 @@ class User extends Authenticatable
     public function socialAccounts(): HasMany
     {
         return $this->hasMany(SocialAccount::class);
+    }
+
+    /**
+     * Tenants this user is a member of. The pivot carries the role
+     * (owner / admin / member) within each tenant.
+     */
+    public function tenants(): BelongsToMany
+    {
+        return $this->belongsToMany(Tenant::class, 'tenant_user')
+            ->withPivot(['role', 'joined_at'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Tenants this user owns (single-direction shortcut).
+     */
+    public function ownedTenants(): HasMany
+    {
+        return $this->hasMany(Tenant::class, 'owner_id');
     }
 }
