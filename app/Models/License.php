@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Support\Str;
 
 class License extends Model
 {
-    use HasFactory;
+    use BelongsToTenant, HasFactory;
 
     public const STATUS_ACTIVE = 'active';
     public const STATUS_EXPIRED = 'expired';

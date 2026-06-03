@@ -31,4 +31,19 @@ return [
         'www', 'app', 'api', 'admin', 'mail', 'smtp', 'ftp', 'cdn',
         'static', 'assets', 'help', 'support', 'docs', 'blog',
     ],
+
+    /*
+    |---------------------------------------------------------------------
+    | Fallback tenant on the central domain
+    |---------------------------------------------------------------------
+    |
+    | If set, requests landing on the central domain (no subdomain) will
+    | resolve to this tenant's slug. Useful in local development where
+    | the whole app runs on localhost without a per-tenant subdomain.
+    |
+    | In production this should usually be empty: the central domain
+    | hosts marketing/auth/super-admin and should NOT silently leak into
+    | a specific tenant's data.
+    */
+    'central_fallback_tenant' => env('TENANCY_CENTRAL_FALLBACK_TENANT'),
 ];

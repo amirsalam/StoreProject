@@ -39,12 +39,14 @@ class ResolveTenant
 
         // 2. Subdomain on the central domain
         if ($host === $central) {
+            $this->applyFallback();
             return $next($request);
         }
 
         $suffix = '.' . $central;
         if (! str_ends_with($host, $suffix)) {
             // Hit on an unrelated host — treat as central (e.g. an IP).
+            $this->applyFallback();
             return $next($request);
         }
 
@@ -53,6 +55,7 @@ class ResolveTenant
         // Reserved labels stay central
         $reserved = (array) config('tenancy.reserved_subdomains', []);
         if ($slug === '' || in_array($slug, $reserved, true)) {
+            $this->applyFallback();
             return $next($request);
         }
 
@@ -63,5 +66,25 @@ class ResolveTenant
 
         $this->context->set($tenant);
         return $next($request);
+    }
+
+    /**
+     * Apply the configured central-domain fallback tenant (if any).
+     *
+     * When `tenancy.central_fallback_tenant` is set, central-domain
+     * requests get scoped to that tenant. Useful in local development
+     * where the whole app runs on `localhost` without per-tenant
+     * subdomains; should usually be empty in production.
+     */
+    private function applyFallback(): void
+    {
+        $slug = (string) config('tenancy.central_fallback_tenant', '');
+        if ($slug === '') {
+            return;
+        }
+        $tenant = Tenant::query()->where('slug', $slug)->first();
+        if ($tenant) {
+            $this->context->set($tenant);
+        }
     }
 }

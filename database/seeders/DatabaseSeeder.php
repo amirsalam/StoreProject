@@ -13,9 +13,12 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\Subscription;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Wishlist;
+use App\Tenancy\TenantContext;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
@@ -27,12 +30,42 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@example.com',
         ]);
 
+        // Provision a default tenant + set it as the active context. Every
+        // model with the BelongsToTenant trait auto-fills tenant_id from
+        // this context during creation, so the rest of this seeder doesn't
+        // need to pass tenant_id around.
+        $tenant = Tenant::firstOrCreate(
+            ['slug' => 'demo'],
+            [
+                'name' => 'Demo Workspace',
+                'owner_id' => $admin->id,
+                'settings' => null,
+                'trial_ends_at' => now()->addDays(30),
+            ],
+        );
+        app(TenantContext::class)->set($tenant);
+
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
 
         $customers = User::factory()->count(9)->create();
+
+        // Attach every seeded user to the default tenant as a member; the
+        // admin lands in as owner so the tenancy ownership chain is intact.
+        $allUsers = User::all();
+        foreach ($allUsers as $user) {
+            DB::table('tenant_user')->updateOrInsert(
+                ['tenant_id' => $tenant->id, 'user_id' => $user->id],
+                [
+                    'role' => $user->id === $admin->id ? Tenant::ROLE_OWNER : Tenant::ROLE_MEMBER,
+                    'joined_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+            );
+        }
 
         $categoryTree = [
             'Laravel Scripts' => ['CRM Scripts', 'Ecommerce Scripts'],
