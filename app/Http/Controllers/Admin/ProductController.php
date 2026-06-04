@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Plans\PlanGate;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
+use App\Tenancy\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -54,8 +56,16 @@ class ProductController extends Controller
         ]);
     }
 
-    public function store(StoreProductRequest $request): RedirectResponse
+    public function store(StoreProductRequest $request, PlanGate $gate): RedirectResponse
     {
+        $tenant = app(TenantContext::class)->current();
+
+        if ($tenant && ! $gate->withinLimit($tenant, 'products', 1)) {
+            // 402 Payment Required is the canonical HTTP code for "upgrade your plan".
+            // The Inertia frontend surfaces it as an `errors.plan` validation-shaped error.
+            abort(402, 'You\'ve reached your plan\'s product limit. Upgrade to add more.');
+        }
+
         $product = Product::create($request->validated());
 
         return redirect()

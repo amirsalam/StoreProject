@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * A tenant — a single customer workspace inside the multi-tenant SaaS.
@@ -16,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Tenant extends Model
 {
-    /** @use HasFactory<\Database\Factories\TenantFactory> */
+    /** @use HasFactory<TenantFactory> */
     use HasFactory;
 
     public const ROLE_OWNER = 'owner';
@@ -74,5 +77,30 @@ class Tenant extends Model
         $membership = $this->users()->where('users.id', $user->id)->first();
 
         return $membership ? (string) $membership->pivot->role : null;
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(TenantSubscription::class);
+    }
+
+    /**
+     * The current active subscription — trialing or active.
+     * Returns null if the tenant has never subscribed.
+     */
+    public function currentSubscription(): HasOne
+    {
+        return $this->hasOne(TenantSubscription::class)
+            ->whereIn('status', [
+                TenantSubscription::STATUS_TRIALING,
+                TenantSubscription::STATUS_ACTIVE,
+                TenantSubscription::STATUS_PAST_DUE,
+            ])
+            ->latestOfMany();
+    }
+
+    public function plan(): ?Plan
+    {
+        return $this->currentSubscription?->plan;
     }
 }

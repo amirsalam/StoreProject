@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\Plans\PlanGate;
 use App\Services\BrandingService;
 use App\Services\CartService;
+use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -67,11 +69,48 @@ class HandleInertiaRequests extends Middleware
             ],
             'cart' => app(CartService::class)->summary(),
             'branding' => app(BrandingService::class)->summary(),
+            'tenant' => fn () => $this->tenantSnapshot(),
             'locale' => App::getLocale(),
             'direction' => SetLocale::direction(App::getLocale()),
             'supportedLocales' => SetLocale::SUPPORTED,
             'translations' => fn () => $this->loadTranslations(App::getLocale()),
         ]);
+    }
+
+    /**
+     * Snapshot of the active tenant + its SaaS plan/usage, for the
+     * frontend to render upgrade prompts and feature gates. Returns
+     * null on the central domain (no tenant resolved).
+     *
+     * @return array{slug: string, name: string, plan: array{slug: string, name: string}, features: list<string>, limits: array<string, int|null>, usage: array<string, array{used: int, limit: int|null, remaining: int|null}>}|null
+     */
+    private function tenantSnapshot(): ?array
+    {
+        $tenant = app(TenantContext::class)->current();
+        if (! $tenant) {
+            return null;
+        }
+
+        $plan = $tenant->plan();
+        if (! $plan) {
+            return [
+                'slug' => $tenant->slug,
+                'name' => $tenant->name,
+                'plan' => ['slug' => 'none', 'name' => 'No plan'],
+                'features' => [],
+                'limits' => [],
+                'usage' => [],
+            ];
+        }
+
+        return [
+            'slug' => $tenant->slug,
+            'name' => $tenant->name,
+            'plan' => ['slug' => $plan->slug, 'name' => $plan->name],
+            'features' => (array) $plan->features,
+            'limits' => (array) $plan->limits,
+            'usage' => app(PlanGate::class)->snapshot($tenant),
+        ];
     }
 
     /**

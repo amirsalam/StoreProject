@@ -10,10 +10,12 @@ use App\Models\License;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Models\Plan;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\Subscription;
 use App\Models\Tenant;
+use App\Models\TenantSubscription;
 use App\Models\User;
 use App\Models\Wishlist;
 use App\Tenancy\TenantContext;
@@ -25,6 +27,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Seed the SaaS plan catalog FIRST — every newly provisioned
+        // tenant gets the default (Starter) plan attached below.
+        $this->call(PlansSeeder::class);
+
         $admin = User::factory()->admin()->create([
             'name' => 'Store Admin',
             'email' => 'admin@example.com',
@@ -44,6 +50,23 @@ class DatabaseSeeder extends Seeder
             ],
         );
         app(TenantContext::class)->set($tenant);
+
+        // Attach a trialing Pro subscription to the demo tenant so the
+        // seeded marketplace data (24 products) fits within plan limits.
+        // The Starter plan caps at 10 products, which would block any
+        // attempt to use the admin UI to create new ones.
+        $proPlan = Plan::query()->where('slug', Plan::SLUG_PRO)->first();
+        if ($proPlan && ! $tenant->currentSubscription) {
+            TenantSubscription::create([
+                'tenant_id' => $tenant->id,
+                'plan_id' => $proPlan->id,
+                'status' => TenantSubscription::STATUS_TRIALING,
+                'billing_cycle' => TenantSubscription::CYCLE_MONTHLY,
+                'current_period_start' => now(),
+                'current_period_end' => now()->addDays(14),
+                'trial_ends_at' => now()->addDays(14),
+            ]);
+        }
 
         User::factory()->create([
             'name' => 'Test User',
