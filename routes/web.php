@@ -6,6 +6,9 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Workspace\InvoiceController as WorkspaceInvoiceController;
+use App\Http\Controllers\Workspace\ProjectController as WorkspaceProjectController;
+use App\Http\Controllers\Workspace\TaskController as WorkspaceTaskController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -29,6 +32,27 @@ Route::middleware(['auth'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 });
+
+Route::middleware(['auth'])
+    ->prefix('workspace')
+    ->name('workspace.')
+    ->group(function () {
+        Route::get('projects', [WorkspaceProjectController::class, 'index'])->name('projects.index');
+        Route::post('projects', [WorkspaceProjectController::class, 'store'])->name('projects.store');
+        Route::put('projects/{project:slug}', [WorkspaceProjectController::class, 'update'])->name('projects.update');
+        Route::delete('projects/{project:slug}', [WorkspaceProjectController::class, 'destroy'])->name('projects.destroy');
+
+        Route::get('tasks', [WorkspaceTaskController::class, 'index'])->name('tasks.index');
+        Route::post('tasks', [WorkspaceTaskController::class, 'store'])->name('tasks.store');
+        Route::patch('tasks/{task}', [WorkspaceTaskController::class, 'update'])->name('tasks.update');
+        Route::delete('tasks/{task}', [WorkspaceTaskController::class, 'destroy'])->name('tasks.destroy');
+
+        Route::get('invoices', [WorkspaceInvoiceController::class, 'index'])->name('invoices.index');
+        Route::post('invoices', [WorkspaceInvoiceController::class, 'store'])->name('invoices.store');
+        Route::post('invoices/{invoice}/send', [WorkspaceInvoiceController::class, 'markSent'])->name('invoices.send');
+        Route::post('invoices/{invoice}/paid', [WorkspaceInvoiceController::class, 'markPaid'])->name('invoices.paid');
+        Route::delete('invoices/{invoice}', [WorkspaceInvoiceController::class, 'destroy'])->name('invoices.destroy');
+    });
 
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')

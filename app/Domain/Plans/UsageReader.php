@@ -3,6 +3,7 @@
 namespace App\Domain\Plans;
 
 use App\Models\Product;
+use App\Models\Project;
 use App\Models\Tenant;
 
 /**
@@ -24,7 +25,7 @@ class UsageReader
         return match ($resource) {
             'users' => $this->users($tenant),
             'products' => $this->products($tenant),
-            'projects' => 0,                                // placeholder until Projects ships
+            'projects' => $this->projects($tenant),
             'storage_gb' => 0,                                // placeholder; computed from media files
             default => 0,
         };
@@ -38,5 +39,10 @@ class UsageReader
     private function products(Tenant $tenant): int
     {
         return Product::query()->forTenant($tenant)->count();
+    }
+
+    private function projects(Tenant $tenant): int
+    {
+        return Project::query()->forTenant($tenant)->count();
     }
 }

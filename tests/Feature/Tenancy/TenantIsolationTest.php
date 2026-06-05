@@ -6,13 +6,16 @@ use App\Models\BlogPost;
 use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\Download;
+use App\Models\Invoice;
 use App\Models\License;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Product;
+use App\Models\Project;
 use App\Models\Review;
 use App\Models\Subscription;
+use App\Models\Task;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Wishlist;
@@ -64,6 +67,9 @@ class TenantIsolationTest extends TestCase
             'Review' => [Review::class, fn () => Review::factory()->create()],
             'Wishlist' => [Wishlist::class, fn () => Wishlist::factory()->create()],
             'BlogPost' => [BlogPost::class, fn () => BlogPost::factory()->create()],
+            'Project' => [Project::class, fn () => Project::factory()->create()],
+            'Task' => [Task::class, fn () => Task::factory()->create()],
+            'Invoice' => [Invoice::class, fn () => Invoice::factory()->create()],
         ];
     }
 
