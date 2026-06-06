@@ -4,11 +4,13 @@ use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Workspace\InvoiceController as WorkspaceInvoiceController;
 use App\Http\Controllers\Workspace\ProjectController as WorkspaceProjectController;
 use App\Http\Controllers\Workspace\TaskController as WorkspaceTaskController;
+use App\Http\Controllers\Workspace\TeamController as WorkspaceTeamController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -52,7 +54,16 @@ Route::middleware(['auth'])
         Route::post('invoices/{invoice}/send', [WorkspaceInvoiceController::class, 'markSent'])->name('invoices.send');
         Route::post('invoices/{invoice}/paid', [WorkspaceInvoiceController::class, 'markPaid'])->name('invoices.paid');
         Route::delete('invoices/{invoice}', [WorkspaceInvoiceController::class, 'destroy'])->name('invoices.destroy');
+
+        Route::get('team', [WorkspaceTeamController::class, 'index'])->name('team.index');
+        Route::post('team/invitations', [WorkspaceTeamController::class, 'invite'])->name('team.invitations.store');
+        Route::delete('team/invitations/{invitation}', [WorkspaceTeamController::class, 'revoke'])->name('team.invitations.revoke');
     });
+
+// Public invitation accept flow — anyone with the token can land here,
+// auth is gated at the accept step.
+Route::get('invitations/{token}', [InvitationController::class, 'show'])->name('invitations.show');
+Route::post('invitations/{token}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
 
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')

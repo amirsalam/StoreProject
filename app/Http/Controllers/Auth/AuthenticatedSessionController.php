@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\ActivityLog;
@@ -50,6 +49,14 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         ActivityLog::record('auth.login', $user, description: 'Signed in');
+
+        // If the user got here from an invitation link, follow through to
+        // the accept page instead of dashboard. (The accept page itself
+        // will re-check the user is the invited email.)
+        $pendingToken = $request->session()->pull('pending_invitation_token');
+        if (is_string($pendingToken) && $pendingToken !== '') {
+            return redirect()->route('invitations.show', $pendingToken);
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
