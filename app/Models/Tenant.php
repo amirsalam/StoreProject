@@ -33,6 +33,7 @@ class Tenant extends Model
         'slug',
         'custom_domain',
         'owner_id',
+        'stripe_customer_id',
         'settings',
         'trial_ends_at',
     ];

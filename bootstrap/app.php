@@ -31,6 +31,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
         ]);
+
+        // Stripe POSTs to /webhooks/stripe without a CSRF token —
+        // signature verification in the controller is what protects it.
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/stripe',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -7,6 +7,8 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Webhooks\StripeWebhookController;
+use App\Http\Controllers\Workspace\BillingController as WorkspaceBillingController;
 use App\Http\Controllers\Workspace\InvoiceController as WorkspaceInvoiceController;
 use App\Http\Controllers\Workspace\ProjectController as WorkspaceProjectController;
 use App\Http\Controllers\Workspace\TaskController as WorkspaceTaskController;
@@ -58,7 +60,16 @@ Route::middleware(['auth'])
         Route::get('team', [WorkspaceTeamController::class, 'index'])->name('team.index');
         Route::post('team/invitations', [WorkspaceTeamController::class, 'invite'])->name('team.invitations.store');
         Route::delete('team/invitations/{invitation}', [WorkspaceTeamController::class, 'revoke'])->name('team.invitations.revoke');
+
+        Route::get('billing', [WorkspaceBillingController::class, 'index'])->name('billing.index');
+        Route::post('billing/change-plan', [WorkspaceBillingController::class, 'changePlan'])->name('billing.change');
+        Route::post('billing/portal', [WorkspaceBillingController::class, 'portal'])->name('billing.portal');
+        Route::post('billing/cancel', [WorkspaceBillingController::class, 'cancel'])->name('billing.cancel');
     });
+
+// Public Stripe webhook — no auth, signature verified inside the
+// controller. CSRF exemption is configured globally in bootstrap/app.php.
+Route::post('webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
 
 // Public invitation accept flow — anyone with the token can land here,
 // auth is gated at the accept step.

@@ -28,6 +28,28 @@ return [
         'key' => env('RESEND_KEY'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Stripe (SaaS billing)
+    |--------------------------------------------------------------------------
+    |
+    | The platform's own billing. BillingService writes through these
+    | credentials to manage tenant_subscriptions. Distinct from any
+    | marketplace storefront payment integration.
+    */
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),                          // pk_test_… (public)
+        'secret' => env('STRIPE_SECRET'),                    // sk_test_… (server)
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),    // whsec_…
+        'price_ids' => [                                     // Stripe price ids, keyed plan-slug.cycle
+            'pro_monthly' => env('STRIPE_PRICE_PRO_MONTHLY'),
+            'pro_annual' => env('STRIPE_PRICE_PRO_ANNUAL'),
+            'business_monthly' => env('STRIPE_PRICE_BUSINESS_MONTHLY'),
+            'business_annual' => env('STRIPE_PRICE_BUSINESS_ANNUAL'),
+        ],
+        'portal_return_url' => env('STRIPE_PORTAL_RETURN_URL', '/workspace/billing'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
