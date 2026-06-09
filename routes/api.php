@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,4 +22,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
             'token_abilities' => $user->currentAccessToken()?->abilities ?? [],
         ];
     })->name('api.v1.user');
+
+    // Dashboard payload — role-aware
+    Route::get('dashboard', [DashboardController::class, 'show'])->name('api.v1.dashboard');
+
+    // Notifications
+    Route::get('notifications', [NotificationController::class, 'index'])->name('api.v1.notifications.index');
+    Route::patch('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('api.v1.notifications.read');
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('api.v1.notifications.read_all');
+    Route::delete('notifications/{notification}', [NotificationController::class, 'destroy'])->name('api.v1.notifications.destroy');
 });

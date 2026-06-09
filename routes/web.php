@@ -32,9 +32,7 @@ Route::delete('cart', [CartController::class, 'clear'])->name('cart.clear');
 Route::patch('locale', [LocaleController::class, 'update'])->name('locale.update');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'show'])->name('dashboard');
 });
 
 Route::middleware(['auth'])
