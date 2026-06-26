@@ -101,7 +101,7 @@ Complexity = remaining build effort.
 | 21 | **Mobile / responsive** | mobile | 🟡 | 35% | Low | Med |
 | 13 | **Projects** | projects | 🟡 | 25% | Med | Med |
 | 14 | **Tasks** | tasks | 🟡 | 25% | Med | Med |
-| 27 | **Admin control center** | admin-control-center | 🟡 | 25% | Med | High |
+| 27 | **Admin control center** | admin-control-center | 🟡 | 35% | Med | High |
 | 29 | **Audit logs** | audit-logs | 🟡 | 25% | Med | Med |
 | 18 | **Analytics** | analytics | 🟡 | 20% | Low | High |
 | 30 | **API & developer portal** | api-developer-portal | 🟡 | 20% | Med | High |
@@ -175,9 +175,9 @@ Complexity = remaining build effort.
 - **Completed:** `tasks` migration + `Task` model + `Workspace/TaskController` + page.
 - **Missing:** boards/columns, assignments, dependencies, comments, the doc's full task lifecycle.
 
-### 🟡 Admin control center — 25%
-- **Completed:** super-admin dashboard, `EnsureUserIsAdmin`, `Admin/{Product,Branding,User}Controller` + pages, `Setting` store.
-- **Missing:** cross-tenant governance, the aggregation/control overlays, security/compliance centers.
+### 🟡 Admin control center — 35%
+- **Completed:** super-admin dashboard, `EnsureUserIsAdmin`, `Admin/{Product,Branding,User}Controller` + pages, `Setting` store. **Payment Gateways Management** (this PR): `PaymentGateway` model (encrypted credentials/webhook_secret), `payment_gateways` table, `config/payment_gateways.php` provider registry (18 providers, extensible), `PaymentGatewayService` (CRUD + toggle + setDefault + reorder + testConnection, all audited), `Admin\PaymentGatewayController` (full CRUD + custom actions, secrets redacted), `admin/payment-gateways/{index,create,edit,gateway-form}` pages, sidebar nav, `PaymentGatewayTest` (11 cases).
+- **Missing:** cross-tenant governance, the aggregation/control overlays, security/compliance centers, gateway transaction statistics, live API credential ping.
 
 ### 🟡 Audit logs — 25%
 - **Completed:** append-only `ActivityLog` (`UPDATED_AT=null`, `record()`), wired across auth + reconciliation, `settings/activity` page, `ActivityLogTest`.
@@ -257,3 +257,4 @@ low-risk documentation PR.
 |---|---|
 | 2026-06-26 | Index created. Surveyed codebase (28 models, 39 migrations, 35 pages, 27 test files, 5 route files) and classified all modules. Identified the foundational-docs (00–11) gap. |
 | 2026-06-26 | **Marketplace checkout vertical shipped** (45% → 55%): `CheckoutService` + `CheckoutController` + `FulfillOrder` listener on `PaymentCompleted` + checkout/confirmation pages + 4-locale i18n + `CheckoutTest` (8 cases). Wired the previously-disabled cart checkout button. Closes the cart→order→payment→digital-delivery gap on the shipped payments spine. |
+| 2026-06-26 | **Payment Gateways Management shipped** (admin control center 25% → 35%): `payment_gateways` table + `PaymentGateway` model (encrypted credentials), `config/payment_gateways.php` registry (18 providers, config-only extensibility), `PaymentGatewayService` (CRUD/toggle/default/reorder/test, audited), `Admin\PaymentGatewayController` (secrets redacted), 4 React pages + sidebar nav + types, `PaymentGatewayTest` (11 cases). |

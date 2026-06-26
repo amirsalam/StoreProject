@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
+use App\Http\Controllers\Admin\PaymentGatewayController as AdminPaymentGatewayController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProductController;
@@ -33,7 +35,7 @@ Route::delete('cart', [CartController::class, 'clear'])->name('cart.clear');
 Route::patch('locale', [LocaleController::class, 'update'])->name('locale.update');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'show'])->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'show'])->name('dashboard');
 
     // Checkout — cart -> order + Stripe PaymentIntent -> confirmation.
     Route::get('checkout', [CheckoutController::class, 'show'])->name('checkout.show');
@@ -93,6 +95,13 @@ Route::middleware(['auth', 'admin'])
 
         Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
         Route::patch('users/{user}/role', [AdminUserController::class, 'updateRole'])->name('users.role.update');
+
+        // Payment gateways management.
+        Route::post('payment-gateways/reorder', [AdminPaymentGatewayController::class, 'reorder'])->name('payment-gateways.reorder');
+        Route::post('payment-gateways/{paymentGateway}/toggle', [AdminPaymentGatewayController::class, 'toggle'])->name('payment-gateways.toggle');
+        Route::post('payment-gateways/{paymentGateway}/default', [AdminPaymentGatewayController::class, 'setDefault'])->name('payment-gateways.default');
+        Route::post('payment-gateways/{paymentGateway}/test', [AdminPaymentGatewayController::class, 'test'])->name('payment-gateways.test');
+        Route::resource('payment-gateways', AdminPaymentGatewayController::class)->except(['show']);
     });
 
 require __DIR__.'/settings.php';

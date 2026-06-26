@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, CreditCard, FileText, Folder, FolderKanban, LayoutGrid, ListTodo, Package, Palette, UserCog, Users } from 'lucide-react';
+import { BookOpen, CreditCard, FileText, Folder, FolderKanban, LayoutGrid, ListTodo, Package, Palette, UserCog, Users, Wallet } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -58,6 +58,11 @@ const adminNavItems: NavItem[] = [
         title: 'Branding',
         url: '/admin/branding',
         icon: Palette,
+    },
+    {
+        title: 'Payment Gateways',
+        url: '/admin/payment-gateways',
+        icon: Wallet,
     },
 ];
 

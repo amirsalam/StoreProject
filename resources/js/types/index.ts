@@ -98,6 +98,39 @@ export interface Review {
     user?: Pick<User, 'id' | 'name'>;
 }
 
+export interface PaymentGatewaySummary {
+    id: number;
+    provider: string;
+    provider_label: string;
+    name: string;
+    display_name: string;
+    logo: string | null;
+    is_active: boolean;
+    is_default: boolean;
+    environment: 'sandbox' | 'production';
+    fee_fixed: string;
+    fee_percent: string;
+    webhook_status: string;
+    has_webhook_secret: boolean;
+    last_connection_at: string | null;
+    sort_order: number;
+}
+
+export interface PaymentProviderField {
+    key: string;
+    label: string;
+    secret: boolean;
+    required: boolean;
+}
+
+export interface PaymentProvider {
+    value: string;
+    label: string;
+    logo: string | null;
+    supports_webhook: boolean;
+    fields: PaymentProviderField[];
+}
+
 export interface PaginatedLink {
     url: string | null;
     label: string;
