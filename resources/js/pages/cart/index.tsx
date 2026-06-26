@@ -252,13 +252,15 @@ function OrderSummary({ subtotal, currency }: { subtotal: number; currency: stri
                         {money(total, currency)}
                     </span>
                 </div>
-                <Button size="lg" className="w-full" disabled>
-                    {t('cart.continue_to_checkout')}
-                    <ArrowRight />
+                <Button asChild size="lg" className="w-full">
+                    <Link href={route('checkout.show')}>
+                        {t('cart.continue_to_checkout')}
+                        <ArrowRight />
+                    </Link>
                 </Button>
                 <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
                     <ShieldCheck className="size-3" />
-                    {t('cart.stripe_coming_soon')}
+                    {t('cart.secure_checkout')}
                 </p>
             </div>
 

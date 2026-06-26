@@ -96,7 +96,7 @@ Complexity = remaining build effort.
 | F | **i18n / localization** | (28) | ✅ | 80% | Low | Low |
 | 06 | **Team / invitations** | (27) | 🟡 | 70% | Med | Low |
 | 16 | **Billing / subscriptions** | billing | 🟡 | 60% | High | Med |
-| 20 | **Marketplace** | marketplace | 🟡 | 45% | High | High |
+| 20 | **Marketplace** | marketplace | 🟡 | 55% | High | High |
 | 15 | **Notifications** | notifications | 🟡 | 30% | Med | Med |
 | 21 | **Mobile / responsive** | mobile | 🟡 | 35% | Low | Med |
 | 13 | **Projects** | projects | 🟡 | 25% | Med | Med |
@@ -154,9 +154,9 @@ Complexity = remaining build effort.
 - **Missing:** dunning/retries, proration, usage-based billing, commission/payout to vendors, invoice PDF.
 - **Depends on:** payments ✅, plans ✅.
 
-### 🟡 Marketplace — 45%
-- **Completed:** `categories`, `products` (+ admin CRUD with `StoreProductRequest` + `PlanGate` limit), `coupons` (`Coupon` model), `orders` + `order_items`, `licenses`, `downloads`, `reviews`, `wishlists`, storefront (`products/index`+`show`), cart (`CartService` + `CartController` + page). Tests: ProductManagement, ProductPlanLimit, Cart.
-- **Missing:** checkout→payment completion wiring, vendor stores/profiles, product search/facets, digital-delivery on purchase, vendor payouts, ratings moderation.
+### 🟡 Marketplace — 55%
+- **Completed:** `categories`, `products` (+ admin CRUD with `StoreProductRequest` + `PlanGate` limit), `coupons` (`Coupon` model), `orders` + `order_items`, `licenses`, `downloads`, `reviews`, `wishlists`, storefront (`products/index`+`show`), cart (`CartService` + `CartController` + page). **Checkout vertical** (this PR): `CheckoutController` + `CheckoutService` (cart → order + items + pending `Payment` + Stripe PaymentIntent, server-side prices, coupon redemption with per-user/min-order/max-uses guards, $0-order fast-settle) + `FulfillOrder` listener on `PaymentCompleted` (issues `License`/`Download` idempotently) + `checkout/index` + `checkout/confirmation` pages + i18n (en/ar/fr/es). Tests: ProductManagement, ProductPlanLimit, Cart, **Checkout** (8 cases).
+- **Missing:** vendor stores/profiles, product search/facets, vendor payouts, ratings moderation, Stripe Elements card-confirmation UI (the intent client_secret is returned; the front-end card form is the next increment), tax.
 - **Depends on:** payments ✅, billing 🟡, file-manager 🟡.
 
 ### 🟡 Notifications — 30%
@@ -256,3 +256,4 @@ low-risk documentation PR.
 | Date | Change |
 |---|---|
 | 2026-06-26 | Index created. Surveyed codebase (28 models, 39 migrations, 35 pages, 27 test files, 5 route files) and classified all modules. Identified the foundational-docs (00–11) gap. |
+| 2026-06-26 | **Marketplace checkout vertical shipped** (45% → 55%): `CheckoutService` + `CheckoutController` + `FulfillOrder` listener on `PaymentCompleted` + checkout/confirmation pages + 4-locale i18n + `CheckoutTest` (8 cases). Wired the previously-disabled cart checkout button. Closes the cart→order→payment→digital-delivery gap on the shipped payments spine. |

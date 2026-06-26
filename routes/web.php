@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProductController;
@@ -33,6 +34,12 @@ Route::patch('locale', [LocaleController::class, 'update'])->name('locale.update
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'show'])->name('dashboard');
+
+    // Checkout — cart -> order + Stripe PaymentIntent -> confirmation.
+    Route::get('checkout', [CheckoutController::class, 'show'])->name('checkout.show');
+    Route::post('checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::get('checkout/{order:order_number}/confirmation', [CheckoutController::class, 'confirmation'])
+        ->name('checkout.confirmation');
 });
 
 Route::middleware(['auth'])
