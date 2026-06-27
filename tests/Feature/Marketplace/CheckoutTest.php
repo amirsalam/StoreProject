@@ -151,6 +151,107 @@ class CheckoutTest extends TestCase
         $this->assertSame(0, Order::query()->count());
     }
 
+    public function test_json_checkout_returns_client_secret_for_card_confirmation(): void
+    {
+        $this->fakeStripe();
+        $user = User::factory()->create();
+        $product = Product::factory()->digitalDownload()->create([
+            'status' => Product::STATUS_PUBLISHED,
+            'price' => 30.00,
+            'sale_price' => null,
+        ]);
+
+        $this->actingAs($user)->post('/cart', ['product_id' => $product->id]);
+
+        // The card-confirmation UI calls checkout with Accept: application/json
+        // and gets the PaymentIntent client_secret to confirm in the browser.
+        $response = $this->actingAs($user)->postJson('/checkout', [
+            'billing_name' => 'Ada Lovelace',
+            'billing_email' => 'ada@example.test',
+        ]);
+
+        $order = Order::query()->where('user_id', $user->id)->firstOrFail();
+
+        $response->assertOk()
+            ->assertJson([
+                'order_number' => $order->order_number,
+                'client_secret' => 'pi_fake_secret_3000',
+                'confirmation_url' => route('checkout.confirmation', $order->order_number),
+            ]);
+
+        $this->assertSame(Order::STATUS_PENDING, $order->status);
+        $this->assertSame(
+            Payment::STATUS_PENDING,
+            Payment::query()->where('order_id', $order->id)->firstOrFail()->status,
+        );
+    }
+
+    public function test_json_checkout_rejects_invalid_coupon_with_422(): void
+    {
+        $this->fakeStripe();
+        $user = User::factory()->create();
+        $product = Product::factory()->digitalDownload()->create([
+            'status' => Product::STATUS_PUBLISHED,
+            'price' => 20.00,
+            'sale_price' => null,
+        ]);
+
+        $this->actingAs($user)->post('/cart', ['product_id' => $product->id]);
+
+        $this->actingAs($user)
+            ->postJson('/checkout', [
+                'billing_name' => 'Alan Turing',
+                'billing_email' => 'alan@example.test',
+                'coupon_code' => 'NOPE',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('coupon_code');
+
+        $this->assertSame(0, Order::query()->count());
+    }
+
+    public function test_json_checkout_returns_null_secret_for_zero_dollar_order(): void
+    {
+        // No fakeStripe(): a $0 order must never open a Stripe intent, so the
+        // card step is skipped and the client goes straight to confirmation.
+        $user = User::factory()->create();
+        $product = Product::factory()->digitalDownload()->create([
+            'status' => Product::STATUS_PUBLISHED,
+            'price' => 40.00,
+            'sale_price' => null,
+        ]);
+        Coupon::factory()->create([
+            'code' => 'FREE100',
+            'type' => Coupon::TYPE_PERCENTAGE,
+            'value' => 100,
+            'is_active' => true,
+            'used_count' => 0,
+            'max_uses' => null,
+            'min_order_amount' => null,
+            'max_uses_per_user' => null,
+            'starts_at' => null,
+            'expires_at' => null,
+        ]);
+
+        $this->actingAs($user)->post('/cart', ['product_id' => $product->id]);
+
+        $response = $this->actingAs($user)->postJson('/checkout', [
+            'billing_name' => 'Free Buyer',
+            'billing_email' => 'free@example.test',
+            'coupon_code' => 'FREE100',
+        ]);
+
+        $order = Order::query()->where('user_id', $user->id)->firstOrFail();
+
+        $response->assertOk()->assertJson([
+            'order_number' => $order->order_number,
+            'client_secret' => null,
+            'confirmation_url' => route('checkout.confirmation', $order->order_number),
+        ]);
+
+        $this->assertSame(Order::STATUS_PAID, $order->status);
+    }
+
     public function test_payment_completed_fulfills_license_and_download_idempotently(): void
     {
         $user = User::factory()->create();

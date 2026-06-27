@@ -97,7 +97,7 @@ Complexity = remaining build effort.
 | F | **i18n / localization** | (28) | ✅ | 80% | Low | Low |
 | 06 | **Team / invitations** | (27) | 🟡 | 70% | Med | Low |
 | 16 | **Billing / subscriptions** | billing | 🟡 | 60% | High | Med |
-| 20 | **Marketplace** | marketplace | 🟡 | 55% | High | High |
+| 20 | **Marketplace** | marketplace | 🟡 | 65% | High | High |
 | 15 | **Notifications** | notifications | 🟡 | 30% | Med | Med |
 | 21 | **Mobile / responsive** | mobile | 🟡 | 35% | Low | Med |
 | 13 | **Projects** | projects | 🟡 | 25% | Med | Med |
@@ -155,9 +155,9 @@ Complexity = remaining build effort.
 - **Missing:** dunning/retries, proration, usage-based billing, commission/payout to vendors, invoice PDF.
 - **Depends on:** payments ✅, plans ✅.
 
-### 🟡 Marketplace — 55%
-- **Completed:** `categories`, `products` (+ admin CRUD with `StoreProductRequest` + `PlanGate` limit), `coupons` (`Coupon` model), `orders` + `order_items`, `licenses`, `downloads`, `reviews`, `wishlists`, storefront (`products/index`+`show`), cart (`CartService` + `CartController` + page). **Checkout vertical** (this PR): `CheckoutController` + `CheckoutService` (cart → order + items + pending `Payment` + Stripe PaymentIntent, server-side prices, coupon redemption with per-user/min-order/max-uses guards, $0-order fast-settle) + `FulfillOrder` listener on `PaymentCompleted` (issues `License`/`Download` idempotently) + `checkout/index` + `checkout/confirmation` pages + i18n (en/ar/fr/es). Tests: ProductManagement, ProductPlanLimit, Cart, **Checkout** (8 cases).
-- **Missing:** vendor stores/profiles, product search/facets, vendor payouts, ratings moderation, Stripe Elements card-confirmation UI (the intent client_secret is returned; the front-end card form is the next increment), tax.
+### 🟡 Marketplace — 65%
+- **Completed:** `categories`, `products` (+ admin CRUD with `StoreProductRequest` + `PlanGate` limit), `coupons` (`Coupon` model), `orders` + `order_items`, `licenses`, `downloads`, `reviews`, `wishlists`, storefront (`products/index`+`show`), cart (`CartService` + `CartController` + page). **Checkout vertical:** `CheckoutController` + `CheckoutService` (cart → order + items + pending `Payment` + Stripe PaymentIntent, server-side prices, coupon redemption with per-user/min-order/max-uses guards, $0-order fast-settle) + `FulfillOrder` listener on `PaymentCompleted` (issues `License`/`Download` idempotently) + `checkout/confirmation` page + i18n. **Stripe Elements card confirmation** (this PR): `checkout/index` rebuilt as a two-phase flow (billing → `@stripe/react-stripe-js` `PaymentElement` → `stripe.confirmPayment` with `return_url` = confirmation), `store()` content-negotiated to return the intent `client_secret` as JSON (redirect path unchanged → existing tests green), publishable key passed as a page prop, $0 orders skip the card step, no-key + processing + card-error states handled, 6 new i18n keys × 4 locales. Tests: ProductManagement, ProductPlanLimit, Cart, **Checkout** (11 cases — 3 new for the JSON intent contract).
+- **Missing:** vendor stores/profiles, product search/facets, vendor payouts, ratings moderation, tax, webhook-lag "processing" affordance on the confirmation page.
 - **Depends on:** payments ✅, billing 🟡, file-manager 🟡.
 
 ### 🟡 Notifications — 30%
@@ -225,33 +225,35 @@ recommended *marketplace checkout → payment* slice has **shipped**
 (`c8d701b`), as has *Payment Gateways Management* (`9b87025`). The next
 PR-sized increments, in leverage order:
 
-1. **Marketplace — Stripe Elements card-confirmation UI** *(smallest, highest leverage)*.
-   Checkout already creates the order + `Payment` + a Stripe **PaymentIntent**
-   and returns the `client_secret`; the **only** missing link to
-   *captured* revenue is the browser card form (`@stripe/react-stripe-js`
-   `PaymentElement` → confirm → `PaymentCompleted` → the shipped
-   `FulfillOrder` listener already issues the license/download). One clean
-   front-end-focused PR closes the end-to-end revenue path. **Recommended.**
+1. ~~**Marketplace — Stripe Elements card-confirmation UI**~~ ✅ **SHIPPED
+   2026-06-27** (`checkout/index` two-phase billing→`PaymentElement`→
+   `confirmPayment`; content-negotiated `client_secret`; $0 fast-path).
+   The end-to-end captured-revenue path is now closed on the shipped spine.
 
-2. **Marketplace — vendor stores/profiles.** No `Vendor`/`Store` model exists
-   yet; this unblocks the *multi-vendor* half of the marketplace (vendor
-   onboarding §7, vendor payouts, per-vendor catalog). Larger, backend-led.
+2. **Marketplace — vendor stores/profiles** *(now recommended)*. No
+   `Vendor`/`Store` model exists yet; this unblocks the *multi-vendor* half
+   of the marketplace (vendor onboarding §7, vendor payouts, per-vendor
+   catalog). Larger, backend-led — DB→model→service→controller→frontend.
 
-3. **Projects or Tasks vertical slice.** Self-contained, medium complexity,
+3. **Marketplace — confirmation "processing" affordance** *(tiny follow-up)*.
+   After Stripe's redirect the webhook may lag; the confirmation page should
+   show "payment processing" when the order is still `pending` with
+   `redirect_status=succeeded`. A small, self-contained polish PR.
+
+4. **Projects or Tasks vertical slice.** Self-contained, medium complexity,
    a clean full-stack vertical (FSM/statuses → members → comments) — good if
    a non-revenue domain slice is preferred.
 
-4. **Documentation track — backfill foundational docs 00–11.** The
+5. **Documentation track — backfill foundational docs 00–11.** The
    source-of-truth is still incomplete: the cross-cutting docs describing
    the *already-shipped* architecture/tenancy/auth/DB/security/testing don't
    exist as standalone files. Low-risk; can run in parallel with any code PR.
 
-**Recommendation:** take **increment 1 (Stripe Elements card-confirmation
-UI)** — it converts the entire already-shipped commerce surface (catalog →
-cart → checkout → order → PaymentIntent → `FulfillOrder`) into *actually
-captured* money with the smallest possible change, and exercises the
-frontend→test→doc tail of the stack the methodology prescribes. Backfill
-foundational docs 00–11 in parallel as a low-risk documentation PR.
+**Recommendation:** take **increment 2 (vendor stores/profiles)** — with the
+revenue path now closed, the largest remaining marketplace gap is the
+*multi-vendor* dimension, and it's the prerequisite for vendor payouts +
+the affiliate/vendor revenue split. Increment 3 is a clean tiny follow-up if
+a small PR is preferred first. Backfill foundational docs 00–11 in parallel.
 
 > **Whichever track is chosen, the loop is the same:** read the module doc →
 > confirm the rows above → implement the next PR-sized increment in
@@ -270,3 +272,4 @@ foundational docs 00–11 in parallel as a low-risk documentation PR.
 | 2026-06-26 | **Payment Gateways Management shipped** (admin control center 25% → 35%): `payment_gateways` table + `PaymentGateway` model (encrypted credentials), `config/payment_gateways.php` registry (18 providers, config-only extensibility), `PaymentGatewayService` (CRUD/toggle/default/reorder/test, audited), `Admin\PaymentGatewayController` (secrets redacted), 4 React pages + sidebar nav + types, `PaymentGatewayTest` (11 cases). |
 | 2026-06-27 | **Architecture doc set completed (22 docs).** Added white-label, audit-logs, api-developer-portal, affiliate-referral, onboarding architecture docs since index creation — every prompted module now has a shipped-vs-planned doc. |
 | 2026-06-27 | **Index reconciled to DDDocs mode.** Re-surveyed code (29 models / 40 migrations / 40 pages / 29 tests / 22 docs). Corrected doc count (21 → 22). Refreshed "Recommended next step": the prior recommendation (marketplace checkout) has shipped, so the next PR-sized increment is now the **Stripe Elements card-confirmation UI** to close the captured-revenue path. Per-module rows re-verified accurate (no vendor/store model yet; no product search; no checkout card form yet). |
+| 2026-06-27 | **Stripe Elements card-confirmation UI shipped** (marketplace 55% → 65%): `@stripe/stripe-js` + `@stripe/react-stripe-js`; `checkout/index` rebuilt two-phase (billing → `PaymentElement` → `confirmPayment` with `return_url`); `CheckoutController::store` content-negotiated to return the intent `client_secret` as JSON (legacy redirect path preserved → 8 existing tests stay green); publishable key surfaced as a page prop; $0 orders skip the card step; no-key/processing/card-error states; 6 i18n keys × 4 locales; 3 new `CheckoutTest` cases (JSON intent contract, 422 coupon, $0 null-secret) → 11 total. Verified: tsc (clean for checkout), eslint (clean), `npm run build` (green). Closes the end-to-end *captured-revenue* path on the shipped payments spine. Next: vendor stores. |

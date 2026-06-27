@@ -8,6 +8,7 @@ use App\Domain\Marketplace\InvalidCouponException;
 use App\Http\Requests\Marketplace\PlaceOrderRequest;
 use App\Models\Order;
 use App\Services\CartService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -52,10 +53,22 @@ class CheckoutController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
             ],
+            // pk_test_… — the public publishable key. Used by Stripe.js in the
+            // browser to mount the PaymentElement. Null if payments are not
+            // configured (the page then shows a "payments unavailable" state).
+            'stripeKey' => config('services.stripe.key'),
         ]);
     }
 
-    public function store(PlaceOrderRequest $request): RedirectResponse
+    /**
+     * Place the order + open a Stripe PaymentIntent.
+     *
+     * Content-negotiated: the card-confirmation UI calls this with
+     * `Accept: application/json` and gets back the intent `client_secret`
+     * (which it confirms client-side via Stripe Elements). Plain requests
+     * keep the original redirect-to-confirmation behaviour.
+     */
+    public function store(PlaceOrderRequest $request): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
 
@@ -66,12 +79,33 @@ class CheckoutController extends Controller
                 $data['coupon_code'] ?? null,
             );
         } catch (EmptyCartException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage(), 'redirect' => route('cart.show')], 422);
+            }
+
             return redirect()->route('cart.show')->withErrors(['cart' => $e->getMessage()]);
         } catch (InvalidCouponException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['errors' => ['coupon_code' => [$e->getMessage()]]], 422);
+            }
+
             return back()->withErrors(['coupon_code' => $e->getMessage()])->withInput();
         }
 
-        return redirect()->route('checkout.confirmation', $result->order->order_number);
+        $confirmationUrl = route('checkout.confirmation', $result->order->order_number);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'order_number' => $result->order->order_number,
+                // null for a fully-discounted $0 order — already settled, so
+                // the client skips the card step and goes straight to
+                // confirmation.
+                'client_secret' => $result->clientSecret,
+                'confirmation_url' => $confirmationUrl,
+            ]);
+        }
+
+        return redirect($confirmationUrl);
     }
 
     public function confirmation(Request $request, Order $order): Response

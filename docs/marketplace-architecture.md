@@ -52,10 +52,10 @@ Follows the shipped/planned convention of the other nine docs.
 | Layer | Shipped | Planned in this doc |
 |---|---|---|
 | **Catalog** | `products` (type, price, sale_price, status, SEO fields, thumbnail, gallery), `categories` (nested via parent_id) | + `product_variants`, `product_media`, `product_downloads`, `product_attributes`, `product_subcategories`, `product_tags` |
-| **Commerce** | `orders` + `order_items` (lifecycle: pending/paid/failed/refunded/cancelled), session `cart`, **checkout** (`CheckoutController` + `CheckoutService` → order + Stripe PaymentIntent + coupon redemption), **digital fulfillment** (`FulfillOrder` listener on `PaymentCompleted` → issues `License`/`Download` idempotently) | + checkout→project-package, multi-item split-tender, tax |
+| **Commerce** | `orders` + `order_items` (lifecycle: pending/paid/failed/refunded/cancelled), session `cart`, **checkout** (`CheckoutController` + `CheckoutService` → order + Stripe PaymentIntent + coupon redemption), **Stripe Elements card confirmation** (`checkout/index` two-phase: billing → `PaymentElement` → `confirmPayment`; content-negotiated JSON returns the intent `client_secret`; $0 orders skip the card step), **digital fulfillment** (`FulfillOrder` listener on `PaymentCompleted` → issues `License`/`Download` idempotently) | + checkout→project-package, multi-item split-tender, tax |
 | **Social** | `reviews` (rating + approved flag + verified purchase), `wishlists` | + separate `ratings` aggregate, `vendor_followers` |
 | **Discounts** | `coupons` | + `marketplace_promotions`, `marketplace_banners` |
-| **Storefront** | `products/index` (search/filter/sort), `products/show` (gallery, reviews, related), `cart/index` | + vendor store pages, category pages, search results, vendor dashboard |
+| **Storefront** | `products/index` (search/filter/sort), `products/show` (gallery, reviews, related), `cart/index`, `checkout/index` (Stripe Elements) | + vendor store pages, category pages, search results, vendor dashboard |
 | **Controllers** | `ProductController`, `CartController`, `Admin\ProductController` (CRUD + PlanGate limit) | + Vendor/Store/Order/Review controllers |
 | **Vendors** | "vendor" = the tenant today (one tenant = one seller); products are tenant-scoped | + `vendors`, `vendor_profiles`, `vendor_stores` for multi-vendor *within* a tenant |
 
