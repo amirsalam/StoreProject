@@ -9,12 +9,13 @@
 
 ## How to read this
 
-The 21 `*-architecture.md` docs are written in a **shipped-vs-planned**
+The 22 `*-architecture.md` docs are written in a **shipped-vs-planned**
 format: each describes the *target* architecture and marks, in a "status
 snapshot", what already ships versus what is planned. This index
 aggregates those snapshots into one verifiable picture, **grounded in an
 actual codebase survey** (models, migrations, services, controllers,
-pages, tests) — not in the docs' aspirations.
+pages, tests) — not in the docs' aspirations. Last survey: **2026-06-27**
+— 29 models, 40 migrations, 40 pages, 29 test files, 22 architecture docs.
 
 - ✅ **Completed** — shipped with code + tests; do not rebuild, only improve (respect backward compatibility).
 - 🟡 **Partial** — a real, working core ships; continue from where it stopped, do not duplicate.
@@ -219,29 +220,38 @@ Complexity = remaining build effort.
 ## Recommended next step
 
 Per the methodology (read → verify → continue partial → implement missing,
-in dependency order, PR-sized), two tracks are open and the choice changes
-what gets built next:
+in dependency order, PR-sized). **Update (2026-06-27):** the previously
+recommended *marketplace checkout → payment* slice has **shipped**
+(`c8d701b`), as has *Payment Gateways Management* (`9b87025`). The next
+PR-sized increments, in leverage order:
 
-1. **Documentation track — backfill foundational docs 00–11.** The
-   source-of-truth is incomplete: the cross-cutting docs that describe the
-   *already-shipped* architecture/tenancy/auth/DB/security/testing don't
-   exist. Writing them makes "documentation wins" actionable and is
-   low-risk. Closes the documentation gap before code work.
+1. **Marketplace — Stripe Elements card-confirmation UI** *(smallest, highest leverage)*.
+   Checkout already creates the order + `Payment` + a Stripe **PaymentIntent**
+   and returns the `client_secret`; the **only** missing link to
+   *captured* revenue is the browser card form (`@stripe/react-stripe-js`
+   `PaymentElement` → confirm → `PaymentCompleted` → the shipped
+   `FulfillOrder` listener already issues the license/download). One clean
+   front-end-focused PR closes the end-to-end revenue path. **Recommended.**
 
-2. **Code track — drive the highest-leverage *partial* module to 100%.**
-   Dependency order favors finishing **Marketplace checkout → payment
-   wiring** (it has the most shipped pieces, sits on the ✅ payments spine,
-   and unblocks billing/affiliate revenue) — or completing
-   **Projects/Tasks** (self-contained, medium complexity, good first
-   end-to-end vertical slice).
+2. **Marketplace — vendor stores/profiles.** No `Vendor`/`Store` model exists
+   yet; this unblocks the *multi-vendor* half of the marketplace (vendor
+   onboarding §7, vendor payouts, per-vendor catalog). Larger, backend-led.
 
-**Recommendation:** start with the **code track on the marketplace
-checkout→payment slice** — it converts the largest amount of already-shipped
-surface (catalog + cart + orders + payments) into a working revenue path,
-is a clean PR-sized vertical, and exercises the full stack
-(migration→model→service→event→controller→frontend→test→doc) the
-methodology prescribes. Backfill foundational docs 00–11 in parallel as a
-low-risk documentation PR.
+3. **Projects or Tasks vertical slice.** Self-contained, medium complexity,
+   a clean full-stack vertical (FSM/statuses → members → comments) — good if
+   a non-revenue domain slice is preferred.
+
+4. **Documentation track — backfill foundational docs 00–11.** The
+   source-of-truth is still incomplete: the cross-cutting docs describing
+   the *already-shipped* architecture/tenancy/auth/DB/security/testing don't
+   exist as standalone files. Low-risk; can run in parallel with any code PR.
+
+**Recommendation:** take **increment 1 (Stripe Elements card-confirmation
+UI)** — it converts the entire already-shipped commerce surface (catalog →
+cart → checkout → order → PaymentIntent → `FulfillOrder`) into *actually
+captured* money with the smallest possible change, and exercises the
+frontend→test→doc tail of the stack the methodology prescribes. Backfill
+foundational docs 00–11 in parallel as a low-risk documentation PR.
 
 > **Whichever track is chosen, the loop is the same:** read the module doc →
 > confirm the rows above → implement the next PR-sized increment in
@@ -258,3 +268,5 @@ low-risk documentation PR.
 | 2026-06-26 | Index created. Surveyed codebase (28 models, 39 migrations, 35 pages, 27 test files, 5 route files) and classified all modules. Identified the foundational-docs (00–11) gap. |
 | 2026-06-26 | **Marketplace checkout vertical shipped** (45% → 55%): `CheckoutService` + `CheckoutController` + `FulfillOrder` listener on `PaymentCompleted` + checkout/confirmation pages + 4-locale i18n + `CheckoutTest` (8 cases). Wired the previously-disabled cart checkout button. Closes the cart→order→payment→digital-delivery gap on the shipped payments spine. |
 | 2026-06-26 | **Payment Gateways Management shipped** (admin control center 25% → 35%): `payment_gateways` table + `PaymentGateway` model (encrypted credentials), `config/payment_gateways.php` registry (18 providers, config-only extensibility), `PaymentGatewayService` (CRUD/toggle/default/reorder/test, audited), `Admin\PaymentGatewayController` (secrets redacted), 4 React pages + sidebar nav + types, `PaymentGatewayTest` (11 cases). |
+| 2026-06-27 | **Architecture doc set completed (22 docs).** Added white-label, audit-logs, api-developer-portal, affiliate-referral, onboarding architecture docs since index creation — every prompted module now has a shipped-vs-planned doc. |
+| 2026-06-27 | **Index reconciled to DDDocs mode.** Re-surveyed code (29 models / 40 migrations / 40 pages / 29 tests / 22 docs). Corrected doc count (21 → 22). Refreshed "Recommended next step": the prior recommendation (marketplace checkout) has shipped, so the next PR-sized increment is now the **Stripe Elements card-confirmation UI** to close the captured-revenue path. Per-module rows re-verified accurate (no vendor/store model yet; no product search; no checkout card form yet). |
