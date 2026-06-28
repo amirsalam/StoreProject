@@ -10,12 +10,14 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\StoreController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Controllers\Workspace\BillingController as WorkspaceBillingController;
 use App\Http\Controllers\Workspace\InvoiceController as WorkspaceInvoiceController;
 use App\Http\Controllers\Workspace\ProjectController as WorkspaceProjectController;
 use App\Http\Controllers\Workspace\TaskController as WorkspaceTaskController;
 use App\Http\Controllers\Workspace\TeamController as WorkspaceTeamController;
+use App\Http\Controllers\Workspace\VendorController as WorkspaceVendorController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -25,6 +27,9 @@ Route::get('/', function () {
 
 Route::get('products', [ProductController::class, 'index'])->name('products.index');
 Route::get('products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+
+// Public vendor storefront.
+Route::get('store/{vendor:slug}', [StoreController::class, 'show'])->name('store.show');
 
 Route::get('cart', [CartController::class, 'show'])->name('cart.show');
 Route::post('cart', [CartController::class, 'add'])->name('cart.add');
@@ -72,6 +77,11 @@ Route::middleware(['auth'])
         Route::post('billing/change-plan', [WorkspaceBillingController::class, 'changePlan'])->name('billing.change');
         Route::post('billing/portal', [WorkspaceBillingController::class, 'portal'])->name('billing.portal');
         Route::post('billing/cancel', [WorkspaceBillingController::class, 'cancel'])->name('billing.cancel');
+
+        // Vendor store — open + manage your own storefront.
+        Route::get('vendor', [WorkspaceVendorController::class, 'edit'])->name('vendor.edit');
+        Route::post('vendor', [WorkspaceVendorController::class, 'store'])->name('vendor.store');
+        Route::put('vendor', [WorkspaceVendorController::class, 'update'])->name('vendor.update');
     });
 
 // Public Stripe webhook — no auth, signature verified inside the

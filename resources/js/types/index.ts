@@ -66,9 +66,35 @@ export interface Category {
     parent_id: number | null;
 }
 
+export interface VendorProfile {
+    id: number;
+    vendor_id: number;
+    company_name: string | null;
+    bio: string | null;
+    logo_path: string | null;
+    banner_path: string | null;
+    website: string | null;
+    social_links: Record<string, string> | null;
+    contact_email: string | null;
+    contact_phone: string | null;
+    country: string | null;
+    founded_year: number | null;
+}
+
+export interface Vendor {
+    id: number;
+    name: string;
+    slug: string;
+    status?: string;
+    is_verified?: boolean;
+    verified_at?: string | null;
+    profile?: VendorProfile | null;
+}
+
 export interface Product {
     id: number;
     category_id: number | null;
+    vendor_id?: number | null;
     title: string;
     slug: string;
     short_description: string | null;
@@ -83,6 +109,7 @@ export interface Product {
     is_featured: boolean;
     sales_count: number;
     category?: Pick<Category, 'id' | 'name' | 'slug'> | null;
+    vendor?: Pick<Vendor, 'id' | 'name' | 'slug' | 'status'> | null;
     created_at: string;
 }
 

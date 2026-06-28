@@ -24,7 +24,7 @@ class ProductController extends Controller
             ->where('status', Product::STATUS_PUBLISHED);
 
         if ($filters['search'] !== '') {
-            $term = '%' . $filters['search'] . '%';
+            $term = '%'.$filters['search'].'%';
             $query->where(function ($q) use ($term) {
                 $q->where('title', 'like', $term)
                     ->orWhere('short_description', 'like', $term);
@@ -68,7 +68,7 @@ class ProductController extends Controller
     {
         abort_unless($product->status === Product::STATUS_PUBLISHED, 404);
 
-        $product->load(['category:id,name,slug']);
+        $product->load(['category:id,name,slug', 'vendor:id,name,slug,status']);
 
         $reviews = $product->reviews()
             ->with('user:id,name')

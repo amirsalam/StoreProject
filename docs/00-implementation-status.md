@@ -14,10 +14,10 @@ format: each describes the *target* architecture and marks, in a "status
 snapshot", what already ships versus what is planned. This index
 aggregates those snapshots into one verifiable picture, **grounded in an
 actual codebase survey** (models, migrations, services, controllers,
-pages, tests) — not in the docs' aspirations. Last full survey: **2026-06-27**;
-**re-verified 2026-06-28** (code unchanged since `81c883c` — counts
-identical: 29 models, 40 migrations, 40 pages, 29 test files, 22
-architecture docs; no `Vendor`/`Store` model yet — matrix accurate).
+pages, tests) — not in the docs' aspirations. Last survey: **2026-06-28**
+(post vendor-stores: **31 models, 43 migrations, 42 pages, 31 test files**,
+22 architecture docs). The multi-vendor core now ships — see the
+marketplace row + changelog.
 
 - ✅ **Completed** — shipped with code + tests; do not rebuild, only improve (respect backward compatibility).
 - 🟡 **Partial** — a real, working core ships; continue from where it stopped, do not duplicate.
@@ -99,7 +99,7 @@ Complexity = remaining build effort.
 | F | **i18n / localization** | (28) | ✅ | 80% | Low | Low |
 | 06 | **Team / invitations** | (27) | 🟡 | 70% | Med | Low |
 | 16 | **Billing / subscriptions** | billing | 🟡 | 60% | High | Med |
-| 20 | **Marketplace** | marketplace | 🟡 | 65% | High | High |
+| 20 | **Marketplace** | marketplace | 🟡 | 72% | High | High |
 | 15 | **Notifications** | notifications | 🟡 | 30% | Med | Med |
 | 21 | **Mobile / responsive** | mobile | 🟡 | 35% | Low | Med |
 | 13 | **Projects** | projects | 🟡 | 25% | Med | Med |
@@ -159,7 +159,8 @@ Complexity = remaining build effort.
 
 ### 🟡 Marketplace — 65%
 - **Completed:** `categories`, `products` (+ admin CRUD with `StoreProductRequest` + `PlanGate` limit), `coupons` (`Coupon` model), `orders` + `order_items`, `licenses`, `downloads`, `reviews`, `wishlists`, storefront (`products/index`+`show`), cart (`CartService` + `CartController` + page). **Checkout vertical:** `CheckoutController` + `CheckoutService` (cart → order + items + pending `Payment` + Stripe PaymentIntent, server-side prices, coupon redemption with per-user/min-order/max-uses guards, $0-order fast-settle) + `FulfillOrder` listener on `PaymentCompleted` (issues `License`/`Download` idempotently) + `checkout/confirmation` page + i18n. **Stripe Elements card confirmation** (this PR): `checkout/index` rebuilt as a two-phase flow (billing → `@stripe/react-stripe-js` `PaymentElement` → `stripe.confirmPayment` with `return_url` = confirmation), `store()` content-negotiated to return the intent `client_secret` as JSON (redirect path unchanged → existing tests green), publishable key passed as a page prop, $0 orders skip the card step, no-key + processing + card-error states handled, 6 new i18n keys × 4 locales. Tests: ProductManagement, ProductPlanLimit, Cart, **Checkout** (11 cases — 3 new for the JSON intent contract).
-- **Missing:** vendor stores/profiles, product search/facets, vendor payouts, ratings moderation, tax, webhook-lag "processing" affordance on the confirmation page.
+- **Vendor stores (this PR):** `vendors` + `vendor_profiles` tables (tenant-scoped, soft-deletes), `Vendor`/`VendorProfile` models, `VendorService` (registerForUser/updateProfile/verify/suspend — DB transaction + `ActivityLog` audit + `VendorRegistered` event), `VendorPolicy` (owner/admin), `products.vendor_id` attribution, public storefront `StoreController` → `store/show` (profile header, logo/banner, verified badge, catalog grid, aggregate rating), `Workspace\VendorController` (open + manage own store) → `workspace/vendor/edit`, product→store backlink + `product.sold_by` i18n × 4 locales, `User::vendor()` relation, sidebar "My store" nav. Tests: `VendorStoreTest` (6) + `VendorProfileTest` (8). Verified: `php artisan migrate` (MySQL) green, smoke-test against real DB (register/unique-slug/attribution/profile/verify/suspend all pass), live HTTP `GET /store/{slug}` → 200 with correct data + 404 for unknown/inactive, `npm run build` + tsc + eslint clean.
+- **Missing:** `vendor_stores` (theme/featured/SEO/custom domain), admin vendor approval/moderation (vendors self-activate today), vendor payouts (wire to the shipped wallet/ledger), product search/facets, ratings moderation, tax, webhook-lag "processing" affordance on the confirmation page.
 - **Depends on:** payments ✅, billing 🟡, file-manager 🟡.
 
 ### 🟡 Notifications — 30%
@@ -232,10 +233,15 @@ PR-sized increments, in leverage order:
    `confirmPayment`; content-negotiated `client_secret`; $0 fast-path).
    The end-to-end captured-revenue path is now closed on the shipped spine.
 
-2. **Marketplace — vendor stores/profiles** *(now recommended)*. No
-   `Vendor`/`Store` model exists yet; this unblocks the *multi-vendor* half
-   of the marketplace (vendor onboarding §7, vendor payouts, per-vendor
-   catalog). Larger, backend-led — DB→model→service→controller→frontend.
+2. ~~**Marketplace — vendor stores/profiles**~~ ✅ **SHIPPED 2026-06-28**
+   (`vendors` + `vendor_profiles`, `VendorService`/`VendorPolicy`,
+   `products.vendor_id`, public `/store/{slug}`, `workspace/vendor`
+   management). The multi-vendor core is in. **Next vendor increments, in
+   order:** (a) **admin vendor approval/moderation** — vendors self-activate
+   today; add the pending→approve workflow + an admin queue (small, gates
+   §28 governance); (b) **vendor payouts** — wire vendor earnings to the
+   shipped wallet/ledger (the affiliate doc's split logic applies); (c)
+   `vendor_stores` (theme/featured/SEO/custom domain).
 
 3. **Marketplace — confirmation "processing" affordance** *(tiny follow-up)*.
    After Stripe's redirect the webhook may lag; the confirmation page should
@@ -251,11 +257,12 @@ PR-sized increments, in leverage order:
    the *already-shipped* architecture/tenancy/auth/DB/security/testing don't
    exist as standalone files. Low-risk; can run in parallel with any code PR.
 
-**Recommendation:** take **increment 2 (vendor stores/profiles)** — with the
-revenue path now closed, the largest remaining marketplace gap is the
-*multi-vendor* dimension, and it's the prerequisite for vendor payouts +
-the affiliate/vendor revenue split. Increment 3 is a clean tiny follow-up if
-a small PR is preferred first. Backfill foundational docs 00–11 in parallel.
+**Recommendation:** with vendor stores shipped, take **increment 2a (admin
+vendor approval/moderation)** next — it's small, closes the self-activation
+gap, and is the prerequisite for trustworthy multi-vendor onboarding +
+§28 governance. Then **2b (vendor payouts)** to complete the revenue loop
+for sellers. Increment 3 (confirmation affordance) remains a clean tiny PR;
+backfill foundational docs 00–11 in parallel.
 
 > **Whichever track is chosen, the loop is the same:** read the module doc →
 > confirm the rows above → implement the next PR-sized increment in
@@ -276,3 +283,4 @@ a small PR is preferred first. Backfill foundational docs 00–11 in parallel.
 | 2026-06-27 | **Index reconciled to DDDocs mode.** Re-surveyed code (29 models / 40 migrations / 40 pages / 29 tests / 22 docs). Corrected doc count (21 → 22). Refreshed "Recommended next step": the prior recommendation (marketplace checkout) has shipped, so the next PR-sized increment is now the **Stripe Elements card-confirmation UI** to close the captured-revenue path. Per-module rows re-verified accurate (no vendor/store model yet; no product search; no checkout card form yet). |
 | 2026-06-27 | **Stripe Elements card-confirmation UI shipped** (marketplace 55% → 65%): `@stripe/stripe-js` + `@stripe/react-stripe-js`; `checkout/index` rebuilt two-phase (billing → `PaymentElement` → `confirmPayment` with `return_url`); `CheckoutController::store` content-negotiated to return the intent `client_secret` as JSON (legacy redirect path preserved → 8 existing tests stay green); publishable key surfaced as a page prop; $0 orders skip the card step; no-key/processing/card-error states; 6 i18n keys × 4 locales; 3 new `CheckoutTest` cases (JSON intent contract, 422 coupon, $0 null-secret) → 11 total. Verified: tsc (clean for checkout), eslint (clean), `npm run build` (green). Closes the end-to-end *captured-revenue* path on the shipped payments spine. Next: vendor stores. |
 | 2026-06-28 | **DDDocs verification pass (no code change).** Re-ran the Step-2 survey against live code: counts identical to 2026-06-27 (29 models / 40 migrations / 40 pages / 29 tests / 22 docs), tree clean, no `Vendor`/`Store` model — every matrix row re-confirmed accurate. Commits since the last code-bearing change (`81c883c`) are documentation-only (the architecture-doc set). No completion %s moved. Recommended next increment stands: **marketplace vendor stores/profiles** (the multi-vendor gap). |
+| 2026-06-28 | **Vendor stores shipped** (marketplace 65% → 72%; +2 models / +3 migrations / +2 pages / +2 tests → 31/43/42/31). Multi-vendor core: `vendors` + `vendor_profiles` (tenant-scoped, soft-deletes, `tenant_id` nullable per the business-table convention), `Vendor`/`VendorProfile` models, `VendorService` (register/updateProfile/verify/suspend — transaction + `ActivityLog` + `VendorRegistered` event), `VendorPolicy` (owner/admin), `products.vendor_id` attribution, public `StoreController` → `store/show`, `Workspace\VendorController` → `workspace/vendor/edit` (open + manage own store), `User::vendor()`, product→store backlink + `product.sold_by` i18n ×4, sidebar "My store". Verified: MySQL migrate green; real-DB smoke test (register/unique-slug/attribution/profile/verify/suspend) pass; live `GET /store/pixelforge` → 200 with correct data, unknown → 404; build + tsc + eslint clean. PHPUnit `VendorStoreTest` (6) + `VendorProfileTest` (8) written (run in CI — local `pdo_sqlite` absent). Next: admin vendor approval/moderation, then vendor payouts. |

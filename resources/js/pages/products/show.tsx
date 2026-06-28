@@ -90,6 +90,11 @@ export default function ProductShow({ product, reviews, relatedProducts, average
                             {product.version && <span className="text-xs text-muted-foreground">v{product.version}</span>}
                         </div>
                         <h1 className="text-3xl font-semibold tracking-tight">{product.title}</h1>
+                        {product.vendor && product.vendor.status === 'active' && (
+                            <Link href={route('store.show', product.vendor.slug)} className="text-sm text-muted-foreground hover:text-foreground">
+                                {t('product.sold_by')} <span className="font-medium text-foreground">{product.vendor.name}</span>
+                            </Link>
+                        )}
                         {reviewsCount > 0 && (
                             <div className="flex items-center gap-2 text-sm">
                                 <RatingStars value={averageRating} />

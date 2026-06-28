@@ -96,6 +96,7 @@ return [
     ],
 
     'product' => [
+        'sold_by' => 'Sold by',
         'add_to_cart' => 'Add to cart',
         'adding' => 'Adding…',
         'added' => 'Added to cart',
