@@ -14,8 +14,10 @@ format: each describes the *target* architecture and marks, in a "status
 snapshot", what already ships versus what is planned. This index
 aggregates those snapshots into one verifiable picture, **grounded in an
 actual codebase survey** (models, migrations, services, controllers,
-pages, tests) — not in the docs' aspirations. Last survey: **2026-06-27**
-— 29 models, 40 migrations, 40 pages, 29 test files, 22 architecture docs.
+pages, tests) — not in the docs' aspirations. Last full survey: **2026-06-27**;
+**re-verified 2026-06-28** (code unchanged since `81c883c` — counts
+identical: 29 models, 40 migrations, 40 pages, 29 test files, 22
+architecture docs; no `Vendor`/`Store` model yet — matrix accurate).
 
 - ✅ **Completed** — shipped with code + tests; do not rebuild, only improve (respect backward compatibility).
 - 🟡 **Partial** — a real, working core ships; continue from where it stopped, do not duplicate.
@@ -273,3 +275,4 @@ a small PR is preferred first. Backfill foundational docs 00–11 in parallel.
 | 2026-06-27 | **Architecture doc set completed (22 docs).** Added white-label, audit-logs, api-developer-portal, affiliate-referral, onboarding architecture docs since index creation — every prompted module now has a shipped-vs-planned doc. |
 | 2026-06-27 | **Index reconciled to DDDocs mode.** Re-surveyed code (29 models / 40 migrations / 40 pages / 29 tests / 22 docs). Corrected doc count (21 → 22). Refreshed "Recommended next step": the prior recommendation (marketplace checkout) has shipped, so the next PR-sized increment is now the **Stripe Elements card-confirmation UI** to close the captured-revenue path. Per-module rows re-verified accurate (no vendor/store model yet; no product search; no checkout card form yet). |
 | 2026-06-27 | **Stripe Elements card-confirmation UI shipped** (marketplace 55% → 65%): `@stripe/stripe-js` + `@stripe/react-stripe-js`; `checkout/index` rebuilt two-phase (billing → `PaymentElement` → `confirmPayment` with `return_url`); `CheckoutController::store` content-negotiated to return the intent `client_secret` as JSON (legacy redirect path preserved → 8 existing tests stay green); publishable key surfaced as a page prop; $0 orders skip the card step; no-key/processing/card-error states; 6 i18n keys × 4 locales; 3 new `CheckoutTest` cases (JSON intent contract, 422 coupon, $0 null-secret) → 11 total. Verified: tsc (clean for checkout), eslint (clean), `npm run build` (green). Closes the end-to-end *captured-revenue* path on the shipped payments spine. Next: vendor stores. |
+| 2026-06-28 | **DDDocs verification pass (no code change).** Re-ran the Step-2 survey against live code: counts identical to 2026-06-27 (29 models / 40 migrations / 40 pages / 29 tests / 22 docs), tree clean, no `Vendor`/`Store` model — every matrix row re-confirmed accurate. Commits since the last code-bearing change (`81c883c`) are documentation-only (the architecture-doc set). No completion %s moved. Recommended next increment stands: **marketplace vendor stores/profiles** (the multi-vendor gap). |
