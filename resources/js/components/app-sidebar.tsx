@@ -2,9 +2,23 @@ import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { type NavItem, type SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
+import {
+    BookOpen,
+    CreditCard,
+    FileText,
+    Folder,
+    FolderKanban,
+    LayoutGrid,
+    ListTodo,
+    Package,
+    Palette,
+    Store,
+    UserCog,
+    Users,
+    Wallet,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -12,6 +26,67 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         url: '/dashboard',
         icon: LayoutGrid,
+    },
+];
+
+const workspaceNavItems: NavItem[] = [
+    {
+        title: 'Projects',
+        url: '/workspace/projects',
+        icon: FolderKanban,
+    },
+    {
+        title: 'Tasks',
+        url: '/workspace/tasks',
+        icon: ListTodo,
+    },
+    {
+        title: 'Invoices',
+        url: '/workspace/invoices',
+        icon: FileText,
+    },
+    {
+        title: 'My store',
+        url: '/workspace/vendor',
+        icon: Store,
+    },
+    {
+        title: 'Team',
+        url: '/workspace/team',
+        icon: UserCog,
+    },
+    {
+        title: 'Billing',
+        url: '/workspace/billing',
+        icon: CreditCard,
+    },
+];
+
+const adminNavItems: NavItem[] = [
+    {
+        title: 'Products',
+        url: '/admin/products',
+        icon: Package,
+    },
+    {
+        title: 'Vendors',
+        url: '/admin/vendors',
+        icon: Store,
+    },
+    {
+        title: 'Users',
+        url: '/admin/users',
+        icon: Users,
+    },
+    {
+        title: 'Branding',
+        url: '/admin/branding',
+        icon: Palette,
+    },
+    {
+        title: 'Payment Gateways',
+        url: '/admin/payment-gateways',
+        icon: Wallet,
     },
 ];
 
@@ -29,6 +104,9 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage<SharedData>().props;
+    const isAdmin = Boolean(auth?.user?.is_admin);
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -45,6 +123,8 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                <NavMain items={workspaceNavItems} label="Workspace" />
+                {isAdmin && <NavMain items={adminNavItems} label="Admin" />}
             </SidebarContent>
 
             <SidebarFooter>

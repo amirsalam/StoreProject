@@ -21,10 +21,10 @@ class ProductController extends Controller
 
         $query = Product::query()
             ->with('category:id,name,slug')
-            ->where('status', Product::STATUS_PUBLISHED);
+            ->listed();
 
         if ($filters['search'] !== '') {
-            $term = '%' . $filters['search'] . '%';
+            $term = '%'.$filters['search'].'%';
             $query->where(function ($q) use ($term) {
                 $q->where('title', 'like', $term)
                     ->orWhere('short_description', 'like', $term);
@@ -66,9 +66,9 @@ class ProductController extends Controller
 
     public function show(Product $product): Response
     {
-        abort_unless($product->status === Product::STATUS_PUBLISHED, 404);
+        $product->load(['category:id,name,slug', 'vendor:id,name,slug,status']);
 
-        $product->load(['category:id,name,slug']);
+        abort_unless($product->isListed(), 404);
 
         $reviews = $product->reviews()
             ->with('user:id,name')
@@ -78,7 +78,7 @@ class ProductController extends Controller
             ->get();
 
         $relatedProducts = Product::query()
-            ->where('status', Product::STATUS_PUBLISHED)
+            ->listed()
             ->where('id', '!=', $product->id)
             ->when($product->category_id, fn ($q) => $q->where('category_id', $product->category_id))
             ->with('category:id,name,slug')
