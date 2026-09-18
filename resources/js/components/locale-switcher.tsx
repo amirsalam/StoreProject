@@ -18,7 +18,6 @@ const LOCALE_META: Record<Locale, { label: string; flag: string }> = {
 
 export default function LocaleSwitcher() {
     const { t, locale, switchLocale } = useTranslate();
-    const current = LOCALE_META[locale] ?? LOCALE_META.en;
 
     return (
         <DropdownMenu>

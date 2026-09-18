@@ -164,6 +164,7 @@ class CartTest extends TestCase
         $product = Product::factory()->digitalDownload()->create([
             'status' => Product::STATUS_PUBLISHED,
             'price' => 12.34,
+            'sale_price' => null, // factory puts ~25% of products on sale at a random price
         ]);
 
         $this->post('/cart', ['product_id' => $product->id]);

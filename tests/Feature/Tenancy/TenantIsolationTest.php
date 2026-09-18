@@ -5,12 +5,15 @@ namespace Tests\Feature\Tenancy;
 use App\Models\BlogPost;
 use App\Models\Category;
 use App\Models\Coupon;
+use App\Models\DailyMetric;
 use App\Models\Download;
 use App\Models\Invoice;
 use App\Models\License;
+use App\Models\Notification;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Models\PaymentGateway;
 use App\Models\Product;
 use App\Models\Project;
 use App\Models\Review;
@@ -18,6 +21,8 @@ use App\Models\Subscription;
 use App\Models\Task;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\Vendor;
+use App\Models\Wallet;
 use App\Models\Wishlist;
 use App\Tenancy\BelongsToTenant;
 use App\Tenancy\TenantContext;
@@ -70,6 +75,30 @@ class TenantIsolationTest extends TestCase
             'Project' => [Project::class, fn () => Project::factory()->create()],
             'Task' => [Task::class, fn () => Task::factory()->create()],
             'Invoice' => [Invoice::class, fn () => Invoice::factory()->create()],
+            'Vendor' => [Vendor::class, fn () => Vendor::factory()->create()],
+            'PaymentGateway' => [PaymentGateway::class, fn () => PaymentGateway::factory()->create()],
+            'Wallet' => [
+                Wallet::class,
+                fn () => Wallet::create([
+                    'user_id' => User::factory()->create()->id,
+                    'currency' => 'USD',
+                ]),
+            ],
+            'Notification' => [
+                Notification::class,
+                fn () => Notification::create([
+                    'user_id' => User::factory()->create()->id,
+                    'type' => 'order.created',
+                    'title' => 'X',
+                ]),
+            ],
+            'DailyMetric' => [
+                DailyMetric::class,
+                fn () => DailyMetric::create([
+                    'metric_key' => DailyMetric::KEY_REVENUE_CENTS,
+                    'recorded_on' => now()->toDateString(),
+                ]),
+            ],
         ];
     }
 

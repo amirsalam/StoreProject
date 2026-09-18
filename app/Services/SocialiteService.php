@@ -61,7 +61,8 @@ class SocialiteService
 
             // 3. Brand new user
             if (! $user) {
-                $user = User::query()->create([
+                // forceCreate: email_verified_at is deliberately not fillable.
+                $user = User::query()->forceCreate([
                     'name' => $this->resolveName($payload, $email),
                     'email' => $email ?? "{$provider}-{$providerId}@users.noreply.local",
                     'password' => bcrypt(Str::random(40)),

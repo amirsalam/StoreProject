@@ -8,6 +8,7 @@ use App\Http\Requests\Workspace\StoreVendorRequest;
 use App\Http\Requests\Workspace\UpdateVendorProfileRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -49,7 +50,7 @@ class VendorController extends Controller
     public function update(UpdateVendorProfileRequest $request): RedirectResponse
     {
         $vendor = $request->user()->vendor()->firstOrFail();
-        $this->authorize('update', $vendor);
+        Gate::authorize('update', $vendor);
 
         $this->vendors->updateProfile(
             $vendor,

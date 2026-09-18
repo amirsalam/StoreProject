@@ -128,10 +128,12 @@ class BrandingService
         // Strip event handler attributes (on*=)
         $contents = preg_replace('/\son[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $contents) ?? $contents;
 
-        // Neutralize javascript: / data: hrefs in href/xlink:href
+        // Neutralize javascript: / data: hrefs in href/xlink:href. Each quote
+        // style is matched separately so the value runs to its own closing
+        // quote — `href="javascript:alert('x')"` must not stop at the inner '.
         $contents = preg_replace(
-            '/(href|xlink:href)\s*=\s*(["\'])\s*(javascript|data|vbscript):[^"\']*\2/i',
-            '$1=$2#$2',
+            '/(href|xlink:href)\s*=\s*(?:"\s*(?:javascript|data|vbscript):[^"]*"|\'\s*(?:javascript|data|vbscript):[^\']*\'|(?:javascript|data|vbscript):[^\s>]*)/i',
+            '$1="#"',
             $contents,
         ) ?? $contents;
 

@@ -114,6 +114,7 @@ class MetricsAggregatorTest extends TestCase
             ->get();
 
         $this->assertCount(3, $rows);
-        $this->assertSame(1000, $rows->sum('value'));
+        // $10.00 per day → 1000 cents on each of the 3 days.
+        $this->assertSame([1000, 1000, 1000], $rows->pluck('value')->map(fn ($v) => (int) $v)->all());
     }
 }

@@ -35,28 +35,31 @@ trait BelongsToTenant
     public static function bootBelongsToTenant(): void
     {
         static::addGlobalScope('tenant', function (Builder $query) {
-            // Console contexts (artisan, queue workers without tenant runner,
-            // tinker, factories during testing) are exempt — they typically
-            // operate cross-tenant and the global scope would silently empty
-            // every query. Tenant-aware jobs should still set context
-            // explicitly before running their work.
+            $tenantId = app(TenantContext::class)->id();
+
+            // A tenant in context always scopes the query — in web requests
+            // AND in console contexts. Tenant-aware jobs set context
+            // explicitly before running their work, and must get the same
+            // isolation a web request does.
+            if ($tenantId !== null) {
+                $table = $query->getModel()->getTable();
+                $query->where("{$table}.tenant_id", $tenantId);
+
+                return;
+            }
+
+            // No tenant in context. Console contexts (artisan, queue workers
+            // without tenant runner, tinker, factories during testing) are
+            // exempt — they typically operate cross-tenant and the global
+            // scope would silently empty every query.
             if (App::runningInConsole()) {
                 return;
             }
 
-            $tenantId = app(TenantContext::class)->id();
-
-            if ($tenantId === null) {
-                // No tenant in context AND we're in a web/api request — refuse
-                // to return any data. A leak here would silently expose every
-                // tenant's rows to a request that escaped ResolveTenant.
-                $query->whereRaw('1 = 0');
-
-                return;
-            }
-
-            $table = $query->getModel()->getTable();
-            $query->where("{$table}.tenant_id", $tenantId);
+            // No tenant in context AND we're in a web/api request — refuse
+            // to return any data. A leak here would silently expose every
+            // tenant's rows to a request that escaped ResolveTenant.
+            $query->whereRaw('1 = 0');
         });
 
         static::creating(function (Model $model) {

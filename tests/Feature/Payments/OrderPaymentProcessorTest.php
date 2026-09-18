@@ -50,7 +50,7 @@ class OrderPaymentProcessorTest extends TestCase
 
     public function test_payment_intent_succeeded_transitions_payment_and_order(): void
     {
-        Event::fake();
+        Event::fake([PaymentCompleted::class]);
 
         $payment = $this->makePayment();
         $processor = app(OrderPaymentProcessor::class);
