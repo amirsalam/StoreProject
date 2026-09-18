@@ -24,10 +24,14 @@ marketplace row + changelog.
 - ❌ **Planned** — documented only; implement incrementally, dependency-order, one PR-sized feature at a time.
 
 Completion % is a grounded estimate from code presence + test coverage,
-not a precise metric. Local test execution is currently blocked
-(`pdo_sqlite` not enabled in the local PHP); the suite runs in CI — so
-"tests" below means *tests exist in the repo*, verified by file, not by a
-local green run.
+not a precise metric. **Tests run locally** (since 2026-09-18): the
+`pdo_sqlite` DLL ships with the local PHP but isn't enabled in `php.ini`,
+so load it per-invocation —
+`php -d extension=pdo_sqlite -d extension=sqlite3 vendor/bin/phpunit`
+(first confirm `bootstrap/cache/config.php` is absent, or `RefreshDatabase`
+would hit the MySQL dev DB). CI runs the same suite on Linux.
+Rows below marked "tests" before 2026-09-18 were verified by file only —
+the 2026-09-18 CI pass found several of them failing (see changelog).
 
 ---
 
@@ -126,12 +130,13 @@ Complexity = remaining build effort.
 ## Per-module verification
 
 ### ✅ Authentication & sessions — 95%
-- **Completed:** email register (`RegisteredUserController`, audited), login, logout, password reset/confirm, email verification (`VerifyEmailController` + `email_verified_at`), 2FA (`TwoFactorService` + challenge), social login (`SocialiteController` + `SocialAccount`), session management. Tests: Authentication, Registration, EmailVerification, PasswordReset, PasswordConfirmation, Socialite, TwoFactor.
+- **Completed:** email register (`RegisteredUserController`, audited), login, logout, password reset/confirm, email verification (`VerifyEmailController` + `email_verified_at`), 2FA (`TwoFactorService` + challenge), social login (`SocialiteController` + `SocialAccount`; social signups pre-verified via `forceCreate` — fixed 2026-09-18, `email_verified_at` was silently dropped by mass assignment), session management. Tests: Authentication, Registration, EmailVerification, PasswordReset, PasswordConfirmation, Socialite, TwoFactor.
 - **Missing:** SSO/OIDC, phone verification, CAPTCHA, signup fraud checks.
 - **Depends on:** —. **Improve, don't rebuild.**
 
 ### ✅ Multi-tenancy — 90%
-- **Completed:** `tenants` + `tenant_user` pivot, `BelongsToTenant` trait + global scope, `add_tenant_id_to_business_tables`, `Tenant` (owner/users/roleOf/currentSubscription/plan), `TenantIsolationTest`.
+- **Completed:** `tenants` + `tenant_user` pivot, `BelongsToTenant` trait + global scope, `add_tenant_id_to_business_tables`, `Tenant` (owner/users/roleOf/currentSubscription/plan), `TenantIsolationTest` (20 models × 2 cases + completeness check).
+- **Fixed 2026-09-18 (`520d339`):** the global scope returned early whenever `runningInConsole()`, so it never filtered in tests **or in queue jobs/commands that set a tenant context** — isolation was unenforced there and `TenantIsolationTest` had never passed. The scope now always applies when a tenant is in context; the console exemption covers only the no-tenant case. Behavioral change for console code that sets a tenant then expects cross-tenant reads.
 - **Missing:** custom-domain resolution flow (column exists; verification/SSL planned — white-label §7), per-tenant data residency.
 - **Depends on:** —. **High blast radius — change with care + tests.**
 
@@ -196,7 +201,7 @@ Complexity = remaining build effort.
 - **Missing:** gateway middleware stack, OAuth2/OIDC, outbound webhooks, OpenAPI/SDKs, the portal, metering/monetization.
 
 ### 🟡 White-label / branding — 20%
-- **Completed:** single-tenant `BrandingService` (title+logo, sanitize/optimize), admin branding page, CSS token system, `BrandLockup`, `BrandingTest`.
+- **Completed:** single-tenant `BrandingService` (title+logo, sanitize/optimize), admin branding page, CSS token system, `BrandLockup`, `BrandingTest`. SVG href sanitizer XSS bypass (`href="javascript:alert('x')"` slipped past on the inner quote) fixed 2026-09-18.
 - **Missing:** per-tenant scoping, theme/typography/domain/email/PDF branding, feature tiers.
 
 ### 🟡 Onboarding wizard — 20%
@@ -284,3 +289,4 @@ backfill foundational docs 00–11 in parallel.
 | 2026-06-27 | **Stripe Elements card-confirmation UI shipped** (marketplace 55% → 65%): `@stripe/stripe-js` + `@stripe/react-stripe-js`; `checkout/index` rebuilt two-phase (billing → `PaymentElement` → `confirmPayment` with `return_url`); `CheckoutController::store` content-negotiated to return the intent `client_secret` as JSON (legacy redirect path preserved → 8 existing tests stay green); publishable key surfaced as a page prop; $0 orders skip the card step; no-key/processing/card-error states; 6 i18n keys × 4 locales; 3 new `CheckoutTest` cases (JSON intent contract, 422 coupon, $0 null-secret) → 11 total. Verified: tsc (clean for checkout), eslint (clean), `npm run build` (green). Closes the end-to-end *captured-revenue* path on the shipped payments spine. Next: vendor stores. |
 | 2026-06-28 | **DDDocs verification pass (no code change).** Re-ran the Step-2 survey against live code: counts identical to 2026-06-27 (29 models / 40 migrations / 40 pages / 29 tests / 22 docs), tree clean, no `Vendor`/`Store` model — every matrix row re-confirmed accurate. Commits since the last code-bearing change (`81c883c`) are documentation-only (the architecture-doc set). No completion %s moved. Recommended next increment stands: **marketplace vendor stores/profiles** (the multi-vendor gap). |
 | 2026-06-28 | **Vendor stores shipped** (marketplace 65% → 72%; +2 models / +3 migrations / +2 pages / +2 tests → 31/43/42/31). Multi-vendor core: `vendors` + `vendor_profiles` (tenant-scoped, soft-deletes, `tenant_id` nullable per the business-table convention), `Vendor`/`VendorProfile` models, `VendorService` (register/updateProfile/verify/suspend — transaction + `ActivityLog` + `VendorRegistered` event), `VendorPolicy` (owner/admin), `products.vendor_id` attribution, public `StoreController` → `store/show`, `Workspace\VendorController` → `workspace/vendor/edit` (open + manage own store), `User::vendor()`, product→store backlink + `product.sold_by` i18n ×4, sidebar "My store". Verified: MySQL migrate green; real-DB smoke test (register/unique-slug/attribution/profile/verify/suspend) pass; live `GET /store/pixelforge` → 200 with correct data, unknown → 404; build + tsc + eslint clean. PHPUnit `VendorStoreTest` (6) + `VendorProfileTest` (8) written (run in CI — local `pdo_sqlite` absent). Next: admin vendor approval/moderation, then vendor payouts. |
+| 2026-09-18 | **CI green on PR #1 + test-suite truth pass** (`520d339`). CI had 32 failing tests + 1 lint error; several were real bugs the tests caught: (1) tenant global scope skipped under `runningInConsole()` → never enforced in tests/queue jobs (multi-tenancy row updated); (2) SVG sanitizer `javascript:` href bypass via mixed quotes (XSS); (3) social signups unverified (`email_verified_at` not fillable → dropped); (4) `Workspace\VendorController::update` called `$this->authorize()`, absent from Laravel 12's base controller → every vendor profile save 500'd. Env/test fixes: published `config/inertia.php` (`js/pages`; package default `js/Pages` fails on case-sensitive Linux), scoped `Event::fake`, corrected a metrics assertion, de-flaked a cart test (factory random `sale_price`), 5 missing models added to the isolation matrix. Local test execution unblocked (see "How to read this"). **234 tests green.** |
