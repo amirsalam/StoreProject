@@ -56,12 +56,14 @@ Follows the shipped/planned convention of the other nine docs.
 | **Social** | `reviews` (rating + approved flag + verified purchase), `wishlists` | + separate `ratings` aggregate, `vendor_followers` |
 | **Discounts** | `coupons` | + `marketplace_promotions`, `marketplace_banners` |
 | **Storefront** | `products/index` (search/filter/sort), `products/show` (gallery, reviews, related, **vendor backlink**), `cart/index`, `checkout/index` (Stripe Elements), **`store/show` (public vendor storefront — profile header, logo/banner, verified badge, catalog grid, aggregate rating)** | + category pages, search results, vendor analytics dashboard |
-| **Controllers** | `ProductController`, `CartController`, `Admin\ProductController` (CRUD + PlanGate limit), **`StoreController` (public store), `Workspace\VendorController` (open + manage own store)** | + Order/Review controllers, admin vendor moderation |
-| **Vendors** | **shipped**: `vendors` + `vendor_profiles` tables, `Vendor`/`VendorProfile` models (BelongsToTenant + SoftDeletes), `VendorService` (register/updateProfile/verify/suspend — transaction + audit + `VendorRegistered` event), `VendorPolicy`, products carry `vendor_id`, public store at `/store/{vendor:slug}`, self-serve store management in workspace, verified badge | + `vendor_stores` (theme/featured/SEO/custom_domain), admin moderation/approval workflow, vendor payouts, vendor followers |
+| **Controllers** | `ProductController`, `CartController`, `Admin\ProductController` (CRUD + PlanGate limit), **`StoreController` (public store), `Workspace\VendorController` (open + manage own store), `Admin\VendorController` (moderation queue)** | + Order/Review controllers, tenant-owner moderation |
+| **Vendors** | **shipped**: `vendors` + `vendor_profiles` tables, `Vendor`/`VendorProfile` models (BelongsToTenant + SoftDeletes), `VendorService` (register/updateProfile + guarded **approve/reject/suspend/reinstate/verify** — row-locked transitions + audit + `VendorRegistered`/`VendorStatusChanged` events), `VendorPolicy` (+ `moderate`), products carry `vendor_id`, public store at `/store/{vendor:slug}`, self-serve store management in workspace, verified badge, **admin approval queue + per-tenant approval mode (§11/§21)**, **catalog gated on vendor status** (`Product::listed()`) | + `vendor_stores` (theme/featured/SEO/custom_domain), vendor payouts, vendor followers, KYC verification, tenant-owner moderation |
 
 > The single-vendor storefront is real and working (seeded products, cart, reviews, admin CRUD). This doc's main expansion is **multi-vendor within a tenant**: today one tenant = one seller; the spec adds vendor entities so a tenant can host many sellers (a true marketplace), each with a store, while keeping the shipped product/order/review tables as the foundation.
 >
-> **Update — multi-vendor core shipped.** The `vendors` + `vendor_profiles` entities, the `Vendor`/`VendorProfile` models, `VendorService` (lifecycle + audit + `VendorRegistered`), `VendorPolicy`, product→vendor attribution (`products.vendor_id`), the public store page (`/store/{vendor:slug}`), and self-serve store management (`workspace/vendor`) now ship. A tenant can host many sellers, each with a public storefront. Remaining vendor work: the `vendor_stores` table (theme/featured/SEO/custom domain), an admin approval/moderation workflow (vendors currently self-activate), vendor payouts (wired to the shipped wallet/ledger), and vendor followers.
+> **Update — multi-vendor core shipped.** The `vendors` + `vendor_profiles` entities, the `Vendor`/`VendorProfile` models, `VendorService` (lifecycle + audit + `VendorRegistered`), `VendorPolicy`, product→vendor attribution (`products.vendor_id`), the public store page (`/store/{vendor:slug}`), and self-serve store management (`workspace/vendor`) now ship. A tenant can host many sellers, each with a public storefront. Remaining vendor work: the `vendor_stores` table (theme/featured/SEO/custom domain), vendor payouts (wired to the shipped wallet/ledger), and vendor followers.
+>
+> **Update — vendor approval/moderation shipped (2026-09-18).** New vendors no longer self-activate: they start `pending` under the default *manual* approval mode and an admin approves or rejects them from `/admin/vendors`; active vendors can be suspended and reinstated. A pending/rejected/suspended vendor's catalog is unlisted everywhere a customer can reach it. See §11 for the shipped behavior and its known gaps.
 
 ---
 
@@ -392,6 +394,21 @@ stateDiagram-v2
 - **Performance monitoring + scoring** — the vendor performance score (analytics §4): GMV, refund rate, rating, on-time, retention.
 - **Health reports** — per-vendor dashboard; at-risk vendors flagged for outreach.
 
+#### Shipped (2026-09-18) — approval & moderation
+
+| Concern | Implementation |
+|---|---|
+| State machine | `VendorService::TRANSITIONS` enforces exactly the diagram above: `approve` pending→active, `reject` pending→rejected, `suspend` active→suspended, `reinstate` suspended→active. Any other move throws `InvalidVendorTransition` (shown to the admin as an error; no state change, no audit, no event). The row is re-read `lockForUpdate` inside the transaction so concurrent admins can't both pass the check. |
+| `rejected` | Terminal, per the diagram — a rejected owner cannot re-apply (one store per user). Revisit if re-application is wanted. |
+| Verification | `verify` stamps `verified_at` (the badge) and is **separate from approval**: only an `active` vendor can be verified. Identity/KYC evidence is not collected yet — the badge is an admin attestation. |
+| Actors | Platform admins (`is_admin` / `admin` role) via `VendorPolicy::moderate`; an owner can never moderate their own store. **Tenant-owner moderation (this section's intro) is not built** — needs a workspace-side queue. |
+| Reasons | Optional reason (≤ 500 chars) on reject/suspend → stored in the `activity_logs` properties and used as the owner's notification body. No schema column. |
+| Notifications | `VendorStatusChanged` (`ShouldDispatchAfterCommit`) → `NotifyVendorOfStatusChange` → in-app notification (`vendor.approved` / `.rejected` / `.suspended` / `.reinstated`) linking to `workspace/vendor`. **Email** waits on the notifications module's channel fan-out (§14). |
+| Audit | `vendor.registered` (now with starting status), `vendor.approved`/`.rejected`/`.suspended`/`.reinstated` (from/to/reason), `vendor.verified`, `vendor.approval_mode_changed`. |
+| Listing gate | `Product::scopeListed()` = published **and** (no vendor **or** vendor `active`); applied to the catalog, product page (404), related products, add-to-cart (404), and `CartService::lineItems()` — which checkout prices from, so a product whose vendor is suspended mid-session drops out of the cart and cannot be bought. Operator-owned products (`vendor_id` null) are unaffected. The public store page already required an active vendor. |
+| Owner UX | `workspace/vendor` shows a persistent banner for pending / rejected / suspended; the open-store flash says "submitted for review" under manual mode. |
+| Suspension → wallet freeze | **Not built** — vendors have no wallet until vendor payouts (next increment) wire them to the ledger. Suspension currently hides the store + catalog only. |
+
 ---
 
 ## 12. Marketplace commissions
@@ -547,7 +564,9 @@ API-first; tenant-scoped; cross-tenant → 404. Public read endpoints
 | `PUT` | `/vendor/store` | Store settings |
 | `GET` | `/vendor/analytics` | Vendor performance (analytics §4) |
 | **Admin** | | |
-| `POST` | `/admin/vendors/{id}/approve` / `/suspend` | Vendor management |
+| `GET` | `/admin/vendors` | **Shipped** — moderation queue (`?status=` pending/active/suspended/rejected, `?search=` name/slug/owner email; pending first; per-status counts) |
+| `POST` | `/admin/vendors/{id}/approve` / `/reject` / `/suspend` / `/reinstate` / `/verify` | **Shipped** — vendor management; `reject`/`suspend` accept an optional `reason` (≤ 500). Illegal transitions → session error `vendor` |
+| `PUT` | `/admin/vendors/approval-mode` | **Shipped** — `{ mode: manual \| auto }` for the tenant in context (§21) |
 
 Listing response carries `data` + `meta` (pagination + applied filters +
 facet counts) — the shipped paginated shape, extended with facets.
@@ -647,7 +666,7 @@ Each tenant operates its own marketplace (white-label):
 - **Categories** — tenant-defined taxonomy.
 - **Commission rules** — per-tenant `commission_rules` (billing §4).
 - **Store design** — tenant theme + per-vendor store themes.
-- **Marketplace settings** — which product types are allowed, review moderation policy, vendor approval mode (auto/manual).
+- **Marketplace settings** — which product types are allowed, review moderation policy, vendor approval mode (auto/manual). *Approval mode shipped:* `tenants.settings.marketplace.vendor_approval_mode`, set from `/admin/vendors`; falls back to `config('marketplace.vendor_approval_mode')` (env `MARKETPLACE_VENDOR_APPROVAL_MODE`, default **manual** — §11's "reviewed before listing"); unknown values resolve to manual.
 - **Payment rules** — tenant's connected gateway (Stripe Connect, billing §20) so funds flow to the tenant; the tenant pays *their* vendors.
 
 A tenant's marketplace is fully isolated — vendors, products, orders,

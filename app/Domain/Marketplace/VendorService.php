@@ -3,7 +3,9 @@
 namespace App\Domain\Marketplace;
 
 use App\Events\VendorRegistered;
+use App\Events\VendorStatusChanged;
 use App\Models\ActivityLog;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Http\UploadedFile;
@@ -14,7 +16,8 @@ use Illuminate\Support\Str;
 /**
  * Vendor lifecycle + profile management. The only place vendors and
  * their profiles are created/mutated, so tenant scoping, slug
- * uniqueness, image handling, auditing, and events stay in one place.
+ * uniqueness, image handling, moderation transitions, auditing, and
+ * events stay in one place.
  *
  * See docs/marketplace-architecture.md §2/§11.
  */
@@ -23,10 +26,27 @@ class VendorService
     private const IMAGE_DIRECTORY = 'vendor-assets';
 
     /**
+     * The moderation state machine (marketplace doc §11):
+     * action => [allowed from-statuses, to-status].
+     *
+     *   pending   --approve-->   active
+     *   pending   --reject-->    rejected
+     *   active    --suspend-->   suspended
+     *   suspended --reinstate--> active
+     */
+    private const TRANSITIONS = [
+        'approve' => [[Vendor::STATUS_PENDING], Vendor::STATUS_ACTIVE],
+        'reject' => [[Vendor::STATUS_PENDING], Vendor::STATUS_REJECTED],
+        'suspend' => [[Vendor::STATUS_ACTIVE], Vendor::STATUS_SUSPENDED],
+        'reinstate' => [[Vendor::STATUS_SUSPENDED], Vendor::STATUS_ACTIVE],
+    ];
+
+    /**
      * Register a new vendor (store) owned by $owner within the current
-     * tenant, with an (initially empty) profile. Self-serve activation:
-     * vendors start ACTIVE so the store is usable immediately; the
-     * pending→approval moderation workflow is a documented follow-up.
+     * tenant, with an (initially empty) profile. The starting status
+     * follows the tenant's approval mode: PENDING under manual review
+     * (the store and its products stay unlisted until approved), ACTIVE
+     * under auto.
      *
      * @param  array{name: string}  $data
      */
@@ -37,7 +57,9 @@ class VendorService
                 'owner_user_id' => $owner->id,
                 'name' => $data['name'],
                 'slug' => $this->uniqueSlug($data['name']),
-                'status' => Vendor::STATUS_ACTIVE,
+                'status' => $this->approvalMode() === VendorApprovalMode::Auto
+                    ? Vendor::STATUS_ACTIVE
+                    : Vendor::STATUS_PENDING,
             ]);
 
             $vendor->profile()->create([
@@ -47,6 +69,7 @@ class VendorService
             ActivityLog::record('vendor.registered', $owner, [
                 'vendor_id' => $vendor->id,
                 'name' => $vendor->name,
+                'status' => $vendor->status,
             ]);
 
             VendorRegistered::dispatch($vendor);
@@ -107,25 +130,118 @@ class VendorService
         });
     }
 
-    public function verify(Vendor $vendor): Vendor
+    public function approve(Vendor $vendor, User $actor): Vendor
     {
-        $vendor->forceFill([
-            'status' => Vendor::STATUS_ACTIVE,
-            'verified_at' => now(),
-        ])->save();
+        return $this->transition($vendor, 'approve', 'approved', $actor);
+    }
 
-        ActivityLog::record('vendor.verified', null, ['vendor_id' => $vendor->id]);
+    public function reject(Vendor $vendor, User $actor, ?string $reason = null): Vendor
+    {
+        return $this->transition($vendor, 'reject', 'rejected', $actor, $reason);
+    }
+
+    public function suspend(Vendor $vendor, User $actor, ?string $reason = null): Vendor
+    {
+        return $this->transition($vendor, 'suspend', 'suspended', $actor, $reason);
+    }
+
+    public function reinstate(Vendor $vendor, User $actor): Vendor
+    {
+        return $this->transition($vendor, 'reinstate', 'reinstated', $actor);
+    }
+
+    /**
+     * Grant the verified badge (`verified_at`). Separate from approval:
+     * approval admits the store, verification attests identity (doc §2/§11)
+     * — so only an active vendor can be verified.
+     */
+    public function verify(Vendor $vendor, User $actor): Vendor
+    {
+        if (! $vendor->isActive()) {
+            throw InvalidVendorTransition::for($vendor, 'verify');
+        }
+
+        if ($vendor->isVerified()) {
+            return $vendor;
+        }
+
+        $vendor->forceFill(['verified_at' => now()])->save();
+
+        ActivityLog::record('vendor.verified', $actor, ['vendor_id' => $vendor->id]);
 
         return $vendor;
     }
 
-    public function suspend(Vendor $vendor): Vendor
+    /**
+     * The approval mode in force for $tenant (default: the current
+     * tenant): its own setting, else the platform default from
+     * config/marketplace.php. Unknown values fall back to manual — the
+     * safe side, since it never lists an unreviewed store.
+     */
+    public function approvalMode(?Tenant $tenant = null): VendorApprovalMode
     {
-        $vendor->forceFill(['status' => Vendor::STATUS_SUSPENDED])->save();
+        $tenant ??= tenant();
 
-        ActivityLog::record('vendor.suspended', null, ['vendor_id' => $vendor->id]);
+        $value = $tenant
+            ? data_get($tenant->settings, 'marketplace.vendor_approval_mode')
+            : null;
 
-        return $vendor;
+        return VendorApprovalMode::tryFrom((string) ($value ?? config('marketplace.vendor_approval_mode')))
+            ?? VendorApprovalMode::Manual;
+    }
+
+    public function setApprovalMode(Tenant $tenant, VendorApprovalMode $mode, User $actor): void
+    {
+        $settings = $tenant->settings ?? [];
+        $previous = data_get($settings, 'marketplace.vendor_approval_mode');
+        data_set($settings, 'marketplace.vendor_approval_mode', $mode->value);
+
+        $tenant->forceFill(['settings' => $settings])->save();
+
+        ActivityLog::record('vendor.approval_mode_changed', $actor, [
+            'tenant_id' => $tenant->id,
+            'from' => $previous,
+            'to' => $mode->value,
+        ]);
+    }
+
+    /**
+     * Apply one moderation action. The row is re-read under a lock so two
+     * admins acting at once can't both pass the from-status check; the
+     * event fires only after commit (VendorStatusChanged is
+     * ShouldDispatchAfterCommit).
+     */
+    private function transition(
+        Vendor $vendor,
+        string $action,
+        string $verb,
+        User $actor,
+        ?string $reason = null,
+    ): Vendor {
+        [$from, $to] = self::TRANSITIONS[$action];
+
+        return DB::transaction(function () use ($vendor, $action, $verb, $actor, $reason, $from, $to) {
+            $locked = Vendor::query()->whereKey($vendor->getKey())->lockForUpdate()->firstOrFail();
+
+            if (! in_array($locked->status, $from, true)) {
+                throw InvalidVendorTransition::for($locked, $action);
+            }
+
+            $previous = $locked->status;
+            $locked->forceFill(['status' => $to])->save();
+            $vendor->setRawAttributes($locked->getAttributes(), true);
+
+            ActivityLog::record("vendor.{$verb}", $actor, array_filter([
+                'vendor_id' => $vendor->id,
+                'from' => $previous,
+                'to' => $to,
+                'reason' => $reason,
+            ], fn ($v) => $v !== null));
+
+            VendorStatusChanged::dispatch($vendor, $verb, $previous, $actor, $reason);
+
+            return $vendor;
+        });
     }
 
     /**

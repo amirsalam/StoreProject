@@ -2,9 +2,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type Vendor } from '@/types';
+import { type BreadcrumbItem, type Vendor, type VendorStatus } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { BadgeCheck, ExternalLink, Store } from 'lucide-react';
+import { BadgeCheck, Ban, Clock, ExternalLink, Store, XCircle } from 'lucide-react';
 import { FormEvent } from 'react';
 
 interface VendorEditProps {
@@ -97,6 +97,7 @@ function ProfileForm({ vendor, storeUrl }: { vendor: Vendor; storeUrl: string | 
 
     return (
         <form onSubmit={submit} className="space-y-6">
+            {vendor.status && <StatusBanner status={vendor.status} />}
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <div className="flex items-center gap-2">
@@ -201,6 +202,50 @@ function Field({ label, error, children }: { label: string; error?: string; chil
             <Label className="mb-1.5 block">{label}</Label>
             {children}
             {error && <p className="text-destructive mt-1 text-sm">{error}</p>}
+        </div>
+    );
+}
+
+const STATUS_BANNERS: Partial<Record<VendorStatus, { icon: typeof Clock; title: string; body: string; tone: 'warning' | 'danger' }>> = {
+    pending: {
+        icon: Clock,
+        title: 'Awaiting approval',
+        body: "An admin is reviewing your store. It isn't listed yet — you can finish your profile in the meantime.",
+        tone: 'warning',
+    },
+    rejected: {
+        icon: XCircle,
+        title: 'Application not approved',
+        body: "Your store wasn't approved, so it isn't listed. Check your notifications for the reason.",
+        tone: 'danger',
+    },
+    suspended: {
+        icon: Ban,
+        title: 'Store suspended',
+        body: 'Your store and products are hidden from buyers. Check your notifications for details.',
+        tone: 'danger',
+    },
+};
+
+function StatusBanner({ status }: { status: VendorStatus }) {
+    const banner = STATUS_BANNERS[status];
+    if (!banner) return null;
+
+    const Icon = banner.icon;
+    return (
+        <div
+            role="status"
+            className={
+                banner.tone === 'warning'
+                    ? 'flex gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200'
+                    : 'border-destructive/30 bg-destructive/[0.06] text-destructive flex gap-3 rounded-lg border p-4'
+            }
+        >
+            <Icon className="mt-0.5 size-5 shrink-0" />
+            <div>
+                <p className="text-sm font-medium">{banner.title}</p>
+                <p className="text-sm opacity-90">{banner.body}</p>
+            </div>
         </div>
     );
 }

@@ -69,6 +69,11 @@ const adminNavItems: NavItem[] = [
         icon: Package,
     },
     {
+        title: 'Vendors',
+        url: '/admin/vendors',
+        icon: Store,
+    },
+    {
         title: 'Users',
         url: '/admin/users',
         icon: Users,

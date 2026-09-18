@@ -14,10 +14,10 @@ format: each describes the *target* architecture and marks, in a "status
 snapshot", what already ships versus what is planned. This index
 aggregates those snapshots into one verifiable picture, **grounded in an
 actual codebase survey** (models, migrations, services, controllers,
-pages, tests) — not in the docs' aspirations. Last survey: **2026-06-28**
-(post vendor-stores: **31 models, 43 migrations, 42 pages, 31 test files**,
-22 architecture docs). The multi-vendor core now ships — see the
-marketplace row + changelog.
+pages, tests) — not in the docs' aspirations. Last survey: **2026-09-18**
+(post vendor-approval: **31 models, 43 migrations, 43 pages, 33 test files,
+266 tests green locally**, 22 architecture docs). Vendor approval/moderation
+now ships — see the marketplace row + changelog.
 
 - ✅ **Completed** — shipped with code + tests; do not rebuild, only improve (respect backward compatibility).
 - 🟡 **Partial** — a real, working core ships; continue from where it stopped, do not duplicate.
@@ -103,12 +103,12 @@ Complexity = remaining build effort.
 | F | **i18n / localization** | (28) | ✅ | 80% | Low | Low |
 | 06 | **Team / invitations** | (27) | 🟡 | 70% | Med | Low |
 | 16 | **Billing / subscriptions** | billing | 🟡 | 60% | High | Med |
-| 20 | **Marketplace** | marketplace | 🟡 | 72% | High | High |
+| 20 | **Marketplace** | marketplace | 🟡 | 78% | High | High |
 | 15 | **Notifications** | notifications | 🟡 | 30% | Med | Med |
 | 21 | **Mobile / responsive** | mobile | 🟡 | 35% | Low | Med |
 | 13 | **Projects** | projects | 🟡 | 25% | Med | Med |
 | 14 | **Tasks** | tasks | 🟡 | 25% | Med | Med |
-| 27 | **Admin control center** | admin-control-center | 🟡 | 35% | Med | High |
+| 27 | **Admin control center** | admin-control-center | 🟡 | 38% | Med | High |
 | 29 | **Audit logs** | audit-logs | 🟡 | 25% | Med | Med |
 | 18 | **Analytics** | analytics | 🟡 | 20% | Low | High |
 | 30 | **API & developer portal** | api-developer-portal | 🟡 | 20% | Med | High |
@@ -162,10 +162,11 @@ Complexity = remaining build effort.
 - **Missing:** dunning/retries, proration, usage-based billing, commission/payout to vendors, invoice PDF.
 - **Depends on:** payments ✅, plans ✅.
 
-### 🟡 Marketplace — 65%
+### 🟡 Marketplace — 78%
 - **Completed:** `categories`, `products` (+ admin CRUD with `StoreProductRequest` + `PlanGate` limit), `coupons` (`Coupon` model), `orders` + `order_items`, `licenses`, `downloads`, `reviews`, `wishlists`, storefront (`products/index`+`show`), cart (`CartService` + `CartController` + page). **Checkout vertical:** `CheckoutController` + `CheckoutService` (cart → order + items + pending `Payment` + Stripe PaymentIntent, server-side prices, coupon redemption with per-user/min-order/max-uses guards, $0-order fast-settle) + `FulfillOrder` listener on `PaymentCompleted` (issues `License`/`Download` idempotently) + `checkout/confirmation` page + i18n. **Stripe Elements card confirmation** (this PR): `checkout/index` rebuilt as a two-phase flow (billing → `@stripe/react-stripe-js` `PaymentElement` → `stripe.confirmPayment` with `return_url` = confirmation), `store()` content-negotiated to return the intent `client_secret` as JSON (redirect path unchanged → existing tests green), publishable key passed as a page prop, $0 orders skip the card step, no-key + processing + card-error states handled, 6 new i18n keys × 4 locales. Tests: ProductManagement, ProductPlanLimit, Cart, **Checkout** (11 cases — 3 new for the JSON intent contract).
 - **Vendor stores (this PR):** `vendors` + `vendor_profiles` tables (tenant-scoped, soft-deletes), `Vendor`/`VendorProfile` models, `VendorService` (registerForUser/updateProfile/verify/suspend — DB transaction + `ActivityLog` audit + `VendorRegistered` event), `VendorPolicy` (owner/admin), `products.vendor_id` attribution, public storefront `StoreController` → `store/show` (profile header, logo/banner, verified badge, catalog grid, aggregate rating), `Workspace\VendorController` (open + manage own store) → `workspace/vendor/edit`, product→store backlink + `product.sold_by` i18n × 4 locales, `User::vendor()` relation, sidebar "My store" nav. Tests: `VendorStoreTest` (6) + `VendorProfileTest` (8). Verified: `php artisan migrate` (MySQL) green, smoke-test against real DB (register/unique-slug/attribution/profile/verify/suspend all pass), live HTTP `GET /store/{slug}` → 200 with correct data + 404 for unknown/inactive, `npm run build` + tsc + eslint clean.
-- **Missing:** `vendor_stores` (theme/featured/SEO/custom domain), admin vendor approval/moderation (vendors self-activate today), vendor payouts (wire to the shipped wallet/ledger), product search/facets, ratings moderation, tax, webhook-lag "processing" affordance on the confirmation page.
+- **Vendor approval/moderation (2026-09-18):** guarded state machine in `VendorService` (`approve`/`reject`/`suspend`/`reinstate` + `verify`; row-locked; `InvalidVendorTransition` on illegal moves), `VendorStatusChanged` (after-commit) → `NotifyVendorOfStatusChange` (in-app), `VendorPolicy::moderate` (admins only), `Admin\VendorController` + `admin/vendors/index` queue (status tabs + counts, search, reason dialog) + sidebar entry, per-tenant **approval mode** (`tenants.settings`, config default `manual`) — new vendors start `pending`. **Catalog gated on vendor status** via `Product::listed()` (catalog, product page, related, add-to-cart, cart line items → checkout); cart badge now counts purchasable lines only. Owner status banner on `workspace/vendor`. Tests: `VendorModerationTest` (22 cases incl. 8 illegal transitions), `VendorListingVisibilityTest` (7), `VendorProfileTest` (+3 approval-mode cases). Verified: 266 tests green locally; rolled-back MySQL smoke test (register→pending→approve→suspend→reinstate, listing gate, audit trail, admin props) all pass; `npm run build`, ESLint (CI-equivalent), Pint clean.
+- **Missing:** `vendor_stores` (theme/featured/SEO/custom domain), vendor payouts (wire to the shipped wallet/ledger; also unblocks **wallet freeze on suspension**), tenant-owner moderation UI, KYC verification evidence, vendor re-application after rejection, email channel for vendor notifications, product search/facets, ratings moderation, tax, webhook-lag "processing" affordance on the confirmation page.
 - **Depends on:** payments ✅, billing 🟡, file-manager 🟡.
 
 ### 🟡 Notifications — 30%
@@ -186,6 +187,7 @@ Complexity = remaining build effort.
 
 ### 🟡 Admin control center — 35%
 - **Completed:** super-admin dashboard, `EnsureUserIsAdmin`, `Admin/{Product,Branding,User}Controller` + pages, `Setting` store. **Payment Gateways Management** (this PR): `PaymentGateway` model (encrypted credentials/webhook_secret), `payment_gateways` table, `config/payment_gateways.php` provider registry (18 providers, extensible), `PaymentGatewayService` (CRUD + toggle + setDefault + reorder + testConnection, all audited), `Admin\PaymentGatewayController` (full CRUD + custom actions, secrets redacted), `admin/payment-gateways/{index,create,edit,gateway-form}` pages, sidebar nav, `PaymentGatewayTest` (11 cases).
+- **Vendor moderation queue (2026-09-18):** `/admin/vendors` — see the marketplace row.
 - **Missing:** cross-tenant governance, the aggregation/control overlays, security/compliance centers, gateway transaction statistics, live API credential ping.
 
 ### 🟡 Audit logs — 25%
@@ -242,11 +244,13 @@ PR-sized increments, in leverage order:
    (`vendors` + `vendor_profiles`, `VendorService`/`VendorPolicy`,
    `products.vendor_id`, public `/store/{slug}`, `workspace/vendor`
    management). The multi-vendor core is in. **Next vendor increments, in
-   order:** (a) **admin vendor approval/moderation** — vendors self-activate
-   today; add the pending→approve workflow + an admin queue (small, gates
-   §28 governance); (b) **vendor payouts** — wire vendor earnings to the
-   shipped wallet/ledger (the affiliate doc's split logic applies); (c)
-   `vendor_stores` (theme/featured/SEO/custom domain).
+   order:** (a) ~~**admin vendor approval/moderation**~~ ✅ **SHIPPED
+   2026-09-18** (guarded pending→active/rejected, active⇄suspended, admin
+   queue, per-tenant approval mode, catalog gated on vendor status); (b)
+   **vendor payouts** — wire vendor earnings to the shipped wallet/ledger
+   (the affiliate doc's split logic applies), which also enables the §11
+   *wallet freeze on suspension*; (c) `vendor_stores`
+   (theme/featured/SEO/custom domain).
 
 3. **Marketplace — confirmation "processing" affordance** *(tiny follow-up)*.
    After Stripe's redirect the webhook may lag; the confirmation page should
@@ -262,11 +266,10 @@ PR-sized increments, in leverage order:
    the *already-shipped* architecture/tenancy/auth/DB/security/testing don't
    exist as standalone files. Low-risk; can run in parallel with any code PR.
 
-**Recommendation:** with vendor stores shipped, take **increment 2a (admin
-vendor approval/moderation)** next — it's small, closes the self-activation
-gap, and is the prerequisite for trustworthy multi-vendor onboarding +
-§28 governance. Then **2b (vendor payouts)** to complete the revenue loop
-for sellers. Increment 3 (confirmation affordance) remains a clean tiny PR;
+**Recommendation:** with vendor approval shipped, take **increment 2b
+(vendor payouts)** next — it completes the revenue loop for sellers on the
+shipped wallet/ledger and unlocks the suspension wallet-freeze that §11
+requires. Increment 3 (confirmation affordance) remains a clean tiny PR;
 backfill foundational docs 00–11 in parallel.
 
 > **Whichever track is chosen, the loop is the same:** read the module doc →
@@ -290,3 +293,4 @@ backfill foundational docs 00–11 in parallel.
 | 2026-06-28 | **DDDocs verification pass (no code change).** Re-ran the Step-2 survey against live code: counts identical to 2026-06-27 (29 models / 40 migrations / 40 pages / 29 tests / 22 docs), tree clean, no `Vendor`/`Store` model — every matrix row re-confirmed accurate. Commits since the last code-bearing change (`81c883c`) are documentation-only (the architecture-doc set). No completion %s moved. Recommended next increment stands: **marketplace vendor stores/profiles** (the multi-vendor gap). |
 | 2026-06-28 | **Vendor stores shipped** (marketplace 65% → 72%; +2 models / +3 migrations / +2 pages / +2 tests → 31/43/42/31). Multi-vendor core: `vendors` + `vendor_profiles` (tenant-scoped, soft-deletes, `tenant_id` nullable per the business-table convention), `Vendor`/`VendorProfile` models, `VendorService` (register/updateProfile/verify/suspend — transaction + `ActivityLog` + `VendorRegistered` event), `VendorPolicy` (owner/admin), `products.vendor_id` attribution, public `StoreController` → `store/show`, `Workspace\VendorController` → `workspace/vendor/edit` (open + manage own store), `User::vendor()`, product→store backlink + `product.sold_by` i18n ×4, sidebar "My store". Verified: MySQL migrate green; real-DB smoke test (register/unique-slug/attribution/profile/verify/suspend) pass; live `GET /store/pixelforge` → 200 with correct data, unknown → 404; build + tsc + eslint clean. PHPUnit `VendorStoreTest` (6) + `VendorProfileTest` (8) written (run in CI — local `pdo_sqlite` absent). Next: admin vendor approval/moderation, then vendor payouts. |
 | 2026-09-18 | **CI green on PR #1 + test-suite truth pass** (`520d339`). CI had 32 failing tests + 1 lint error; several were real bugs the tests caught: (1) tenant global scope skipped under `runningInConsole()` → never enforced in tests/queue jobs (multi-tenancy row updated); (2) SVG sanitizer `javascript:` href bypass via mixed quotes (XSS); (3) social signups unverified (`email_verified_at` not fillable → dropped); (4) `Workspace\VendorController::update` called `$this->authorize()`, absent from Laravel 12's base controller → every vendor profile save 500'd. Env/test fixes: published `config/inertia.php` (`js/pages`; package default `js/Pages` fails on case-sensitive Linux), scoped `Event::fake`, corrected a metrics assertion, de-flaked a cart test (factory random `sale_price`), 5 missing models added to the isolation matrix. Local test execution unblocked (see "How to read this"). **234 tests green.** |
+| 2026-09-18 | **Vendor approval/moderation shipped** (marketplace 72% → 78%, admin control center 35% → 38%; +1 page / +2 test files → 31/43/43/33, 266 tests). New vendors start `pending` under the per-tenant approval mode (default `manual`, §21) and are approved/rejected from the new `/admin/vendors` queue; active vendors can be suspended/reinstated (§11 state machine, enforced + row-locked, illegal moves refused). Owners get in-app notifications (with the admin's reason) and a status banner; every action is audited. **Closed a listing gap:** a pending/suspended/rejected vendor's published products were publicly listed and purchasable — `Product::listed()` now gates the catalog, product page, related, add-to-cart, and cart line items (→ checkout); cart badge counts purchasable lines only. Deferred (documented in marketplace §11): tenant-owner moderation UI, KYC evidence, wallet freeze (needs payouts), email channel, re-application after rejection. Next: vendor payouts. |

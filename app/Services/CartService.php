@@ -84,7 +84,7 @@ class CartService
 
         $products = Product::query()
             ->whereIn('id', array_keys($items))
-            ->where('status', Product::STATUS_PUBLISHED)
+            ->listed()
             ->get()
             ->keyBy('id');
 
@@ -109,9 +109,14 @@ class CartService
             ->values();
     }
 
+    /**
+     * Counts only purchasable lines, so the badge never shows an item
+     * that has since become unlisted (unpublished, or its vendor
+     * suspended) and that checkout would therefore drop.
+     */
     public function count(): int
     {
-        return (int) collect($this->raw())->sum('quantity');
+        return (int) $this->lineItems()->sum('quantity');
     }
 
     public function subtotal(): float
@@ -126,9 +131,12 @@ class CartService
      */
     public function summary(): array
     {
+        // One lineItems() pass for both figures — shared on every page.
+        $lines = $this->lineItems();
+
         return [
-            'count' => $this->count(),
-            'subtotal' => $this->subtotal(),
+            'count' => (int) $lines->sum('quantity'),
+            'subtotal' => round($lines->sum('line_total'), 2),
             'currency' => 'USD',
         ];
     }

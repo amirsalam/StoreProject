@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
 use App\Http\Controllers\Admin\PaymentGatewayController as AdminPaymentGatewayController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\VendorController as AdminVendorController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
@@ -112,6 +113,15 @@ Route::middleware(['auth', 'admin'])
         Route::post('payment-gateways/{paymentGateway}/default', [AdminPaymentGatewayController::class, 'setDefault'])->name('payment-gateways.default');
         Route::post('payment-gateways/{paymentGateway}/test', [AdminPaymentGatewayController::class, 'test'])->name('payment-gateways.test');
         Route::resource('payment-gateways', AdminPaymentGatewayController::class)->except(['show']);
+
+        // Vendor moderation queue (marketplace doc §11/§17).
+        Route::get('vendors', [AdminVendorController::class, 'index'])->name('vendors.index');
+        Route::put('vendors/approval-mode', [AdminVendorController::class, 'updateApprovalMode'])->name('vendors.approval-mode');
+        Route::post('vendors/{vendor:id}/approve', [AdminVendorController::class, 'approve'])->name('vendors.approve');
+        Route::post('vendors/{vendor:id}/reject', [AdminVendorController::class, 'reject'])->name('vendors.reject');
+        Route::post('vendors/{vendor:id}/suspend', [AdminVendorController::class, 'suspend'])->name('vendors.suspend');
+        Route::post('vendors/{vendor:id}/reinstate', [AdminVendorController::class, 'reinstate'])->name('vendors.reinstate');
+        Route::post('vendors/{vendor:id}/verify', [AdminVendorController::class, 'verify'])->name('vendors.verify');
     });
 
 require __DIR__.'/settings.php';

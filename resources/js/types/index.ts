@@ -81,11 +81,13 @@ export interface VendorProfile {
     founded_year: number | null;
 }
 
+export type VendorStatus = 'pending' | 'active' | 'suspended' | 'rejected';
+
 export interface Vendor {
     id: number;
     name: string;
     slug: string;
-    status?: string;
+    status?: VendorStatus;
     is_verified?: boolean;
     verified_at?: string | null;
     profile?: VendorProfile | null;

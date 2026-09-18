@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Tenancy\BelongsToTenant;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -107,5 +108,33 @@ class Product extends Model
     public function isOnSale(): bool
     {
         return $this->sale_price !== null && $this->sale_price < $this->price;
+    }
+
+    /**
+     * Products a customer may see and buy: published, and either
+     * operator-owned (no vendor) or sold by an ACTIVE vendor. A pending,
+     * rejected, or suspended vendor's catalog stays unlisted
+     * (marketplace doc §11: reviewed before listing; suspension hides
+     * products). A soft-deleted vendor fails the whereHas too.
+     */
+    public function scopeListed(Builder $query): Builder
+    {
+        return $query
+            ->where('status', self::STATUS_PUBLISHED)
+            ->where(fn (Builder $q) => $q
+                ->whereNull('vendor_id')
+                ->orWhereHas('vendor', fn (Builder $v) => $v->where('status', Vendor::STATUS_ACTIVE)));
+    }
+
+    /**
+     * Instance form of scopeListed() for a product already in hand.
+     */
+    public function isListed(): bool
+    {
+        if ($this->status !== self::STATUS_PUBLISHED) {
+            return false;
+        }
+
+        return $this->vendor_id === null || $this->vendor?->isActive() === true;
     }
 }

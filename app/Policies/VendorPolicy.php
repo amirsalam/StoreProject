@@ -33,4 +33,14 @@ class VendorPolicy
     {
         return $vendor->owner_user_id === $user->id;
     }
+
+    /**
+     * Approve / reject / suspend / reinstate / verify. Platform admins
+     * only (granted by before()); an owner can never moderate their own
+     * store. Tenant-owner moderation (doc §11) is a planned follow-up.
+     */
+    public function moderate(User $user, Vendor $vendor): bool
+    {
+        return false;
+    }
 }
