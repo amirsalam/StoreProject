@@ -301,6 +301,46 @@ return [
         'secondary' => 'See live storefront',
     ],
 
+    'about' => [
+        'meta_title' => 'About us',
+        'eyebrow' => 'About us',
+        'title' => 'A marketplace built by makers, for makers.',
+        'lead' => 'StoreProject is the one-stop marketplace for Laravel scripts, APIs, templates, and SaaS — where independent developers sell their work and buyers get it instantly.',
+        'mission' => [
+            'title' => 'Why we exist',
+            'body_1' => 'Selling software should be about the software. Yet every maker ends up rebuilding the same plumbing: payments, license keys, secure downloads, subscriptions, and invoices.',
+            'body_2' => 'We built that plumbing once, properly, so creators can focus on shipping great products and buyers can trust what they get — from checkout to delivery.',
+        ],
+        'values' => [
+            'title' => 'What we stand for',
+            'description' => 'A few principles guide every decision we make.',
+            'items' => [
+                'makers' => [
+                    'title' => 'Makers first',
+                    'body' => 'Tools designed around how independent developers actually build, price, and ship their products.',
+                ],
+                'commerce' => [
+                    'title' => 'Commerce done right',
+                    'body' => 'Secure payments, instant license and download delivery after checkout, and a clear record of every order.',
+                ],
+                'vendors' => [
+                    'title' => 'Your store, your brand',
+                    'body' => 'Every vendor gets their own storefront with a profile, logo, and product catalog.',
+                ],
+                'global' => [
+                    'title' => 'Open to everyone',
+                    'body' => 'Available in English, French, Spanish, and Arabic — with full right-to-left support.',
+                ],
+            ],
+        ],
+        'cta' => [
+            'title' => 'Ready to get started?',
+            'body' => 'Browse the catalog, or open your own store and start selling today.',
+            'browse' => 'Browse products',
+            'sell' => 'Start selling',
+        ],
+    ],
+
     'footer' => [
         'tagline' => 'The single-vendor marketplace for Laravel scripts, APIs, templates, and SaaS — built for makers who ship.',
         'status_ok' => 'All systems operational',

@@ -301,6 +301,46 @@ return [
         'secondary' => 'Voir la boutique en direct',
     ],
 
+    'about' => [
+        'meta_title' => 'À propos',
+        'eyebrow' => 'À propos',
+        'title' => 'Une marketplace créée par des makers, pour des makers.',
+        'lead' => 'StoreProject est la marketplace tout-en-un pour les scripts Laravel, les API, les templates et le SaaS — où les développeurs indépendants vendent leur travail et où les acheteurs l\'obtiennent instantanément.',
+        'mission' => [
+            'title' => 'Pourquoi nous existons',
+            'body_1' => 'Vendre un logiciel devrait porter sur le logiciel. Pourtant, chaque créateur finit par reconstruire la même tuyauterie : paiements, clés de licence, téléchargements sécurisés, abonnements et factures.',
+            'body_2' => 'Nous avons construit cette tuyauterie une fois, correctement, pour que les créateurs se concentrent sur leurs produits et que les acheteurs aient confiance — du paiement à la livraison.',
+        ],
+        'values' => [
+            'title' => 'Nos valeurs',
+            'description' => 'Quelques principes guident chacune de nos décisions.',
+            'items' => [
+                'makers' => [
+                    'title' => 'Les créateurs d\'abord',
+                    'body' => 'Des outils pensés pour la façon dont les développeurs indépendants construisent, tarifent et livrent leurs produits.',
+                ],
+                'commerce' => [
+                    'title' => 'Un commerce bien fait',
+                    'body' => 'Paiements sécurisés, licences et téléchargements livrés dès le paiement, et un historique clair de chaque commande.',
+                ],
+                'vendors' => [
+                    'title' => 'Votre boutique, votre marque',
+                    'body' => 'Chaque vendeur dispose de sa propre boutique avec profil, logo et catalogue de produits.',
+                ],
+                'global' => [
+                    'title' => 'Ouvert à tous',
+                    'body' => 'Disponible en anglais, français, espagnol et arabe — avec prise en charge complète de l\'écriture de droite à gauche.',
+                ],
+            ],
+        ],
+        'cta' => [
+            'title' => 'Prêt à commencer ?',
+            'body' => 'Parcourez le catalogue, ou ouvrez votre propre boutique et commencez à vendre dès aujourd\'hui.',
+            'browse' => 'Parcourir les produits',
+            'sell' => 'Commencer à vendre',
+        ],
+    ],
+
     'footer' => [
         'tagline' => 'La marketplace mono-vendeur pour scripts Laravel, APIs, modèles et SaaS — pensée pour les créateurs qui livrent.',
         'status_ok' => 'Tous les systèmes opérationnels',
