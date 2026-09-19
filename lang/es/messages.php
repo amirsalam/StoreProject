@@ -301,6 +301,46 @@ return [
         'secondary' => 'Ver la tienda en vivo',
     ],
 
+    'about' => [
+        'meta_title' => 'Sobre nosotros',
+        'eyebrow' => 'Sobre nosotros',
+        'title' => 'Un marketplace creado por makers, para makers.',
+        'lead' => 'StoreProject es el marketplace todo en uno para scripts de Laravel, APIs, plantillas y SaaS — donde los desarrolladores independientes venden su trabajo y los compradores lo reciben al instante.',
+        'mission' => [
+            'title' => 'Por qué existimos',
+            'body_1' => 'Vender software debería tratarse del software. Sin embargo, cada creador termina reconstruyendo la misma infraestructura: pagos, claves de licencia, descargas seguras, suscripciones y facturas.',
+            'body_2' => 'Construimos esa infraestructura una vez, bien hecha, para que los creadores se centren en sus productos y los compradores confíen en lo que reciben — del pago a la entrega.',
+        ],
+        'values' => [
+            'title' => 'Lo que defendemos',
+            'description' => 'Algunos principios guían cada decisión que tomamos.',
+            'items' => [
+                'makers' => [
+                    'title' => 'Los creadores primero',
+                    'body' => 'Herramientas diseñadas en torno a cómo los desarrolladores independientes crean, ponen precio y lanzan sus productos.',
+                ],
+                'commerce' => [
+                    'title' => 'Comercio bien hecho',
+                    'body' => 'Pagos seguros, licencias y descargas entregadas al instante tras el pago, y un registro claro de cada pedido.',
+                ],
+                'vendors' => [
+                    'title' => 'Tu tienda, tu marca',
+                    'body' => 'Cada vendedor tiene su propia tienda con perfil, logotipo y catálogo de productos.',
+                ],
+                'global' => [
+                    'title' => 'Abierto a todos',
+                    'body' => 'Disponible en inglés, francés, español y árabe — con soporte completo de derecha a izquierda.',
+                ],
+            ],
+        ],
+        'cta' => [
+            'title' => '¿Listo para empezar?',
+            'body' => 'Explora el catálogo, o abre tu propia tienda y empieza a vender hoy.',
+            'browse' => 'Explorar productos',
+            'sell' => 'Empezar a vender',
+        ],
+    ],
+
     'footer' => [
         'tagline' => 'El marketplace mono-vendedor para scripts de Laravel, APIs, plantillas y SaaS — hecho para creadores que entregan.',
         'status_ok' => 'Todos los sistemas operativos',

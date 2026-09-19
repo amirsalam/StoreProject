@@ -2,10 +2,7 @@
 
 namespace App\Providers;
 
-use App\Events\PaymentCompleted;
-use App\Listeners\FulfillOrder;
 use App\Tenancy\TenantContext;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,8 +16,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Digital fulfillment (licenses + downloads) fans out from a
-        // completed payment — see App\Listeners\FulfillOrder.
-        Event::listen(PaymentCompleted::class, FulfillOrder::class);
+        // Event listeners in app/Listeners are wired by Laravel's event
+        // discovery (type-hinted handle()). Don't also Event::listen() them
+        // here — that registers them twice.
     }
 }
