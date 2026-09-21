@@ -301,6 +301,21 @@ return [
         'secondary' => 'شاهد المتجر الحي',
     ],
 
+    'blog' => [
+        'meta_title' => 'المدونة',
+        'title' => 'من الورشة',
+        'subtitle' => 'مستجدات المنتج وملاحظات تقنية وأدلة لبيع المنتجات الرقمية.',
+        'search_placeholder' => 'ابحث في المقالات…',
+        'search_submit' => 'بحث',
+        'tags_label' => 'تصفية حسب الوسم',
+        'all_tags' => 'الكل',
+        'empty' => 'لا توجد مقالات بعد. عد قريبًا.',
+        'read_more' => 'اقرأ المزيد',
+        'back_to_index' => 'كل المقالات',
+        'reading_time' => 'قراءة :minutes دقائق',
+        'related' => 'مقالات ذات صلة',
+    ],
+
     'about' => [
         'meta_title' => 'من نحن',
         'eyebrow' => 'من نحن',

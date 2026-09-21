@@ -301,6 +301,21 @@ return [
         'secondary' => 'Ver la tienda en vivo',
     ],
 
+    'blog' => [
+        'meta_title' => 'Blog',
+        'title' => 'Desde el taller',
+        'subtitle' => 'Novedades del producto, notas técnicas y guías para vender productos digitales.',
+        'search_placeholder' => 'Buscar artículos…',
+        'search_submit' => 'Buscar',
+        'tags_label' => 'Filtrar por etiqueta',
+        'all_tags' => 'Todos',
+        'empty' => 'Aún no hay artículos. Vuelve pronto.',
+        'read_more' => 'Leer más',
+        'back_to_index' => 'Todos los artículos',
+        'reading_time' => ':minutes min de lectura',
+        'related' => 'Artículos relacionados',
+    ],
+
     'about' => [
         'meta_title' => 'Sobre nosotros',
         'eyebrow' => 'Sobre nosotros',

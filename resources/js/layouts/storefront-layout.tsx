@@ -181,7 +181,7 @@ function SiteFooter() {
             titleKey: 'footer.columns.company.title',
             links: [
                 { labelKey: 'footer.columns.company.about', href: route('about') },
-                { labelKey: 'footer.columns.company.blog', href: '#' },
+                { labelKey: 'footer.columns.company.blog', href: route('blog.index') },
                 { labelKey: 'footer.columns.company.customers', href: '/#testimonials' },
                 { labelKey: 'footer.columns.company.contact', href: '#' },
             ],

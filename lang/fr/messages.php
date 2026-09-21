@@ -301,6 +301,21 @@ return [
         'secondary' => 'Voir la boutique en direct',
     ],
 
+    'blog' => [
+        'meta_title' => 'Blog',
+        'title' => 'Depuis l\'atelier',
+        'subtitle' => 'Nouveautés produit, notes techniques et guides pour vendre des produits numériques.',
+        'search_placeholder' => 'Rechercher des articles…',
+        'search_submit' => 'Rechercher',
+        'tags_label' => 'Filtrer par tag',
+        'all_tags' => 'Tous',
+        'empty' => 'Aucun article pour le moment. Revenez bientôt.',
+        'read_more' => 'Lire la suite',
+        'back_to_index' => 'Tous les articles',
+        'reading_time' => ':minutes min de lecture',
+        'related' => 'Articles similaires',
+    ],
+
     'about' => [
         'meta_title' => 'À propos',
         'eyebrow' => 'À propos',

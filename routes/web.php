@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\BlogPostController as AdminBlogPostController;
 use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
 use App\Http\Controllers\Admin\PaymentGatewayController as AdminPaymentGatewayController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
@@ -29,6 +31,10 @@ Route::inertia('about', 'about')->name('about');
 
 Route::get('products', [ProductController::class, 'index'])->name('products.index');
 Route::get('products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+
+// Public blog. Only published posts are reachable; see BlogController.
+Route::get('blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('blog/{post:slug}', [BlogController::class, 'show'])->name('blog.show');
 
 // Public vendor storefront.
 Route::get('store/{vendor:slug}', [StoreController::class, 'show'])->name('store.show');
@@ -100,6 +106,7 @@ Route::middleware(['auth', 'admin'])
     ->name('admin.')
     ->group(function () {
         Route::resource('products', AdminProductController::class)->except(['show']);
+        Route::resource('blog-posts', AdminBlogPostController::class)->except(['show']);
 
         Route::get('branding', [AdminBrandingController::class, 'edit'])->name('branding.edit');
         Route::post('branding', [AdminBrandingController::class, 'update'])->name('branding.update');

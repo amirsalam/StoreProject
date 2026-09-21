@@ -301,6 +301,21 @@ return [
         'secondary' => 'See live storefront',
     ],
 
+    'blog' => [
+        'meta_title' => 'Blog',
+        'title' => 'From the workshop',
+        'subtitle' => 'Product updates, engineering notes, and guides for selling digital products.',
+        'search_placeholder' => 'Search posts…',
+        'search_submit' => 'Search',
+        'tags_label' => 'Filter by tag',
+        'all_tags' => 'All',
+        'empty' => 'No posts yet. Check back soon.',
+        'read_more' => 'Read more',
+        'back_to_index' => 'All posts',
+        'reading_time' => ':minutes min read',
+        'related' => 'Related posts',
+    ],
+
     'about' => [
         'meta_title' => 'About us',
         'eyebrow' => 'About us',
