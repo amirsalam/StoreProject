@@ -2,12 +2,14 @@
 
 use App\Http\Controllers\Admin\BlogPostController as AdminBlogPostController;
 use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
+use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\PaymentGatewayController as AdminPaymentGatewayController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LocaleController;
@@ -29,6 +31,13 @@ Route::get('/', function () {
 
 Route::inertia('about', 'about')->name('about');
 Route::inertia('customers', 'customers')->name('customers');
+
+// Public contact form. Messages are stored (admin inbox) and emailed only
+// when contact.notify_to is configured; the POST is rate limited.
+Route::get('contact', [ContactController::class, 'show'])->name('contact');
+Route::post('contact', [ContactController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('contact.store');
 
 Route::get('products', [ProductController::class, 'index'])->name('products.index');
 Route::get('products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
@@ -108,6 +117,11 @@ Route::middleware(['auth', 'admin'])
     ->group(function () {
         Route::resource('products', AdminProductController::class)->except(['show']);
         Route::resource('blog-posts', AdminBlogPostController::class)->except(['show']);
+
+        // Contact inbox.
+        Route::get('contact', [AdminContactMessageController::class, 'index'])->name('contact.index');
+        Route::patch('contact/{contactMessage}', [AdminContactMessageController::class, 'update'])->name('contact.update');
+        Route::delete('contact/{contactMessage}', [AdminContactMessageController::class, 'destroy'])->name('contact.destroy');
 
         Route::get('branding', [AdminBrandingController::class, 'edit'])->name('branding.edit');
         Route::post('branding', [AdminBrandingController::class, 'update'])->name('branding.update');

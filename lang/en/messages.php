@@ -356,6 +356,22 @@ return [
         ],
     ],
 
+    'contact' => [
+        'meta_title' => 'Contact us',
+        'eyebrow' => 'Contact us',
+        'title' => 'Tell us what you need.',
+        'lead' => 'Questions about selling, billing, or a product you bought — send a message and we will get back to you by email.',
+        'form' => [
+            'name' => 'Your name',
+            'email' => 'Email address',
+            'subject' => 'Subject',
+            'message' => 'Message',
+            'submit' => 'Send message',
+            'privacy_note' => 'We only use your address to reply.',
+            'sent' => 'Thanks — your message has been sent. We will reply by email.',
+        ],
+    ],
+
     'customers' => [
         'meta_title' => 'Customers',
         'eyebrow' => 'Customers',

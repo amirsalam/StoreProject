@@ -356,6 +356,22 @@ return [
         ],
     ],
 
+    'contact' => [
+        'meta_title' => 'Contacto',
+        'eyebrow' => 'Contacto',
+        'title' => 'Cuéntanos qué necesitas.',
+        'lead' => 'Dudas sobre vender, la facturación o un producto que compraste — envía un mensaje y te responderemos por correo.',
+        'form' => [
+            'name' => 'Tu nombre',
+            'email' => 'Correo electrónico',
+            'subject' => 'Asunto',
+            'message' => 'Mensaje',
+            'submit' => 'Enviar mensaje',
+            'privacy_note' => 'Solo usamos tu dirección para responderte.',
+            'sent' => 'Gracias — tu mensaje se ha enviado. Te responderemos por correo.',
+        ],
+    ],
+
     'customers' => [
         'meta_title' => 'Clientes',
         'eyebrow' => 'Clientes',

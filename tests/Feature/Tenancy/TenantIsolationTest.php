@@ -4,6 +4,7 @@ namespace Tests\Feature\Tenancy;
 
 use App\Models\BlogPost;
 use App\Models\Category;
+use App\Models\ContactMessage;
 use App\Models\Coupon;
 use App\Models\DailyMetric;
 use App\Models\Download;
@@ -72,6 +73,7 @@ class TenantIsolationTest extends TestCase
             'Review' => [Review::class, fn () => Review::factory()->create()],
             'Wishlist' => [Wishlist::class, fn () => Wishlist::factory()->create()],
             'BlogPost' => [BlogPost::class, fn () => BlogPost::factory()->create()],
+            'ContactMessage' => [ContactMessage::class, fn () => ContactMessage::factory()->create()],
             'Project' => [Project::class, fn () => Project::factory()->create()],
             'Task' => [Task::class, fn () => Task::factory()->create()],
             'Invoice' => [Invoice::class, fn () => Invoice::factory()->create()],

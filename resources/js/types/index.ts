@@ -91,6 +91,17 @@ export interface Vendor {
     profile?: VendorProfile | null;
 }
 
+export interface ContactMessage {
+    id: number;
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+    status: 'new' | 'read' | 'archived';
+    read_at: string | null;
+    created_at: string;
+}
+
 /** Fields a blog post exposes in listings (index cards, related links). */
 export interface BlogPostSummary {
     id: number;

@@ -12,6 +12,7 @@ import {
     FolderKanban,
     LayoutGrid,
     ListTodo,
+    Mail,
     Newspaper,
     Package,
     Palette,
@@ -73,6 +74,11 @@ const adminNavItems: NavItem[] = [
         title: 'Blog',
         url: '/admin/blog-posts',
         icon: Newspaper,
+    },
+    {
+        title: 'Contact',
+        url: '/admin/contact',
+        icon: Mail,
     },
     {
         title: 'Users',

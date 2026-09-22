@@ -183,7 +183,7 @@ function SiteFooter() {
                 { labelKey: 'footer.columns.company.about', href: route('about') },
                 { labelKey: 'footer.columns.company.blog', href: route('blog.index') },
                 { labelKey: 'footer.columns.company.customers', href: route('customers') },
-                { labelKey: 'footer.columns.company.contact', href: '#' },
+                { labelKey: 'footer.columns.company.contact', href: route('contact') },
             ],
         },
         {
