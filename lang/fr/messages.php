@@ -356,6 +356,37 @@ return [
         ],
     ],
 
+    'customers' => [
+        'meta_title' => 'Clients',
+        'eyebrow' => 'Clients',
+        'title' => 'Conçu pour ceux qui livrent.',
+        'lead' => 'Des développeurs indépendants et de petites équipes utilisent StoreProject pour vendre des scripts, des API, des templates et du SaaS — sans reconstruire d\'abord le paiement, les licences et la livraison.',
+        'use_cases' => [
+            'title' => 'Ce que l\'on vend ici',
+            'description' => 'La même boutique gère un téléchargement unique, une API facturée à l\'usage et un abonnement mensuel.',
+            'items' => [
+                'scripts' => [
+                    'title' => 'Scripts et templates',
+                    'body' => 'Vendez une base de code en téléchargement unique, avec livraison sécurisée et historique de chaque commande.',
+                ],
+                'api' => [
+                    'title' => 'Produits API',
+                    'body' => 'Émettez des clés, limitez l\'usage selon le forfait et facturez l\'accès sans écrire la couche de facturation.',
+                ],
+                'saas' => [
+                    'title' => 'SaaS et abonnements',
+                    'body' => 'Des forfaits récurrents avec factures : renouvellements et résiliations sont pris en charge.',
+                ],
+            ],
+        ],
+        'cta' => [
+            'title' => 'Envie d\'y voir votre boutique ?',
+            'body' => 'Parcourez ce qui se vend déjà, ou découvrez comment la plateforme s\'articule.',
+            'browse' => 'Parcourir les produits',
+            'about' => 'À propos',
+        ],
+    ],
+
     'footer' => [
         'tagline' => 'La marketplace mono-vendeur pour scripts Laravel, APIs, modèles et SaaS — pensée pour les créateurs qui livrent.',
         'status_ok' => 'Tous les systèmes opérationnels',

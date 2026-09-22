@@ -20,7 +20,7 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
     const navLinks = [
         { label: t('nav.products'), href: '/products' },
         { label: t('nav.pricing'), href: '/#pricing' },
-        { label: t('nav.customers'), href: '/#testimonials' },
+        { label: t('nav.customers'), href: route('customers') },
         { label: t('nav.docs'), href: '/#faq' },
     ];
 
@@ -182,7 +182,7 @@ function SiteFooter() {
             links: [
                 { labelKey: 'footer.columns.company.about', href: route('about') },
                 { labelKey: 'footer.columns.company.blog', href: route('blog.index') },
-                { labelKey: 'footer.columns.company.customers', href: '/#testimonials' },
+                { labelKey: 'footer.columns.company.customers', href: route('customers') },
                 { labelKey: 'footer.columns.company.contact', href: '#' },
             ],
         },

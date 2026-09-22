@@ -356,6 +356,37 @@ return [
         ],
     ],
 
+    'customers' => [
+        'meta_title' => 'Customers',
+        'eyebrow' => 'Customers',
+        'title' => 'Built for the people shipping the work.',
+        'lead' => 'Independent developers and small teams use StoreProject to sell scripts, APIs, templates, and SaaS — without rebuilding checkout, licensing, and delivery first.',
+        'use_cases' => [
+            'title' => 'What people sell here',
+            'description' => 'The same storefront handles a one-off download, a metered API, and a monthly plan.',
+            'items' => [
+                'scripts' => [
+                    'title' => 'Scripts and templates',
+                    'body' => 'Sell a codebase as a one-time download, with secure delivery and a record of every order.',
+                ],
+                'api' => [
+                    'title' => 'API products',
+                    'body' => 'Issue keys, limit usage by plan, and bill for access without writing the billing layer.',
+                ],
+                'saas' => [
+                    'title' => 'SaaS and subscriptions',
+                    'body' => 'Recurring plans with invoices, so renewals and cancellations are handled for you.',
+                ],
+            ],
+        ],
+        'cta' => [
+            'title' => 'Want your store here?',
+            'body' => 'Browse what is already selling, or read how the platform fits together.',
+            'browse' => 'Browse products',
+            'about' => 'About us',
+        ],
+    ],
+
     'footer' => [
         'tagline' => 'The single-vendor marketplace for Laravel scripts, APIs, templates, and SaaS — built for makers who ship.',
         'status_ok' => 'All systems operational',
