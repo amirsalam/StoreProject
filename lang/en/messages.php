@@ -356,6 +356,92 @@ return [
         ],
     ],
 
+    'legal' => [
+        'draft_banner' => [
+            'title' => 'Unreviewed draft — not binding',
+            'body' => 'This page is an outline of the sections these terms need. It is not legal advice and has not been reviewed by a lawyer. Replace every section with your own wording before launch.',
+        ],
+        'status_label' => 'Draft · not yet published',
+        'toc' => 'On this page',
+        'terms' => [
+            'meta_title' => 'Terms of service',
+            'title' => 'Terms of service',
+            'lead' => 'The agreement between the marketplace and the people who buy and sell on it.',
+            'sections' => [
+                [
+                    'id' => 'acceptance',
+                    'title' => 'Acceptance of the terms',
+                    'body' => 'Drafting note: state that using the marketplace means accepting these terms, who they apply to, and the minimum age to hold an account.',
+                ],
+                [
+                    'id' => 'operator',
+                    'title' => 'Who operates the marketplace',
+                    'body' => 'Drafting note: name the legal entity behind the marketplace, its registered address, its company number, and how to reach it.',
+                ],
+                [
+                    'id' => 'accounts',
+                    'title' => 'Accounts',
+                    'body' => 'Drafting note: cover registration, accurate details, keeping credentials safe, responsibility for activity on the account, and when an account may be suspended.',
+                ],
+                [
+                    'id' => 'purchases',
+                    'title' => 'Orders and payments',
+                    'body' => 'Drafting note: cover how an order is formed, currency and taxes, the payment providers used, failed payments, and what a receipt or invoice represents.',
+                ],
+                [
+                    'id' => 'licenses',
+                    'title' => 'Licenses and downloads',
+                    'body' => 'Drafting note: describe what a buyer receives for each product type — license keys, downloads, API access, subscriptions — including activation limits, download limits and renewal.',
+                ],
+                [
+                    'id' => 'refunds',
+                    'title' => 'Refunds and cancellations',
+                    'body' => 'Drafting note: state the refund window and conditions for digital goods, how to request one, and any statutory withdrawal rights that apply to your buyers.',
+                ],
+                [
+                    'id' => 'vendors',
+                    'title' => 'Selling on the marketplace',
+                    'body' => 'Drafting note: cover what vendors may list, the warranties they give about their own work, commission and payout terms, and grounds for removing a listing or a store.',
+                ],
+                [
+                    'id' => 'acceptable_use',
+                    'title' => 'Acceptable use',
+                    'body' => 'Drafting note: prohibit malware, infringing or illegal content, scraping, abuse of the API, and attempts to bypass licensing or payment.',
+                ],
+                [
+                    'id' => 'intellectual_property',
+                    'title' => 'Intellectual property',
+                    'body' => 'Drafting note: separate the marketplace’s own brand and software from the content vendors upload, and state the licence each party grants the other.',
+                ],
+                [
+                    'id' => 'liability',
+                    'title' => 'Warranties and liability',
+                    'body' => 'Drafting note: this section carries the most legal weight — have a lawyer write the disclaimers, liability cap and indemnity to suit your jurisdiction.',
+                ],
+                [
+                    'id' => 'termination',
+                    'title' => 'Suspension and termination',
+                    'body' => 'Drafting note: explain how either side ends the relationship, what happens to purchased licenses and downloads afterwards, and which clauses survive.',
+                ],
+                [
+                    'id' => 'law',
+                    'title' => 'Governing law and disputes',
+                    'body' => 'Drafting note: name the governing law and the courts or arbitration process that settles disputes.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Changes to these terms',
+                    'body' => 'Drafting note: say how changes are announced, how much notice is given, and what continued use means after a change.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Questions about these terms?',
+                'body' => 'Send a message and we will get back to you by email.',
+                'action' => 'Contact us',
+            ],
+        ],
+    ],
+
     'contact' => [
         'meta_title' => 'Contact us',
         'eyebrow' => 'Contact us',

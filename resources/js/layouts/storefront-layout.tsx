@@ -189,7 +189,7 @@ function SiteFooter() {
         {
             titleKey: 'footer.columns.legal.title',
             links: [
-                { labelKey: 'footer.columns.legal.terms', href: '#' },
+                { labelKey: 'footer.columns.legal.terms', href: route('terms') },
                 { labelKey: 'footer.columns.legal.privacy', href: '#' },
                 { labelKey: 'footer.columns.legal.license', href: '#' },
                 { labelKey: 'footer.columns.legal.refunds', href: '#' },

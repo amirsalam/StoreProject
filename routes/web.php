@@ -32,6 +32,10 @@ Route::get('/', function () {
 Route::inertia('about', 'about')->name('about');
 Route::inertia('customers', 'customers')->name('customers');
 
+// Legal. The terms page is a marked draft outline, not a policy — it sends
+// robots: noindex until real wording replaces it (see pages/legal/terms.tsx).
+Route::inertia('terms', 'legal/terms')->name('terms');
+
 // Public contact form. Messages are stored (admin inbox) and emailed only
 // when contact.notify_to is configured; the POST is rate limited.
 Route::get('contact', [ContactController::class, 'show'])->name('contact');

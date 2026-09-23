@@ -356,6 +356,92 @@ return [
         ],
     ],
 
+    'legal' => [
+        'draft_banner' => [
+            'title' => 'Brouillon non relu — sans valeur contractuelle',
+            'body' => 'Cette page est un plan des sections que ces conditions doivent couvrir. Ce n\'est pas un avis juridique et aucun juriste ne l\'a relue. Remplacez chaque section par votre propre texte avant le lancement.',
+        ],
+        'status_label' => 'Brouillon · non publié',
+        'toc' => 'Sur cette page',
+        'terms' => [
+            'meta_title' => 'Conditions d\'utilisation',
+            'title' => 'Conditions d\'utilisation',
+            'lead' => 'L\'accord entre la marketplace et les personnes qui y achètent et y vendent.',
+            'sections' => [
+                [
+                    'id' => 'acceptance',
+                    'title' => 'Acceptation des conditions',
+                    'body' => 'Note de rédaction : indiquez qu\'utiliser la marketplace vaut acceptation de ces conditions, à qui elles s\'appliquent et l\'âge minimum pour ouvrir un compte.',
+                ],
+                [
+                    'id' => 'operator',
+                    'title' => 'Qui exploite la marketplace',
+                    'body' => 'Note de rédaction : nommez l\'entité juridique derrière la marketplace, son siège social, son numéro d\'immatriculation et ses coordonnées.',
+                ],
+                [
+                    'id' => 'accounts',
+                    'title' => 'Comptes',
+                    'body' => 'Note de rédaction : couvrez l\'inscription, l\'exactitude des informations, la protection des identifiants, la responsabilité liée au compte et les cas de suspension.',
+                ],
+                [
+                    'id' => 'purchases',
+                    'title' => 'Commandes et paiements',
+                    'body' => 'Note de rédaction : couvrez la formation de la commande, la devise et les taxes, les prestataires de paiement, les échecs de paiement et la valeur d\'un reçu ou d\'une facture.',
+                ],
+                [
+                    'id' => 'licenses',
+                    'title' => 'Licences et téléchargements',
+                    'body' => 'Note de rédaction : décrivez ce que reçoit l\'acheteur pour chaque type de produit — clés de licence, téléchargements, accès API, abonnements — avec limites d\'activation, de téléchargement et renouvellement.',
+                ],
+                [
+                    'id' => 'refunds',
+                    'title' => 'Remboursements et annulations',
+                    'body' => 'Note de rédaction : indiquez le délai et les conditions de remboursement des biens numériques, la marche à suivre et le droit de rétractation applicable à vos acheteurs.',
+                ],
+                [
+                    'id' => 'vendors',
+                    'title' => 'Vendre sur la marketplace',
+                    'body' => 'Note de rédaction : couvrez ce que les vendeurs peuvent publier, les garanties qu\'ils donnent sur leur travail, la commission et les versements, et les motifs de retrait d\'une annonce ou d\'une boutique.',
+                ],
+                [
+                    'id' => 'acceptable_use',
+                    'title' => 'Usage acceptable',
+                    'body' => 'Note de rédaction : interdisez les logiciels malveillants, les contenus illicites ou contrefaisants, le scraping, l\'abus de l\'API et le contournement des licences ou du paiement.',
+                ],
+                [
+                    'id' => 'intellectual_property',
+                    'title' => 'Propriété intellectuelle',
+                    'body' => 'Note de rédaction : distinguez la marque et le logiciel de la marketplace des contenus déposés par les vendeurs, et précisez la licence accordée par chaque partie.',
+                ],
+                [
+                    'id' => 'liability',
+                    'title' => 'Garanties et responsabilité',
+                    'body' => 'Note de rédaction : c\'est la section la plus sensible — faites rédiger les exclusions, le plafond de responsabilité et la garantie d\'indemnisation par un juriste de votre juridiction.',
+                ],
+                [
+                    'id' => 'termination',
+                    'title' => 'Suspension et résiliation',
+                    'body' => 'Note de rédaction : expliquez comment chaque partie met fin à la relation, ce qu\'il advient des licences et téléchargements achetés, et quelles clauses survivent.',
+                ],
+                [
+                    'id' => 'law',
+                    'title' => 'Droit applicable et litiges',
+                    'body' => 'Note de rédaction : indiquez le droit applicable et les tribunaux ou la procédure d\'arbitrage compétents.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Modifications des conditions',
+                    'body' => 'Note de rédaction : précisez comment les modifications sont annoncées, le préavis donné et ce qu\'implique la poursuite de l\'utilisation.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Des questions sur ces conditions ?',
+                'body' => 'Envoyez un message et nous vous répondrons par e-mail.',
+                'action' => 'Nous contacter',
+            ],
+        ],
+    ],
+
     'contact' => [
         'meta_title' => 'Nous contacter',
         'eyebrow' => 'Nous contacter',

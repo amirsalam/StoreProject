@@ -356,6 +356,92 @@ return [
         ],
     ],
 
+    'legal' => [
+        'draft_banner' => [
+            'title' => 'Borrador sin revisar — no vinculante',
+            'body' => 'Esta página es un esquema de las secciones que deben cubrir estos términos. No es asesoramiento legal y ningún abogado la ha revisado. Sustituye cada sección por tu propio texto antes del lanzamiento.',
+        ],
+        'status_label' => 'Borrador · sin publicar',
+        'toc' => 'En esta página',
+        'terms' => [
+            'meta_title' => 'Términos del servicio',
+            'title' => 'Términos del servicio',
+            'lead' => 'El acuerdo entre el marketplace y quienes compran y venden en él.',
+            'sections' => [
+                [
+                    'id' => 'acceptance',
+                    'title' => 'Aceptación de los términos',
+                    'body' => 'Nota de redacción: indica que usar el marketplace implica aceptar estos términos, a quién se aplican y la edad mínima para tener una cuenta.',
+                ],
+                [
+                    'id' => 'operator',
+                    'title' => 'Quién opera el marketplace',
+                    'body' => 'Nota de redacción: nombra la entidad legal que hay detrás, su domicilio social, su número de registro y cómo contactarla.',
+                ],
+                [
+                    'id' => 'accounts',
+                    'title' => 'Cuentas',
+                    'body' => 'Nota de redacción: cubre el registro, la exactitud de los datos, la custodia de las credenciales, la responsabilidad sobre la cuenta y cuándo puede suspenderse.',
+                ],
+                [
+                    'id' => 'purchases',
+                    'title' => 'Pedidos y pagos',
+                    'body' => 'Nota de redacción: cubre cómo se formaliza un pedido, la moneda y los impuestos, los proveedores de pago, los pagos fallidos y qué representa un recibo o factura.',
+                ],
+                [
+                    'id' => 'licenses',
+                    'title' => 'Licencias y descargas',
+                    'body' => 'Nota de redacción: describe qué recibe el comprador según el tipo de producto — claves de licencia, descargas, acceso API, suscripciones — con límites de activación, de descarga y renovación.',
+                ],
+                [
+                    'id' => 'refunds',
+                    'title' => 'Reembolsos y cancelaciones',
+                    'body' => 'Nota de redacción: indica el plazo y las condiciones de reembolso de bienes digitales, cómo solicitarlo y el derecho de desistimiento aplicable a tus compradores.',
+                ],
+                [
+                    'id' => 'vendors',
+                    'title' => 'Vender en el marketplace',
+                    'body' => 'Nota de redacción: cubre qué pueden publicar los vendedores, las garantías sobre su propio trabajo, la comisión y los pagos, y los motivos para retirar un producto o una tienda.',
+                ],
+                [
+                    'id' => 'acceptable_use',
+                    'title' => 'Uso aceptable',
+                    'body' => 'Nota de redacción: prohíbe el malware, el contenido ilícito o infractor, el scraping, el abuso de la API y eludir las licencias o el pago.',
+                ],
+                [
+                    'id' => 'intellectual_property',
+                    'title' => 'Propiedad intelectual',
+                    'body' => 'Nota de redacción: separa la marca y el software del marketplace del contenido que suben los vendedores, e indica la licencia que concede cada parte.',
+                ],
+                [
+                    'id' => 'liability',
+                    'title' => 'Garantías y responsabilidad',
+                    'body' => 'Nota de redacción: es la sección de mayor peso legal — que un abogado de tu jurisdicción redacte las exenciones, el límite de responsabilidad y la indemnización.',
+                ],
+                [
+                    'id' => 'termination',
+                    'title' => 'Suspensión y terminación',
+                    'body' => 'Nota de redacción: explica cómo termina la relación cada parte, qué ocurre con las licencias y descargas compradas, y qué cláusulas sobreviven.',
+                ],
+                [
+                    'id' => 'law',
+                    'title' => 'Ley aplicable y controversias',
+                    'body' => 'Nota de redacción: indica la ley aplicable y los tribunales o el arbitraje que resuelven las controversias.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Cambios en estos términos',
+                    'body' => 'Nota de redacción: explica cómo se anuncian los cambios, con cuánta antelación y qué implica seguir usando el servicio.',
+                ],
+            ],
+            'contact' => [
+                'title' => '¿Dudas sobre estos términos?',
+                'body' => 'Envía un mensaje y te responderemos por correo.',
+                'action' => 'Contacto',
+            ],
+        ],
+    ],
+
     'contact' => [
         'meta_title' => 'Contacto',
         'eyebrow' => 'Contacto',
