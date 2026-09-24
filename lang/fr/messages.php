@@ -363,6 +363,98 @@ return [
         ],
         'status_label' => 'Brouillon · non publié',
         'toc' => 'Sur cette page',
+        'privacy' => [
+            'meta_title' => 'Politique de confidentialité',
+            'title' => 'Politique de confidentialité',
+            'lead' => 'Quelles données personnelles cette marketplace conserve, pourquoi, et ce que vous pouvez nous demander d\'en faire.',
+            'sections' => [
+                [
+                    'id' => 'controller',
+                    'title' => 'Qui est responsable',
+                    'body' => 'Note de rédaction : nommez l\'entité qui décide de l\'usage de ces données, son adresse et un contact confidentialité — ainsi qu\'un DPO ou un représentant UE/RU si nécessaire.',
+                ],
+                [
+                    'id' => 'account_data',
+                    'title' => 'Données de compte que vous fournissez',
+                    'body' => 'Ce que le code enregistre aujourd\'hui : votre nom, votre adresse e-mail et un mot de passe haché. Vérifiez cette liste sur votre build final avant publication.',
+                ],
+                [
+                    'id' => 'billing_data',
+                    'title' => 'Données de commande et de facturation',
+                    'body' => 'Ce que le code enregistre aujourd\'hui : montants et devise, nom de facturation, e-mail de facturation, pays et adresse de facturation, et le libellé du moyen de paiement.',
+                ],
+                [
+                    'id' => 'payments',
+                    'title' => 'Paiements',
+                    'body' => 'Les données de carte sont saisies dans le composant du prestataire de paiement et ne sont pas stockées par cette application ; sont conservés le nom de la passerelle, ses identifiants de paiement et de client, et sa réponse. Note de rédaction : nommez votre prestataire et liez sa politique.',
+                ],
+                [
+                    'id' => 'messages',
+                    'title' => 'Messages que vous nous envoyez',
+                    'body' => 'Le formulaire de contact enregistre le nom, l\'adresse e-mail, l\'objet et le message envoyés, rattachés à votre compte si vous êtes connecté.',
+                ],
+                [
+                    'id' => 'technical_data',
+                    'title' => 'Données collectées automatiquement',
+                    'body' => 'Ce que le code enregistre aujourd\'hui : une adresse IP et un user-agent pour chaque session de connexion et chaque événement de sécurité du journal d\'activité, afin que vous puissiez consulter et révoquer vos sessions.',
+                ],
+                [
+                    'id' => 'social_login',
+                    'title' => 'Connexion via un autre fournisseur',
+                    'body' => 'Si vous vous connectez via un fournisseur externe, le code enregistre son nom, l\'identifiant du compte, l\'e-mail et l\'avatar renvoyés, ainsi que le profil brut. Note de rédaction : listez les fournisseurs réellement activés.',
+                ],
+                [
+                    'id' => 'cookies',
+                    'title' => 'Cookies',
+                    'body' => 'Ce que le code dépose aujourd\'hui : un cookie de session pour vous garder connecté et un cookie de langue mémorisant votre locale. Note de rédaction : si vous ajoutez des cookies de mesure ou de publicité, listez-les et ajoutez une bannière de consentement.',
+                ],
+                [
+                    'id' => 'purposes',
+                    'title' => 'Pourquoi et sur quelle base',
+                    'body' => 'Note de rédaction : rattachez chaque catégorie ci-dessus à une finalité (gestion du compte, exécution des commandes, lutte contre la fraude, support) et, si le RGPD s\'applique, à une base légale.',
+                ],
+                [
+                    'id' => 'sharing',
+                    'title' => 'Avec qui nous les partageons',
+                    'body' => 'Note de rédaction : listez les sous-traitants réellement utilisés — paiement, envoi d\'e-mails, hébergement, suivi d\'erreurs — et précisez ce que les vendeurs voient des acheteurs de leurs produits.',
+                ],
+                [
+                    'id' => 'retention',
+                    'title' => 'Durée de conservation',
+                    'body' => 'Note de rédaction : fixez une durée par catégorie. Les commandes et factures ont souvent une durée légale minimale, tandis que sessions, journaux d\'activité et messages doivent avoir un maximum défini.',
+                ],
+                [
+                    'id' => 'rights',
+                    'title' => 'Vos droits',
+                    'body' => 'Note de rédaction : décrivez les droits d\'accès, de rectification, d\'effacement, de portabilité, d\'opposition et de réclamation applicables, et comment les exercer — le formulaire de contact est la voie actuelle.',
+                ],
+                [
+                    'id' => 'transfers',
+                    'title' => 'Transferts internationaux',
+                    'body' => 'Note de rédaction : indiquez où les données sont hébergées et quelles garanties encadrent les transferts hors de la région de vos utilisateurs.',
+                ],
+                [
+                    'id' => 'security',
+                    'title' => 'Comment elles sont protégées',
+                    'body' => 'Ce que fait le code aujourd\'hui : les mots de passe sont hachés, les identifiants des passerelles de paiement sont chiffrés, et les enregistrements de chaque locataire sont cloisonnés. Note de rédaction : ajoutez vos mesures organisationnelles.',
+                ],
+                [
+                    'id' => 'children',
+                    'title' => 'Mineurs',
+                    'body' => 'Note de rédaction : indiquez l\'âge minimum pour ouvrir un compte et ce que vous faites si vous apprenez qu\'un mineur s\'est inscrit.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Modifications de cette politique',
+                    'body' => 'Note de rédaction : précisez comment les modifications sont annoncées et affichez une date de mise à jour dès que ce texte sera réel.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Des questions sur vos données ?',
+                'body' => 'Envoyez un message et nous vous répondrons par e-mail.',
+                'action' => 'Nous contacter',
+            ],
+        ],
         'terms' => [
             'meta_title' => 'Conditions d\'utilisation',
             'title' => 'Conditions d\'utilisation',

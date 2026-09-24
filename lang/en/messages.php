@@ -363,6 +363,98 @@ return [
         ],
         'status_label' => 'Draft · not yet published',
         'toc' => 'On this page',
+        'privacy' => [
+            'meta_title' => 'Privacy policy',
+            'title' => 'Privacy policy',
+            'lead' => 'What personal data this marketplace holds, why, and what you can ask us to do with it.',
+            'sections' => [
+                [
+                    'id' => 'controller',
+                    'title' => 'Who is responsible',
+                    'body' => 'Drafting note: name the legal entity that decides how this data is used, its address, and a privacy contact — plus a data protection officer or EU/UK representative if you need one.',
+                ],
+                [
+                    'id' => 'account_data',
+                    'title' => 'Account data you give us',
+                    'body' => 'What the code stores today: your name, email address and a hashed password. Confirm this list against your final build before publishing.',
+                ],
+                [
+                    'id' => 'billing_data',
+                    'title' => 'Order and billing data',
+                    'body' => 'What the code stores today: order totals and currency, billing name, billing email, billing country and billing address, plus the payment method label.',
+                ],
+                [
+                    'id' => 'payments',
+                    'title' => 'Payments',
+                    'body' => 'Card details are entered in the payment provider’s own element and are not stored by this application; what is stored is the gateway name, its payment and customer identifiers, and the gateway’s response. Drafting note: name your provider and link its privacy notice.',
+                ],
+                [
+                    'id' => 'messages',
+                    'title' => 'Messages you send us',
+                    'body' => 'The contact form stores the name, email address, subject and message you submit, linked to your account when you are signed in.',
+                ],
+                [
+                    'id' => 'technical_data',
+                    'title' => 'Data collected automatically',
+                    'body' => 'What the code stores today: an IP address and browser user-agent against each login session and each security event in the activity log, so you can review and revoke your own sessions.',
+                ],
+                [
+                    'id' => 'social_login',
+                    'title' => 'Signing in with another provider',
+                    'body' => 'If you sign in through an external provider, the code stores the provider name, its account identifier, the email address and avatar it returns, and the raw profile payload. Drafting note: list the providers you actually enable.',
+                ],
+                [
+                    'id' => 'cookies',
+                    'title' => 'Cookies',
+                    'body' => 'What the code sets today: a session cookie to keep you signed in, and a language cookie remembering your locale. Drafting note: if you add analytics or advertising cookies, list them here and add a consent banner.',
+                ],
+                [
+                    'id' => 'purposes',
+                    'title' => 'Why we use it, and on what basis',
+                    'body' => 'Drafting note: map each category above to a purpose (running your account, fulfilling orders, fraud prevention, support) and, where GDPR or similar law applies, to a lawful basis.',
+                ],
+                [
+                    'id' => 'sharing',
+                    'title' => 'Who we share it with',
+                    'body' => 'Drafting note: list the processors you actually use — payment provider, email delivery, hosting, error tracking — and say what vendors on the marketplace can see about buyers of their products.',
+                ],
+                [
+                    'id' => 'retention',
+                    'title' => 'How long we keep it',
+                    'body' => 'Drafting note: set a retention period per category. Note that orders and invoices usually have a statutory minimum, while sessions, activity logs and contact messages should have a defined maximum.',
+                ],
+                [
+                    'id' => 'rights',
+                    'title' => 'Your rights',
+                    'body' => 'Drafting note: describe access, correction, deletion, portability, objection and complaint rights for your jurisdiction, and how someone exercises them — the contact form is the route today.',
+                ],
+                [
+                    'id' => 'transfers',
+                    'title' => 'International transfers',
+                    'body' => 'Drafting note: say where the data is hosted and which safeguards cover transfers out of your users’ region.',
+                ],
+                [
+                    'id' => 'security',
+                    'title' => 'How it is protected',
+                    'body' => 'What the code does today: passwords are hashed, payment gateway credentials are stored encrypted, and each tenant’s records are scoped so one tenant cannot read another’s. Drafting note: add your organisational measures.',
+                ],
+                [
+                    'id' => 'children',
+                    'title' => 'Children',
+                    'body' => 'Drafting note: state the minimum age for an account and what you do if you learn a child has registered.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Changes to this notice',
+                    'body' => 'Drafting note: say how changes are announced and keep a visible last-updated date once this is a real notice.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Questions about your data?',
+                'body' => 'Send a message and we will get back to you by email.',
+                'action' => 'Contact us',
+            ],
+        ],
         'terms' => [
             'meta_title' => 'Terms of service',
             'title' => 'Terms of service',

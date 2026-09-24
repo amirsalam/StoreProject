@@ -363,6 +363,98 @@ return [
         ],
         'status_label' => 'Borrador · sin publicar',
         'toc' => 'En esta página',
+        'privacy' => [
+            'meta_title' => 'Política de privacidad',
+            'title' => 'Política de privacidad',
+            'lead' => 'Qué datos personales guarda este marketplace, por qué, y qué puedes pedirnos que hagamos con ellos.',
+            'sections' => [
+                [
+                    'id' => 'controller',
+                    'title' => 'Quién es responsable',
+                    'body' => 'Nota de redacción: nombra la entidad que decide el uso de estos datos, su dirección y un contacto de privacidad — y un DPD o representante en la UE/RU si lo necesitas.',
+                ],
+                [
+                    'id' => 'account_data',
+                    'title' => 'Datos de cuenta que nos facilitas',
+                    'body' => 'Lo que el código guarda hoy: tu nombre, tu correo electrónico y una contraseña cifrada con hash. Verifica esta lista con tu versión final antes de publicar.',
+                ],
+                [
+                    'id' => 'billing_data',
+                    'title' => 'Datos de pedido y facturación',
+                    'body' => 'Lo que el código guarda hoy: importes y moneda, nombre de facturación, correo de facturación, país y dirección de facturación, y la etiqueta del método de pago.',
+                ],
+                [
+                    'id' => 'payments',
+                    'title' => 'Pagos',
+                    'body' => 'Los datos de la tarjeta se introducen en el componente del proveedor de pago y esta aplicación no los almacena; sí se guardan el nombre de la pasarela, sus identificadores de pago y cliente, y su respuesta. Nota de redacción: nombra tu proveedor y enlaza su política.',
+                ],
+                [
+                    'id' => 'messages',
+                    'title' => 'Mensajes que nos envías',
+                    'body' => 'El formulario de contacto guarda el nombre, el correo, el asunto y el mensaje enviados, vinculados a tu cuenta si has iniciado sesión.',
+                ],
+                [
+                    'id' => 'technical_data',
+                    'title' => 'Datos recogidos automáticamente',
+                    'body' => 'Lo que el código guarda hoy: una dirección IP y el user-agent del navegador en cada sesión y en cada evento de seguridad del registro de actividad, para que puedas revisar y revocar tus sesiones.',
+                ],
+                [
+                    'id' => 'social_login',
+                    'title' => 'Iniciar sesión con otro proveedor',
+                    'body' => 'Si inicias sesión con un proveedor externo, el código guarda su nombre, el identificador de la cuenta, el correo y el avatar devueltos, y el perfil en bruto. Nota de redacción: enumera los proveedores que realmente actives.',
+                ],
+                [
+                    'id' => 'cookies',
+                    'title' => 'Cookies',
+                    'body' => 'Lo que el código instala hoy: una cookie de sesión para mantenerte identificado y una cookie de idioma que recuerda tu locale. Nota de redacción: si añades cookies de analítica o publicidad, enuméralas y añade un banner de consentimiento.',
+                ],
+                [
+                    'id' => 'purposes',
+                    'title' => 'Para qué y con qué base',
+                    'body' => 'Nota de redacción: relaciona cada categoría anterior con una finalidad (gestión de la cuenta, cumplimiento de pedidos, prevención del fraude, soporte) y, si aplica el RGPD, con una base legal.',
+                ],
+                [
+                    'id' => 'sharing',
+                    'title' => 'Con quién los compartimos',
+                    'body' => 'Nota de redacción: enumera los encargados que uses realmente — pago, envío de correo, alojamiento, seguimiento de errores — e indica qué ven los vendedores sobre los compradores de sus productos.',
+                ],
+                [
+                    'id' => 'retention',
+                    'title' => 'Cuánto tiempo los conservamos',
+                    'body' => 'Nota de redacción: fija un plazo por categoría. Pedidos y facturas suelen tener un mínimo legal, mientras que sesiones, registros de actividad y mensajes deberían tener un máximo definido.',
+                ],
+                [
+                    'id' => 'rights',
+                    'title' => 'Tus derechos',
+                    'body' => 'Nota de redacción: describe los derechos de acceso, rectificación, supresión, portabilidad, oposición y reclamación de tu jurisdicción, y cómo ejercerlos — hoy la vía es el formulario de contacto.',
+                ],
+                [
+                    'id' => 'transfers',
+                    'title' => 'Transferencias internacionales',
+                    'body' => 'Nota de redacción: indica dónde se alojan los datos y qué garantías cubren las transferencias fuera de la región de tus usuarios.',
+                ],
+                [
+                    'id' => 'security',
+                    'title' => 'Cómo se protegen',
+                    'body' => 'Lo que hace el código hoy: las contraseñas se guardan con hash, las credenciales de las pasarelas de pago se cifran y los registros de cada inquilino están aislados. Nota de redacción: añade tus medidas organizativas.',
+                ],
+                [
+                    'id' => 'children',
+                    'title' => 'Menores',
+                    'body' => 'Nota de redacción: indica la edad mínima para tener cuenta y qué haces si detectas que se ha registrado un menor.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Cambios en esta política',
+                    'body' => 'Nota de redacción: explica cómo se anuncian los cambios y muestra una fecha de última actualización cuando el texto sea real.',
+                ],
+            ],
+            'contact' => [
+                'title' => '¿Dudas sobre tus datos?',
+                'body' => 'Envía un mensaje y te responderemos por correo.',
+                'action' => 'Contacto',
+            ],
+        ],
         'terms' => [
             'meta_title' => 'Términos del servicio',
             'title' => 'Términos del servicio',
