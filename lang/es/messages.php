@@ -455,6 +455,78 @@ return [
                 'action' => 'Contacto',
             ],
         ],
+        'license' => [
+            'meta_title' => 'Términos de licencia',
+            'title' => 'Términos de licencia',
+            'lead' => 'Qué puedes hacer con los productos que compras aquí, y qué sigue perteneciendo a sus autores.',
+            'sections' => [
+                [
+                    'id' => 'grant',
+                    'title' => 'Qué te da una compra',
+                    'body' => 'Nota de redacción: indica que comprar un producto concede una licencia de uso, no la propiedad, y que el vendedor conserva los derechos de autor.',
+                ],
+                [
+                    'id' => 'license_types',
+                    'title' => 'Tipos de licencia',
+                    'body' => 'Lo que hace el código hoy: cada producto puede llevar una etiqueta de tipo de licencia elegida por su vendedor y mostrada en la ficha del producto. Nota de redacción: define exactamente qué permite cada etiqueta, o sustituye las etiquetas libres por un conjunto fijo definido aquí.',
+                ],
+                [
+                    'id' => 'license_keys',
+                    'title' => 'Claves de licencia',
+                    'body' => 'Lo que hace el código hoy: comprar un producto con licencia o de acceso API genera una clave única, un límite de activaciones fijado por producto y un estado activo, caducado o revocado.',
+                ],
+                [
+                    'id' => 'activations',
+                    'title' => 'Activaciones',
+                    'body' => 'Nota de redacción: define qué cuenta como una activación (un dominio, una instalación, una máquina) y cómo liberar una. Confirma que los límites se aplican de verdad antes de prometerlo aquí.',
+                ],
+                [
+                    'id' => 'downloads',
+                    'title' => 'Descargas',
+                    'body' => 'Lo que hace el código hoy: comprar un producto descargable crea un derecho de descarga, que puede tener un número máximo de descargas fijado por producto. Nota de redacción: indica cuánto tiempo siguen disponibles las descargas.',
+                ],
+                [
+                    'id' => 'permitted_use',
+                    'title' => 'Lo que puedes hacer',
+                    'body' => 'Nota de redacción: enumera los usos permitidos por tipo de licencia — proyectos personales o comerciales, trabajo para clientes, modificación, número de productos finales.',
+                ],
+                [
+                    'id' => 'restrictions',
+                    'title' => 'Lo que no puedes hacer',
+                    'body' => 'Nota de redacción: cubre la reventa o redistribución, compartir claves, publicar el código fuente y usarlo en un producto competidor del marketplace.',
+                ],
+                [
+                    'id' => 'updates_support',
+                    'title' => 'Actualizaciones y soporte',
+                    'body' => 'Nota de redacción: indica si se incluyen actualizaciones y soporte, durante cuánto tiempo, y quién los presta — el marketplace o el vendedor.',
+                ],
+                [
+                    'id' => 'revocation',
+                    'title' => 'Revocación y caducidad',
+                    'body' => 'Lo que hace el código hoy: una licencia puede revocarse, registrando la hora, o caducar en una fecha fijada. Nota de redacción: enumera los motivos de revocación (reembolso, contracargo, incumplimiento) y qué ocurre con las copias ya desplegadas.',
+                ],
+                [
+                    'id' => 'vendor_terms',
+                    'title' => 'Condiciones propias del vendedor',
+                    'body' => 'Nota de redacción: indica si los vendedores pueden añadir su propia licencia y qué condiciones prevalecen si hay conflicto.',
+                ],
+                [
+                    'id' => 'third_party',
+                    'title' => 'Componentes de terceros',
+                    'body' => 'Nota de redacción: indica que los componentes de código abierto o de terceros incluidos mantienen su propia licencia, y exige que los vendedores los declaren.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Cambios en estos términos',
+                    'body' => 'Nota de redacción: indica si los cambios se aplican a compras ya realizadas y muestra una fecha de última actualización cuando el texto sea real.',
+                ],
+            ],
+            'contact' => [
+                'title' => '¿Dudas sobre las licencias?',
+                'body' => 'Envía un mensaje y te responderemos por correo.',
+                'action' => 'Contacto',
+            ],
+        ],
         'terms' => [
             'meta_title' => 'Términos del servicio',
             'title' => 'Términos del servicio',

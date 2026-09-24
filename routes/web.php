@@ -36,6 +36,7 @@ Route::inertia('customers', 'customers')->name('customers');
 // robots: noindex until real wording replaces it (see pages/legal/terms.tsx).
 Route::inertia('terms', 'legal/terms')->name('terms');
 Route::inertia('privacy', 'legal/privacy')->name('privacy');
+Route::inertia('license', 'legal/license')->name('license');
 
 // Public contact form. Messages are stored (admin inbox) and emailed only
 // when contact.notify_to is configured; the POST is rate limited.

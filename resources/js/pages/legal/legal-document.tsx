@@ -18,7 +18,7 @@ interface LegalSection {
  * draft warning and robots: noindex. When real wording replaces the
  * placeholder text, drop the banner and the noindex in the same change.
  */
-export default function LegalDocument({ docKey }: { docKey: 'terms' | 'privacy' }) {
+export default function LegalDocument({ docKey }: { docKey: 'terms' | 'privacy' | 'license' }) {
     const { branding } = usePage<SharedData>().props;
     const { t, tList } = useTranslate();
     const brandTitle = branding?.title ?? 'StoreProject';

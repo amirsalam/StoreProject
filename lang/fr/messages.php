@@ -455,6 +455,78 @@ return [
                 'action' => 'Nous contacter',
             ],
         ],
+        'license' => [
+            'meta_title' => 'Conditions de licence',
+            'title' => 'Conditions de licence',
+            'lead' => 'Ce que vous pouvez faire des produits achetés ici, et ce qui reste à leurs auteurs.',
+            'sections' => [
+                [
+                    'id' => 'grant',
+                    'title' => 'Ce que vous obtenez en achetant',
+                    'body' => 'Note de rédaction : indiquez qu\'un achat accorde une licence d\'utilisation, non la propriété, et que le vendeur conserve le droit d\'auteur.',
+                ],
+                [
+                    'id' => 'license_types',
+                    'title' => 'Types de licence',
+                    'body' => 'Ce que fait le code aujourd\'hui : chaque produit peut porter un libellé de type de licence choisi par son vendeur et affiché sur la fiche produit. Note de rédaction : définissez précisément ce que permet chaque libellé, ou remplacez ces libellés libres par une liste fixe définie ici.',
+                ],
+                [
+                    'id' => 'license_keys',
+                    'title' => 'Clés de licence',
+                    'body' => 'Ce que fait le code aujourd\'hui : l\'achat d\'un produit sous licence ou d\'un accès API génère une clé unique, une limite d\'activations fixée par produit et un statut actif, expiré ou révoqué.',
+                ],
+                [
+                    'id' => 'activations',
+                    'title' => 'Activations',
+                    'body' => 'Note de rédaction : définissez ce qui compte comme une activation (un domaine, une installation, une machine) et comment l\'acheteur en libère une. Vérifiez que les limites sont réellement appliquées avant de le promettre ici.',
+                ],
+                [
+                    'id' => 'downloads',
+                    'title' => 'Téléchargements',
+                    'body' => 'Ce que fait le code aujourd\'hui : l\'achat d\'un produit téléchargeable crée un droit de téléchargement, qui peut comporter un nombre maximal de téléchargements fixé par produit. Note de rédaction : indiquez combien de temps les téléchargements restent disponibles.',
+                ],
+                [
+                    'id' => 'permitted_use',
+                    'title' => 'Ce que vous pouvez faire',
+                    'body' => 'Note de rédaction : listez les usages permis par type de licence — projets personnels ou commerciaux, travail pour des clients, modification, nombre de produits finaux.',
+                ],
+                [
+                    'id' => 'restrictions',
+                    'title' => 'Ce que vous ne pouvez pas faire',
+                    'body' => 'Note de rédaction : couvrez la revente ou redistribution, le partage des clés, la publication du code source et l\'usage dans un produit concurrent sur la marketplace.',
+                ],
+                [
+                    'id' => 'updates_support',
+                    'title' => 'Mises à jour et support',
+                    'body' => 'Note de rédaction : précisez si les mises à jour et le support sont inclus, pour combien de temps, et qui les assure — la marketplace ou le vendeur.',
+                ],
+                [
+                    'id' => 'revocation',
+                    'title' => 'Révocation et expiration',
+                    'body' => 'Ce que fait le code aujourd\'hui : une licence peut être révoquée, avec l\'heure enregistrée, ou expirer à une date fixée. Note de rédaction : listez les motifs de révocation (remboursement, rétrofacturation, manquement) et le sort des copies déjà déployées.',
+                ],
+                [
+                    'id' => 'vendor_terms',
+                    'title' => 'Conditions propres aux vendeurs',
+                    'body' => 'Note de rédaction : indiquez si les vendeurs peuvent joindre leur propre licence et quelles conditions prévalent en cas de conflit.',
+                ],
+                [
+                    'id' => 'third_party',
+                    'title' => 'Composants tiers',
+                    'body' => 'Note de rédaction : précisez que les composants open source ou tiers inclus gardent leur propre licence, et exigez que les vendeurs les déclarent.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Modifications de ces conditions',
+                    'body' => 'Note de rédaction : précisez si les modifications s\'appliquent aux achats déjà effectués, et affichez une date de mise à jour dès que ce texte sera réel.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Des questions sur les licences ?',
+                'body' => 'Envoyez un message et nous vous répondrons par e-mail.',
+                'action' => 'Nous contacter',
+            ],
+        ],
         'terms' => [
             'meta_title' => 'Conditions d\'utilisation',
             'title' => 'Conditions d\'utilisation',

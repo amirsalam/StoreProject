@@ -26,6 +26,7 @@ class LegalPagesTest extends TestCase
             // route name, page component, section count
             'terms' => ['terms', 'legal/terms', 13],
             'privacy' => ['privacy', 'legal/privacy', 16],
+            'license' => ['license', 'legal/license', 12],
         ];
     }
 

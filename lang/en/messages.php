@@ -455,6 +455,78 @@ return [
                 'action' => 'Contact us',
             ],
         ],
+        'license' => [
+            'meta_title' => 'License terms',
+            'title' => 'License terms',
+            'lead' => 'What you may do with the products you buy here, and what stays with their authors.',
+            'sections' => [
+                [
+                    'id' => 'grant',
+                    'title' => 'What a purchase gives you',
+                    'body' => 'Drafting note: state that buying a product grants a licence to use it, not ownership, and that the vendor keeps the copyright.',
+                ],
+                [
+                    'id' => 'license_types',
+                    'title' => 'License types',
+                    'body' => 'What the code does today: each product can carry a license-type label that its vendor chooses, shown on the product page. Drafting note: either define exactly what each label permits, or replace free-text labels with a fixed set you define here.',
+                ],
+                [
+                    'id' => 'license_keys',
+                    'title' => 'License keys',
+                    'body' => 'What the code does today: buying a license or API-access product issues a unique key, an activation limit set per product, and a status of active, expired or revoked.',
+                ],
+                [
+                    'id' => 'activations',
+                    'title' => 'Activations',
+                    'body' => 'Drafting note: define what counts as one activation (a domain, an installation, a machine) and how a buyer frees one up. Confirm activation limits are actually enforced before promising it here.',
+                ],
+                [
+                    'id' => 'downloads',
+                    'title' => 'Downloads',
+                    'body' => 'What the code does today: buying a downloadable product creates a download grant, which can carry a maximum number of downloads set per product. Drafting note: say how long downloads stay available.',
+                ],
+                [
+                    'id' => 'permitted_use',
+                    'title' => 'What you may do',
+                    'body' => 'Drafting note: list permitted uses for each license type — personal or commercial projects, client work, modification, number of end products.',
+                ],
+                [
+                    'id' => 'restrictions',
+                    'title' => 'What you may not do',
+                    'body' => 'Drafting note: cover reselling or redistributing the product, sharing license keys, publishing the source, and using it in a competing marketplace item.',
+                ],
+                [
+                    'id' => 'updates_support',
+                    'title' => 'Updates and support',
+                    'body' => 'Drafting note: say whether updates and support are included, for how long, and who provides them — the marketplace or the vendor.',
+                ],
+                [
+                    'id' => 'revocation',
+                    'title' => 'Revocation and expiry',
+                    'body' => 'What the code does today: a license can be revoked, with the time recorded, or expire on a set date. Drafting note: list the grounds for revocation (refund, chargeback, breach) and what happens to copies already deployed.',
+                ],
+                [
+                    'id' => 'vendor_terms',
+                    'title' => 'Vendor-specific terms',
+                    'body' => 'Drafting note: say whether vendors may attach their own licence to a product and which terms win if they conflict with these.',
+                ],
+                [
+                    'id' => 'third_party',
+                    'title' => 'Third-party components',
+                    'body' => 'Drafting note: state that bundled open-source or third-party components keep their own licences, and require vendors to disclose them.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Changes to these terms',
+                    'body' => 'Drafting note: say whether changes apply to purchases already made, and keep a visible last-updated date once this is real.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Questions about licensing?',
+                'body' => 'Send a message and we will get back to you by email.',
+                'action' => 'Contact us',
+            ],
+        ],
         'terms' => [
             'meta_title' => 'Terms of service',
             'title' => 'Terms of service',
