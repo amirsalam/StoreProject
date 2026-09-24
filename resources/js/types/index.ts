@@ -91,6 +91,39 @@ export interface Vendor {
     profile?: VendorProfile | null;
 }
 
+export interface ContactMessage {
+    id: number;
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+    status: 'new' | 'read' | 'archived';
+    read_at: string | null;
+    created_at: string;
+}
+
+/** Fields a blog post exposes in listings (index cards, related links). */
+export interface BlogPostSummary {
+    id: number;
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    tags?: string[] | null;
+    published_at: string | null;
+    author?: Pick<User, 'id' | 'name'> | null;
+}
+
+export interface BlogPost extends BlogPostSummary {
+    content: string;
+    thumbnail: string | null;
+    status: 'draft' | 'published';
+    seo_title: string | null;
+    seo_description: string | null;
+    views_count: number;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Product {
     id: number;
     category_id: number | null;

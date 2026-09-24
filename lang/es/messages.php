@@ -301,6 +301,358 @@ return [
         'secondary' => 'Ver la tienda en vivo',
     ],
 
+    'blog' => [
+        'meta_title' => 'Blog',
+        'title' => 'Desde el taller',
+        'subtitle' => 'Novedades del producto, notas técnicas y guías para vender productos digitales.',
+        'search_placeholder' => 'Buscar artículos…',
+        'search_submit' => 'Buscar',
+        'tags_label' => 'Filtrar por etiqueta',
+        'all_tags' => 'Todos',
+        'empty' => 'Aún no hay artículos. Vuelve pronto.',
+        'read_more' => 'Leer más',
+        'back_to_index' => 'Todos los artículos',
+        'reading_time' => ':minutes min de lectura',
+        'related' => 'Artículos relacionados',
+    ],
+
+    'about' => [
+        'meta_title' => 'Sobre nosotros',
+        'eyebrow' => 'Sobre nosotros',
+        'title' => 'Un marketplace creado por makers, para makers.',
+        'lead' => 'StoreProject es el marketplace todo en uno para scripts de Laravel, APIs, plantillas y SaaS — donde los desarrolladores independientes venden su trabajo y los compradores lo reciben al instante.',
+        'mission' => [
+            'title' => 'Por qué existimos',
+            'body_1' => 'Vender software debería tratarse del software. Sin embargo, cada creador termina reconstruyendo la misma infraestructura: pagos, claves de licencia, descargas seguras, suscripciones y facturas.',
+            'body_2' => 'Construimos esa infraestructura una vez, bien hecha, para que los creadores se centren en sus productos y los compradores confíen en lo que reciben — del pago a la entrega.',
+        ],
+        'values' => [
+            'title' => 'Lo que defendemos',
+            'description' => 'Algunos principios guían cada decisión que tomamos.',
+            'items' => [
+                'makers' => [
+                    'title' => 'Los creadores primero',
+                    'body' => 'Herramientas diseñadas en torno a cómo los desarrolladores independientes crean, ponen precio y lanzan sus productos.',
+                ],
+                'commerce' => [
+                    'title' => 'Comercio bien hecho',
+                    'body' => 'Pagos seguros, licencias y descargas entregadas al instante tras el pago, y un registro claro de cada pedido.',
+                ],
+                'vendors' => [
+                    'title' => 'Tu tienda, tu marca',
+                    'body' => 'Cada vendedor tiene su propia tienda con perfil, logotipo y catálogo de productos.',
+                ],
+                'global' => [
+                    'title' => 'Abierto a todos',
+                    'body' => 'Disponible en inglés, francés, español y árabe — con soporte completo de derecha a izquierda.',
+                ],
+            ],
+        ],
+        'cta' => [
+            'title' => '¿Listo para empezar?',
+            'body' => 'Explora el catálogo, o abre tu propia tienda y empieza a vender hoy.',
+            'browse' => 'Explorar productos',
+            'sell' => 'Empezar a vender',
+        ],
+    ],
+
+    'legal' => [
+        'draft_banner' => [
+            'title' => 'Borrador sin revisar — no vinculante',
+            'body' => 'Esta página es un esquema de las secciones que deben cubrir estos términos. No es asesoramiento legal y ningún abogado la ha revisado. Sustituye cada sección por tu propio texto antes del lanzamiento.',
+        ],
+        'status_label' => 'Borrador · sin publicar',
+        'toc' => 'En esta página',
+        'privacy' => [
+            'meta_title' => 'Política de privacidad',
+            'title' => 'Política de privacidad',
+            'lead' => 'Qué datos personales guarda este marketplace, por qué, y qué puedes pedirnos que hagamos con ellos.',
+            'sections' => [
+                [
+                    'id' => 'controller',
+                    'title' => 'Quién es responsable',
+                    'body' => 'Nota de redacción: nombra la entidad que decide el uso de estos datos, su dirección y un contacto de privacidad — y un DPD o representante en la UE/RU si lo necesitas.',
+                ],
+                [
+                    'id' => 'account_data',
+                    'title' => 'Datos de cuenta que nos facilitas',
+                    'body' => 'Lo que el código guarda hoy: tu nombre, tu correo electrónico y una contraseña cifrada con hash. Verifica esta lista con tu versión final antes de publicar.',
+                ],
+                [
+                    'id' => 'billing_data',
+                    'title' => 'Datos de pedido y facturación',
+                    'body' => 'Lo que el código guarda hoy: importes y moneda, nombre de facturación, correo de facturación, país y dirección de facturación, y la etiqueta del método de pago.',
+                ],
+                [
+                    'id' => 'payments',
+                    'title' => 'Pagos',
+                    'body' => 'Los datos de la tarjeta se introducen en el componente del proveedor de pago y esta aplicación no los almacena; sí se guardan el nombre de la pasarela, sus identificadores de pago y cliente, y su respuesta. Nota de redacción: nombra tu proveedor y enlaza su política.',
+                ],
+                [
+                    'id' => 'messages',
+                    'title' => 'Mensajes que nos envías',
+                    'body' => 'El formulario de contacto guarda el nombre, el correo, el asunto y el mensaje enviados, vinculados a tu cuenta si has iniciado sesión.',
+                ],
+                [
+                    'id' => 'technical_data',
+                    'title' => 'Datos recogidos automáticamente',
+                    'body' => 'Lo que el código guarda hoy: una dirección IP y el user-agent del navegador en cada sesión y en cada evento de seguridad del registro de actividad, para que puedas revisar y revocar tus sesiones.',
+                ],
+                [
+                    'id' => 'social_login',
+                    'title' => 'Iniciar sesión con otro proveedor',
+                    'body' => 'Si inicias sesión con un proveedor externo, el código guarda su nombre, el identificador de la cuenta, el correo y el avatar devueltos, y el perfil en bruto. Nota de redacción: enumera los proveedores que realmente actives.',
+                ],
+                [
+                    'id' => 'cookies',
+                    'title' => 'Cookies',
+                    'body' => 'Lo que el código instala hoy: una cookie de sesión para mantenerte identificado y una cookie de idioma que recuerda tu locale. Nota de redacción: si añades cookies de analítica o publicidad, enuméralas y añade un banner de consentimiento.',
+                ],
+                [
+                    'id' => 'purposes',
+                    'title' => 'Para qué y con qué base',
+                    'body' => 'Nota de redacción: relaciona cada categoría anterior con una finalidad (gestión de la cuenta, cumplimiento de pedidos, prevención del fraude, soporte) y, si aplica el RGPD, con una base legal.',
+                ],
+                [
+                    'id' => 'sharing',
+                    'title' => 'Con quién los compartimos',
+                    'body' => 'Nota de redacción: enumera los encargados que uses realmente — pago, envío de correo, alojamiento, seguimiento de errores — e indica qué ven los vendedores sobre los compradores de sus productos.',
+                ],
+                [
+                    'id' => 'retention',
+                    'title' => 'Cuánto tiempo los conservamos',
+                    'body' => 'Nota de redacción: fija un plazo por categoría. Pedidos y facturas suelen tener un mínimo legal, mientras que sesiones, registros de actividad y mensajes deberían tener un máximo definido.',
+                ],
+                [
+                    'id' => 'rights',
+                    'title' => 'Tus derechos',
+                    'body' => 'Nota de redacción: describe los derechos de acceso, rectificación, supresión, portabilidad, oposición y reclamación de tu jurisdicción, y cómo ejercerlos — hoy la vía es el formulario de contacto.',
+                ],
+                [
+                    'id' => 'transfers',
+                    'title' => 'Transferencias internacionales',
+                    'body' => 'Nota de redacción: indica dónde se alojan los datos y qué garantías cubren las transferencias fuera de la región de tus usuarios.',
+                ],
+                [
+                    'id' => 'security',
+                    'title' => 'Cómo se protegen',
+                    'body' => 'Lo que hace el código hoy: las contraseñas se guardan con hash, las credenciales de las pasarelas de pago se cifran y los registros de cada inquilino están aislados. Nota de redacción: añade tus medidas organizativas.',
+                ],
+                [
+                    'id' => 'children',
+                    'title' => 'Menores',
+                    'body' => 'Nota de redacción: indica la edad mínima para tener cuenta y qué haces si detectas que se ha registrado un menor.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Cambios en esta política',
+                    'body' => 'Nota de redacción: explica cómo se anuncian los cambios y muestra una fecha de última actualización cuando el texto sea real.',
+                ],
+            ],
+            'contact' => [
+                'title' => '¿Dudas sobre tus datos?',
+                'body' => 'Envía un mensaje y te responderemos por correo.',
+                'action' => 'Contacto',
+            ],
+        ],
+        'license' => [
+            'meta_title' => 'Términos de licencia',
+            'title' => 'Términos de licencia',
+            'lead' => 'Qué puedes hacer con los productos que compras aquí, y qué sigue perteneciendo a sus autores.',
+            'sections' => [
+                [
+                    'id' => 'grant',
+                    'title' => 'Qué te da una compra',
+                    'body' => 'Nota de redacción: indica que comprar un producto concede una licencia de uso, no la propiedad, y que el vendedor conserva los derechos de autor.',
+                ],
+                [
+                    'id' => 'license_types',
+                    'title' => 'Tipos de licencia',
+                    'body' => 'Lo que hace el código hoy: cada producto puede llevar una etiqueta de tipo de licencia elegida por su vendedor y mostrada en la ficha del producto. Nota de redacción: define exactamente qué permite cada etiqueta, o sustituye las etiquetas libres por un conjunto fijo definido aquí.',
+                ],
+                [
+                    'id' => 'license_keys',
+                    'title' => 'Claves de licencia',
+                    'body' => 'Lo que hace el código hoy: comprar un producto con licencia o de acceso API genera una clave única, un límite de activaciones fijado por producto y un estado activo, caducado o revocado.',
+                ],
+                [
+                    'id' => 'activations',
+                    'title' => 'Activaciones',
+                    'body' => 'Nota de redacción: define qué cuenta como una activación (un dominio, una instalación, una máquina) y cómo liberar una. Confirma que los límites se aplican de verdad antes de prometerlo aquí.',
+                ],
+                [
+                    'id' => 'downloads',
+                    'title' => 'Descargas',
+                    'body' => 'Lo que hace el código hoy: comprar un producto descargable crea un derecho de descarga, que puede tener un número máximo de descargas fijado por producto. Nota de redacción: indica cuánto tiempo siguen disponibles las descargas.',
+                ],
+                [
+                    'id' => 'permitted_use',
+                    'title' => 'Lo que puedes hacer',
+                    'body' => 'Nota de redacción: enumera los usos permitidos por tipo de licencia — proyectos personales o comerciales, trabajo para clientes, modificación, número de productos finales.',
+                ],
+                [
+                    'id' => 'restrictions',
+                    'title' => 'Lo que no puedes hacer',
+                    'body' => 'Nota de redacción: cubre la reventa o redistribución, compartir claves, publicar el código fuente y usarlo en un producto competidor del marketplace.',
+                ],
+                [
+                    'id' => 'updates_support',
+                    'title' => 'Actualizaciones y soporte',
+                    'body' => 'Nota de redacción: indica si se incluyen actualizaciones y soporte, durante cuánto tiempo, y quién los presta — el marketplace o el vendedor.',
+                ],
+                [
+                    'id' => 'revocation',
+                    'title' => 'Revocación y caducidad',
+                    'body' => 'Lo que hace el código hoy: una licencia puede revocarse, registrando la hora, o caducar en una fecha fijada. Nota de redacción: enumera los motivos de revocación (reembolso, contracargo, incumplimiento) y qué ocurre con las copias ya desplegadas.',
+                ],
+                [
+                    'id' => 'vendor_terms',
+                    'title' => 'Condiciones propias del vendedor',
+                    'body' => 'Nota de redacción: indica si los vendedores pueden añadir su propia licencia y qué condiciones prevalecen si hay conflicto.',
+                ],
+                [
+                    'id' => 'third_party',
+                    'title' => 'Componentes de terceros',
+                    'body' => 'Nota de redacción: indica que los componentes de código abierto o de terceros incluidos mantienen su propia licencia, y exige que los vendedores los declaren.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Cambios en estos términos',
+                    'body' => 'Nota de redacción: indica si los cambios se aplican a compras ya realizadas y muestra una fecha de última actualización cuando el texto sea real.',
+                ],
+            ],
+            'contact' => [
+                'title' => '¿Dudas sobre las licencias?',
+                'body' => 'Envía un mensaje y te responderemos por correo.',
+                'action' => 'Contacto',
+            ],
+        ],
+        'terms' => [
+            'meta_title' => 'Términos del servicio',
+            'title' => 'Términos del servicio',
+            'lead' => 'El acuerdo entre el marketplace y quienes compran y venden en él.',
+            'sections' => [
+                [
+                    'id' => 'acceptance',
+                    'title' => 'Aceptación de los términos',
+                    'body' => 'Nota de redacción: indica que usar el marketplace implica aceptar estos términos, a quién se aplican y la edad mínima para tener una cuenta.',
+                ],
+                [
+                    'id' => 'operator',
+                    'title' => 'Quién opera el marketplace',
+                    'body' => 'Nota de redacción: nombra la entidad legal que hay detrás, su domicilio social, su número de registro y cómo contactarla.',
+                ],
+                [
+                    'id' => 'accounts',
+                    'title' => 'Cuentas',
+                    'body' => 'Nota de redacción: cubre el registro, la exactitud de los datos, la custodia de las credenciales, la responsabilidad sobre la cuenta y cuándo puede suspenderse.',
+                ],
+                [
+                    'id' => 'purchases',
+                    'title' => 'Pedidos y pagos',
+                    'body' => 'Nota de redacción: cubre cómo se formaliza un pedido, la moneda y los impuestos, los proveedores de pago, los pagos fallidos y qué representa un recibo o factura.',
+                ],
+                [
+                    'id' => 'licenses',
+                    'title' => 'Licencias y descargas',
+                    'body' => 'Nota de redacción: describe qué recibe el comprador según el tipo de producto — claves de licencia, descargas, acceso API, suscripciones — con límites de activación, de descarga y renovación.',
+                ],
+                [
+                    'id' => 'refunds',
+                    'title' => 'Reembolsos y cancelaciones',
+                    'body' => 'Nota de redacción: indica el plazo y las condiciones de reembolso de bienes digitales, cómo solicitarlo y el derecho de desistimiento aplicable a tus compradores.',
+                ],
+                [
+                    'id' => 'vendors',
+                    'title' => 'Vender en el marketplace',
+                    'body' => 'Nota de redacción: cubre qué pueden publicar los vendedores, las garantías sobre su propio trabajo, la comisión y los pagos, y los motivos para retirar un producto o una tienda.',
+                ],
+                [
+                    'id' => 'acceptable_use',
+                    'title' => 'Uso aceptable',
+                    'body' => 'Nota de redacción: prohíbe el malware, el contenido ilícito o infractor, el scraping, el abuso de la API y eludir las licencias o el pago.',
+                ],
+                [
+                    'id' => 'intellectual_property',
+                    'title' => 'Propiedad intelectual',
+                    'body' => 'Nota de redacción: separa la marca y el software del marketplace del contenido que suben los vendedores, e indica la licencia que concede cada parte.',
+                ],
+                [
+                    'id' => 'liability',
+                    'title' => 'Garantías y responsabilidad',
+                    'body' => 'Nota de redacción: es la sección de mayor peso legal — que un abogado de tu jurisdicción redacte las exenciones, el límite de responsabilidad y la indemnización.',
+                ],
+                [
+                    'id' => 'termination',
+                    'title' => 'Suspensión y terminación',
+                    'body' => 'Nota de redacción: explica cómo termina la relación cada parte, qué ocurre con las licencias y descargas compradas, y qué cláusulas sobreviven.',
+                ],
+                [
+                    'id' => 'law',
+                    'title' => 'Ley aplicable y controversias',
+                    'body' => 'Nota de redacción: indica la ley aplicable y los tribunales o el arbitraje que resuelven las controversias.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Cambios en estos términos',
+                    'body' => 'Nota de redacción: explica cómo se anuncian los cambios, con cuánta antelación y qué implica seguir usando el servicio.',
+                ],
+            ],
+            'contact' => [
+                'title' => '¿Dudas sobre estos términos?',
+                'body' => 'Envía un mensaje y te responderemos por correo.',
+                'action' => 'Contacto',
+            ],
+        ],
+    ],
+
+    'contact' => [
+        'meta_title' => 'Contacto',
+        'eyebrow' => 'Contacto',
+        'title' => 'Cuéntanos qué necesitas.',
+        'lead' => 'Dudas sobre vender, la facturación o un producto que compraste — envía un mensaje y te responderemos por correo.',
+        'form' => [
+            'name' => 'Tu nombre',
+            'email' => 'Correo electrónico',
+            'subject' => 'Asunto',
+            'message' => 'Mensaje',
+            'submit' => 'Enviar mensaje',
+            'privacy_note' => 'Solo usamos tu dirección para responderte.',
+            'sent' => 'Gracias — tu mensaje se ha enviado. Te responderemos por correo.',
+        ],
+    ],
+
+    'customers' => [
+        'meta_title' => 'Clientes',
+        'eyebrow' => 'Clientes',
+        'title' => 'Hecho para quienes lanzan el trabajo.',
+        'lead' => 'Desarrolladores independientes y equipos pequeños usan StoreProject para vender scripts, APIs, plantillas y SaaS — sin reconstruir antes el pago, las licencias y la entrega.',
+        'use_cases' => [
+            'title' => 'Qué se vende aquí',
+            'description' => 'La misma tienda gestiona una descarga única, una API por uso y un plan mensual.',
+            'items' => [
+                'scripts' => [
+                    'title' => 'Scripts y plantillas',
+                    'body' => 'Vende una base de código como descarga única, con entrega segura y registro de cada pedido.',
+                ],
+                'api' => [
+                    'title' => 'Productos API',
+                    'body' => 'Emite claves, limita el uso según el plan y cobra por el acceso sin escribir la capa de facturación.',
+                ],
+                'saas' => [
+                    'title' => 'SaaS y suscripciones',
+                    'body' => 'Planes recurrentes con facturas: las renovaciones y cancelaciones se gestionan solas.',
+                ],
+            ],
+        ],
+        'cta' => [
+            'title' => '¿Quieres tu tienda aquí?',
+            'body' => 'Explora lo que ya se vende, o descubre cómo encaja la plataforma.',
+            'browse' => 'Explorar productos',
+            'about' => 'Sobre nosotros',
+        ],
+    ],
+
     'footer' => [
         'tagline' => 'El marketplace mono-vendedor para scripts de Laravel, APIs, plantillas y SaaS — hecho para creadores que entregan.',
         'status_ok' => 'Todos los sistemas operativos',

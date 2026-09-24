@@ -301,6 +301,358 @@ return [
         'secondary' => 'See live storefront',
     ],
 
+    'blog' => [
+        'meta_title' => 'Blog',
+        'title' => 'From the workshop',
+        'subtitle' => 'Product updates, engineering notes, and guides for selling digital products.',
+        'search_placeholder' => 'Search posts…',
+        'search_submit' => 'Search',
+        'tags_label' => 'Filter by tag',
+        'all_tags' => 'All',
+        'empty' => 'No posts yet. Check back soon.',
+        'read_more' => 'Read more',
+        'back_to_index' => 'All posts',
+        'reading_time' => ':minutes min read',
+        'related' => 'Related posts',
+    ],
+
+    'about' => [
+        'meta_title' => 'About us',
+        'eyebrow' => 'About us',
+        'title' => 'A marketplace built by makers, for makers.',
+        'lead' => 'StoreProject is the one-stop marketplace for Laravel scripts, APIs, templates, and SaaS — where independent developers sell their work and buyers get it instantly.',
+        'mission' => [
+            'title' => 'Why we exist',
+            'body_1' => 'Selling software should be about the software. Yet every maker ends up rebuilding the same plumbing: payments, license keys, secure downloads, subscriptions, and invoices.',
+            'body_2' => 'We built that plumbing once, properly, so creators can focus on shipping great products and buyers can trust what they get — from checkout to delivery.',
+        ],
+        'values' => [
+            'title' => 'What we stand for',
+            'description' => 'A few principles guide every decision we make.',
+            'items' => [
+                'makers' => [
+                    'title' => 'Makers first',
+                    'body' => 'Tools designed around how independent developers actually build, price, and ship their products.',
+                ],
+                'commerce' => [
+                    'title' => 'Commerce done right',
+                    'body' => 'Secure payments, instant license and download delivery after checkout, and a clear record of every order.',
+                ],
+                'vendors' => [
+                    'title' => 'Your store, your brand',
+                    'body' => 'Every vendor gets their own storefront with a profile, logo, and product catalog.',
+                ],
+                'global' => [
+                    'title' => 'Open to everyone',
+                    'body' => 'Available in English, French, Spanish, and Arabic — with full right-to-left support.',
+                ],
+            ],
+        ],
+        'cta' => [
+            'title' => 'Ready to get started?',
+            'body' => 'Browse the catalog, or open your own store and start selling today.',
+            'browse' => 'Browse products',
+            'sell' => 'Start selling',
+        ],
+    ],
+
+    'legal' => [
+        'draft_banner' => [
+            'title' => 'Unreviewed draft — not binding',
+            'body' => 'This page is an outline of the sections these terms need. It is not legal advice and has not been reviewed by a lawyer. Replace every section with your own wording before launch.',
+        ],
+        'status_label' => 'Draft · not yet published',
+        'toc' => 'On this page',
+        'privacy' => [
+            'meta_title' => 'Privacy policy',
+            'title' => 'Privacy policy',
+            'lead' => 'What personal data this marketplace holds, why, and what you can ask us to do with it.',
+            'sections' => [
+                [
+                    'id' => 'controller',
+                    'title' => 'Who is responsible',
+                    'body' => 'Drafting note: name the legal entity that decides how this data is used, its address, and a privacy contact — plus a data protection officer or EU/UK representative if you need one.',
+                ],
+                [
+                    'id' => 'account_data',
+                    'title' => 'Account data you give us',
+                    'body' => 'What the code stores today: your name, email address and a hashed password. Confirm this list against your final build before publishing.',
+                ],
+                [
+                    'id' => 'billing_data',
+                    'title' => 'Order and billing data',
+                    'body' => 'What the code stores today: order totals and currency, billing name, billing email, billing country and billing address, plus the payment method label.',
+                ],
+                [
+                    'id' => 'payments',
+                    'title' => 'Payments',
+                    'body' => 'Card details are entered in the payment provider’s own element and are not stored by this application; what is stored is the gateway name, its payment and customer identifiers, and the gateway’s response. Drafting note: name your provider and link its privacy notice.',
+                ],
+                [
+                    'id' => 'messages',
+                    'title' => 'Messages you send us',
+                    'body' => 'The contact form stores the name, email address, subject and message you submit, linked to your account when you are signed in.',
+                ],
+                [
+                    'id' => 'technical_data',
+                    'title' => 'Data collected automatically',
+                    'body' => 'What the code stores today: an IP address and browser user-agent against each login session and each security event in the activity log, so you can review and revoke your own sessions.',
+                ],
+                [
+                    'id' => 'social_login',
+                    'title' => 'Signing in with another provider',
+                    'body' => 'If you sign in through an external provider, the code stores the provider name, its account identifier, the email address and avatar it returns, and the raw profile payload. Drafting note: list the providers you actually enable.',
+                ],
+                [
+                    'id' => 'cookies',
+                    'title' => 'Cookies',
+                    'body' => 'What the code sets today: a session cookie to keep you signed in, and a language cookie remembering your locale. Drafting note: if you add analytics or advertising cookies, list them here and add a consent banner.',
+                ],
+                [
+                    'id' => 'purposes',
+                    'title' => 'Why we use it, and on what basis',
+                    'body' => 'Drafting note: map each category above to a purpose (running your account, fulfilling orders, fraud prevention, support) and, where GDPR or similar law applies, to a lawful basis.',
+                ],
+                [
+                    'id' => 'sharing',
+                    'title' => 'Who we share it with',
+                    'body' => 'Drafting note: list the processors you actually use — payment provider, email delivery, hosting, error tracking — and say what vendors on the marketplace can see about buyers of their products.',
+                ],
+                [
+                    'id' => 'retention',
+                    'title' => 'How long we keep it',
+                    'body' => 'Drafting note: set a retention period per category. Note that orders and invoices usually have a statutory minimum, while sessions, activity logs and contact messages should have a defined maximum.',
+                ],
+                [
+                    'id' => 'rights',
+                    'title' => 'Your rights',
+                    'body' => 'Drafting note: describe access, correction, deletion, portability, objection and complaint rights for your jurisdiction, and how someone exercises them — the contact form is the route today.',
+                ],
+                [
+                    'id' => 'transfers',
+                    'title' => 'International transfers',
+                    'body' => 'Drafting note: say where the data is hosted and which safeguards cover transfers out of your users’ region.',
+                ],
+                [
+                    'id' => 'security',
+                    'title' => 'How it is protected',
+                    'body' => 'What the code does today: passwords are hashed, payment gateway credentials are stored encrypted, and each tenant’s records are scoped so one tenant cannot read another’s. Drafting note: add your organisational measures.',
+                ],
+                [
+                    'id' => 'children',
+                    'title' => 'Children',
+                    'body' => 'Drafting note: state the minimum age for an account and what you do if you learn a child has registered.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Changes to this notice',
+                    'body' => 'Drafting note: say how changes are announced and keep a visible last-updated date once this is a real notice.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Questions about your data?',
+                'body' => 'Send a message and we will get back to you by email.',
+                'action' => 'Contact us',
+            ],
+        ],
+        'license' => [
+            'meta_title' => 'License terms',
+            'title' => 'License terms',
+            'lead' => 'What you may do with the products you buy here, and what stays with their authors.',
+            'sections' => [
+                [
+                    'id' => 'grant',
+                    'title' => 'What a purchase gives you',
+                    'body' => 'Drafting note: state that buying a product grants a licence to use it, not ownership, and that the vendor keeps the copyright.',
+                ],
+                [
+                    'id' => 'license_types',
+                    'title' => 'License types',
+                    'body' => 'What the code does today: each product can carry a license-type label that its vendor chooses, shown on the product page. Drafting note: either define exactly what each label permits, or replace free-text labels with a fixed set you define here.',
+                ],
+                [
+                    'id' => 'license_keys',
+                    'title' => 'License keys',
+                    'body' => 'What the code does today: buying a license or API-access product issues a unique key, an activation limit set per product, and a status of active, expired or revoked.',
+                ],
+                [
+                    'id' => 'activations',
+                    'title' => 'Activations',
+                    'body' => 'Drafting note: define what counts as one activation (a domain, an installation, a machine) and how a buyer frees one up. Confirm activation limits are actually enforced before promising it here.',
+                ],
+                [
+                    'id' => 'downloads',
+                    'title' => 'Downloads',
+                    'body' => 'What the code does today: buying a downloadable product creates a download grant, which can carry a maximum number of downloads set per product. Drafting note: say how long downloads stay available.',
+                ],
+                [
+                    'id' => 'permitted_use',
+                    'title' => 'What you may do',
+                    'body' => 'Drafting note: list permitted uses for each license type — personal or commercial projects, client work, modification, number of end products.',
+                ],
+                [
+                    'id' => 'restrictions',
+                    'title' => 'What you may not do',
+                    'body' => 'Drafting note: cover reselling or redistributing the product, sharing license keys, publishing the source, and using it in a competing marketplace item.',
+                ],
+                [
+                    'id' => 'updates_support',
+                    'title' => 'Updates and support',
+                    'body' => 'Drafting note: say whether updates and support are included, for how long, and who provides them — the marketplace or the vendor.',
+                ],
+                [
+                    'id' => 'revocation',
+                    'title' => 'Revocation and expiry',
+                    'body' => 'What the code does today: a license can be revoked, with the time recorded, or expire on a set date. Drafting note: list the grounds for revocation (refund, chargeback, breach) and what happens to copies already deployed.',
+                ],
+                [
+                    'id' => 'vendor_terms',
+                    'title' => 'Vendor-specific terms',
+                    'body' => 'Drafting note: say whether vendors may attach their own licence to a product and which terms win if they conflict with these.',
+                ],
+                [
+                    'id' => 'third_party',
+                    'title' => 'Third-party components',
+                    'body' => 'Drafting note: state that bundled open-source or third-party components keep their own licences, and require vendors to disclose them.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Changes to these terms',
+                    'body' => 'Drafting note: say whether changes apply to purchases already made, and keep a visible last-updated date once this is real.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Questions about licensing?',
+                'body' => 'Send a message and we will get back to you by email.',
+                'action' => 'Contact us',
+            ],
+        ],
+        'terms' => [
+            'meta_title' => 'Terms of service',
+            'title' => 'Terms of service',
+            'lead' => 'The agreement between the marketplace and the people who buy and sell on it.',
+            'sections' => [
+                [
+                    'id' => 'acceptance',
+                    'title' => 'Acceptance of the terms',
+                    'body' => 'Drafting note: state that using the marketplace means accepting these terms, who they apply to, and the minimum age to hold an account.',
+                ],
+                [
+                    'id' => 'operator',
+                    'title' => 'Who operates the marketplace',
+                    'body' => 'Drafting note: name the legal entity behind the marketplace, its registered address, its company number, and how to reach it.',
+                ],
+                [
+                    'id' => 'accounts',
+                    'title' => 'Accounts',
+                    'body' => 'Drafting note: cover registration, accurate details, keeping credentials safe, responsibility for activity on the account, and when an account may be suspended.',
+                ],
+                [
+                    'id' => 'purchases',
+                    'title' => 'Orders and payments',
+                    'body' => 'Drafting note: cover how an order is formed, currency and taxes, the payment providers used, failed payments, and what a receipt or invoice represents.',
+                ],
+                [
+                    'id' => 'licenses',
+                    'title' => 'Licenses and downloads',
+                    'body' => 'Drafting note: describe what a buyer receives for each product type — license keys, downloads, API access, subscriptions — including activation limits, download limits and renewal.',
+                ],
+                [
+                    'id' => 'refunds',
+                    'title' => 'Refunds and cancellations',
+                    'body' => 'Drafting note: state the refund window and conditions for digital goods, how to request one, and any statutory withdrawal rights that apply to your buyers.',
+                ],
+                [
+                    'id' => 'vendors',
+                    'title' => 'Selling on the marketplace',
+                    'body' => 'Drafting note: cover what vendors may list, the warranties they give about their own work, commission and payout terms, and grounds for removing a listing or a store.',
+                ],
+                [
+                    'id' => 'acceptable_use',
+                    'title' => 'Acceptable use',
+                    'body' => 'Drafting note: prohibit malware, infringing or illegal content, scraping, abuse of the API, and attempts to bypass licensing or payment.',
+                ],
+                [
+                    'id' => 'intellectual_property',
+                    'title' => 'Intellectual property',
+                    'body' => 'Drafting note: separate the marketplace’s own brand and software from the content vendors upload, and state the licence each party grants the other.',
+                ],
+                [
+                    'id' => 'liability',
+                    'title' => 'Warranties and liability',
+                    'body' => 'Drafting note: this section carries the most legal weight — have a lawyer write the disclaimers, liability cap and indemnity to suit your jurisdiction.',
+                ],
+                [
+                    'id' => 'termination',
+                    'title' => 'Suspension and termination',
+                    'body' => 'Drafting note: explain how either side ends the relationship, what happens to purchased licenses and downloads afterwards, and which clauses survive.',
+                ],
+                [
+                    'id' => 'law',
+                    'title' => 'Governing law and disputes',
+                    'body' => 'Drafting note: name the governing law and the courts or arbitration process that settles disputes.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Changes to these terms',
+                    'body' => 'Drafting note: say how changes are announced, how much notice is given, and what continued use means after a change.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Questions about these terms?',
+                'body' => 'Send a message and we will get back to you by email.',
+                'action' => 'Contact us',
+            ],
+        ],
+    ],
+
+    'contact' => [
+        'meta_title' => 'Contact us',
+        'eyebrow' => 'Contact us',
+        'title' => 'Tell us what you need.',
+        'lead' => 'Questions about selling, billing, or a product you bought — send a message and we will get back to you by email.',
+        'form' => [
+            'name' => 'Your name',
+            'email' => 'Email address',
+            'subject' => 'Subject',
+            'message' => 'Message',
+            'submit' => 'Send message',
+            'privacy_note' => 'We only use your address to reply.',
+            'sent' => 'Thanks — your message has been sent. We will reply by email.',
+        ],
+    ],
+
+    'customers' => [
+        'meta_title' => 'Customers',
+        'eyebrow' => 'Customers',
+        'title' => 'Built for the people shipping the work.',
+        'lead' => 'Independent developers and small teams use StoreProject to sell scripts, APIs, templates, and SaaS — without rebuilding checkout, licensing, and delivery first.',
+        'use_cases' => [
+            'title' => 'What people sell here',
+            'description' => 'The same storefront handles a one-off download, a metered API, and a monthly plan.',
+            'items' => [
+                'scripts' => [
+                    'title' => 'Scripts and templates',
+                    'body' => 'Sell a codebase as a one-time download, with secure delivery and a record of every order.',
+                ],
+                'api' => [
+                    'title' => 'API products',
+                    'body' => 'Issue keys, limit usage by plan, and bill for access without writing the billing layer.',
+                ],
+                'saas' => [
+                    'title' => 'SaaS and subscriptions',
+                    'body' => 'Recurring plans with invoices, so renewals and cancellations are handled for you.',
+                ],
+            ],
+        ],
+        'cta' => [
+            'title' => 'Want your store here?',
+            'body' => 'Browse what is already selling, or read how the platform fits together.',
+            'browse' => 'Browse products',
+            'about' => 'About us',
+        ],
+    ],
+
     'footer' => [
         'tagline' => 'The single-vendor marketplace for Laravel scripts, APIs, templates, and SaaS — built for makers who ship.',
         'status_ok' => 'All systems operational',

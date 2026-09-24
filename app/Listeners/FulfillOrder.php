@@ -19,6 +19,10 @@ use App\Models\Product;
  *   - digital_download       -> a Download grant (download-limited)
  *   - subscription           -> skipped (owned by the billing module)
  *
+ * Wired by Laravel's event discovery via the type-hinted handle() — do not
+ * also register it with Event::listen() (e.g. in AppServiceProvider), or it
+ * runs twice per paid order. Guarded by ListenerRegistrationTest.
+ *
  * Idempotent: it checks for an existing License/Download on the order item
  * before creating, so a re-dispatched event (Stripe retry, reconciler
  * replay) never double-grants.

@@ -20,7 +20,7 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
     const navLinks = [
         { label: t('nav.products'), href: '/products' },
         { label: t('nav.pricing'), href: '/#pricing' },
-        { label: t('nav.customers'), href: '/#testimonials' },
+        { label: t('nav.customers'), href: route('customers') },
         { label: t('nav.docs'), href: '/#faq' },
     ];
 
@@ -180,18 +180,18 @@ function SiteFooter() {
         {
             titleKey: 'footer.columns.company.title',
             links: [
-                { labelKey: 'footer.columns.company.about', href: '#' },
-                { labelKey: 'footer.columns.company.blog', href: '#' },
-                { labelKey: 'footer.columns.company.customers', href: '/#testimonials' },
-                { labelKey: 'footer.columns.company.contact', href: '#' },
+                { labelKey: 'footer.columns.company.about', href: route('about') },
+                { labelKey: 'footer.columns.company.blog', href: route('blog.index') },
+                { labelKey: 'footer.columns.company.customers', href: route('customers') },
+                { labelKey: 'footer.columns.company.contact', href: route('contact') },
             ],
         },
         {
             titleKey: 'footer.columns.legal.title',
             links: [
-                { labelKey: 'footer.columns.legal.terms', href: '#' },
-                { labelKey: 'footer.columns.legal.privacy', href: '#' },
-                { labelKey: 'footer.columns.legal.license', href: '#' },
+                { labelKey: 'footer.columns.legal.terms', href: route('terms') },
+                { labelKey: 'footer.columns.legal.privacy', href: route('privacy') },
+                { labelKey: 'footer.columns.legal.license', href: route('license') },
                 { labelKey: 'footer.columns.legal.refunds', href: '#' },
             ],
         },
