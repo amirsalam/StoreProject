@@ -26,6 +26,11 @@ use App\Models\Product;
  * Idempotent: it checks for an existing License/Download on the order item
  * before creating, so a re-dispatched event (Stripe retry, reconciler
  * replay) never double-grants.
+ *
+ * tenant_id is copied from the order rather than left to BelongsToTenant's
+ * auto-fill: the Stripe webhook path runs with no tenant in context, and a
+ * license without its store's tenant_id can never be activated through the
+ * host-scoped license API.
  */
 class FulfillOrder
 {
@@ -55,6 +60,7 @@ class FulfillOrder
         }
 
         License::create([
+            'tenant_id' => $order->tenant_id,
             'user_id' => $order->user_id,
             'product_id' => $product->id,
             'order_item_id' => $item->id,
@@ -73,6 +79,7 @@ class FulfillOrder
         }
 
         Download::create([
+            'tenant_id' => $order->tenant_id,
             'user_id' => $order->user_id,
             'product_id' => $product->id,
             'order_item_id' => $item->id,

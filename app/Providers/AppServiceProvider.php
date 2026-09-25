@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Tenancy\TenantContext;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,5 +22,9 @@ class AppServiceProvider extends ServiceProvider
         // Event listeners in app/Listeners are wired by Laravel's event
         // discovery (type-hinted handle()). Don't also Event::listen() them
         // here — that registers them twice.
+
+        // Public license API (/api/v1/licenses/*): unauthenticated, so
+        // throttle per client IP.
+        RateLimiter::for('license-api', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
     }
 }
