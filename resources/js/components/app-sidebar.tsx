@@ -1,6 +1,7 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
+import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
@@ -111,13 +112,16 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, direction } = usePage<SharedData>().props;
     const isAdmin = Boolean(auth?.user?.is_admin);
 
     return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
+        // The sidebar sits on the reading-start edge: the spacer that reserves its
+        // width is a flex item and flips with dir="rtl", so the fixed panel must too.
+        // Closing hides it fully (offcanvas); SidebarToggle here and in the page header show/hide it.
+        <Sidebar side={direction === 'rtl' ? 'right' : 'left'} collapsible="offcanvas" variant="inset">
+            <SidebarHeader className="flex-row items-center">
+                <SidebarMenu className="min-w-0 flex-1">
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/dashboard" prefetch>
@@ -126,6 +130,7 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
+                <SidebarToggle />
             </SidebarHeader>
 
             <SidebarContent>
