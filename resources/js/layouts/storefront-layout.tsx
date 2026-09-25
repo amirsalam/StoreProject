@@ -192,7 +192,7 @@ function SiteFooter() {
                 { labelKey: 'footer.columns.legal.terms', href: route('terms') },
                 { labelKey: 'footer.columns.legal.privacy', href: route('privacy') },
                 { labelKey: 'footer.columns.legal.license', href: route('license') },
-                { labelKey: 'footer.columns.legal.refunds', href: '#' },
+                { labelKey: 'footer.columns.legal.refunds', href: route('refunds') },
             ],
         },
     ];

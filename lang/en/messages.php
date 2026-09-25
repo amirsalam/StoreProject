@@ -527,6 +527,63 @@ return [
                 'action' => 'Contact us',
             ],
         ],
+        'refunds' => [
+            'meta_title' => 'Refund policy',
+            'title' => 'Refund policy',
+            'lead' => 'When you can get your money back for a purchase, and what happens to your access when you do.',
+            'sections' => [
+                [
+                    'id' => 'eligibility',
+                    'title' => 'Who can get a refund',
+                    'body' => 'Drafting note: say which purchases can be refunded and within how many days. Decide whether digital products that were already downloaded or activated are excluded, and check the statutory withdrawal rights that apply where your buyers live.',
+                ],
+                [
+                    'id' => 'how_to_request',
+                    'title' => 'How to ask for a refund',
+                    'body' => 'What the code does today: there is no refund button or request form — a refund is issued by the marketplace through the payment provider (Stripe). Drafting note: tell buyers how to ask (for example through the contact form, with their order number) and how quickly you answer.',
+                ],
+                [
+                    'id' => 'processing',
+                    'title' => 'How a refund is processed',
+                    'body' => 'What the code does today: once the payment provider confirms a refund, the payment and its order are marked as refunded and a matching entry is recorded in the account ledger. Drafting note: say how long the money takes to reach the original payment method.',
+                ],
+                [
+                    'id' => 'partial_refunds',
+                    'title' => 'Partial refunds',
+                    'body' => 'What the code does today: any refund, even for part of the amount, marks the whole order as refunded. Drafting note: decide whether you offer partial refunds, and make the order record reflect them before promising it here.',
+                ],
+                [
+                    'id' => 'access_after_refund',
+                    'title' => 'Licenses and downloads after a refund',
+                    'body' => 'What the code does today: a refund does not revoke the order’s license keys or download access — they stay active. Drafting note: decide whether a refund ends access; if it does, add automatic revocation before stating it here.',
+                ],
+                [
+                    'id' => 'subscriptions',
+                    'title' => 'Subscriptions',
+                    'body' => 'Drafting note: say whether cancelling a subscription is refunded for the unused time or simply runs to the end of the paid period.',
+                ],
+                [
+                    'id' => 'vendor_products',
+                    'title' => 'Products sold by vendors',
+                    'body' => 'Drafting note: say who decides refunds on products sold by other vendors — the marketplace or the vendor — and whether the vendor’s share is taken back.',
+                ],
+                [
+                    'id' => 'chargebacks',
+                    'title' => 'Chargebacks and abuse',
+                    'body' => 'Drafting note: explain what happens after a card chargeback, and whether repeated refund requests can lead to restrictions on an account.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Changes to this policy',
+                    'body' => 'Drafting note: say whether changes apply to purchases already made, and keep a visible last-updated date once this is real.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Need a refund?',
+                'body' => 'Send a message with your order number and we will get back to you by email.',
+                'action' => 'Contact us',
+            ],
+        ],
         'terms' => [
             'meta_title' => 'Terms of service',
             'title' => 'Terms of service',

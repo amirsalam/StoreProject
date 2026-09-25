@@ -37,6 +37,7 @@ Route::inertia('customers', 'customers')->name('customers');
 Route::inertia('terms', 'legal/terms')->name('terms');
 Route::inertia('privacy', 'legal/privacy')->name('privacy');
 Route::inertia('license', 'legal/license')->name('license');
+Route::inertia('refunds', 'legal/refunds')->name('refunds');
 
 // Public contact form. Messages are stored (admin inbox) and emailed only
 // when contact.notify_to is configured; the POST is rate limited.

@@ -527,6 +527,63 @@ return [
                 'action' => 'Nous contacter',
             ],
         ],
+        'refunds' => [
+            'meta_title' => 'Politique de remboursement',
+            'title' => 'Politique de remboursement',
+            'lead' => 'Quand vous pouvez être remboursé d\'un achat, et ce qu\'il advient de votre accès dans ce cas.',
+            'sections' => [
+                [
+                    'id' => 'eligibility',
+                    'title' => 'Qui peut être remboursé',
+                    'body' => 'Note de rédaction : indiquez quels achats peuvent être remboursés et dans quel délai. Décidez si les produits numériques déjà téléchargés ou activés sont exclus, et vérifiez le droit de rétractation applicable là où vivent vos acheteurs.',
+                ],
+                [
+                    'id' => 'how_to_request',
+                    'title' => 'Comment demander un remboursement',
+                    'body' => 'Ce que fait le code aujourd\'hui : il n\'existe ni bouton ni formulaire de remboursement — un remboursement est émis par la plateforme via le prestataire de paiement (Stripe). Note de rédaction : expliquez aux acheteurs comment le demander (par exemple via le formulaire de contact, avec leur numéro de commande) et sous quel délai vous répondez.',
+                ],
+                [
+                    'id' => 'processing',
+                    'title' => 'Traitement d\'un remboursement',
+                    'body' => 'Ce que fait le code aujourd\'hui : dès que le prestataire de paiement confirme un remboursement, le paiement et sa commande sont marqués comme remboursés et une écriture correspondante est enregistrée dans le registre du compte. Note de rédaction : indiquez le délai avant que l\'argent n\'arrive sur le moyen de paiement d\'origine.',
+                ],
+                [
+                    'id' => 'partial_refunds',
+                    'title' => 'Remboursements partiels',
+                    'body' => 'Ce que fait le code aujourd\'hui : tout remboursement, même d\'une partie du montant, marque la commande entière comme remboursée. Note de rédaction : décidez si vous proposez des remboursements partiels, et faites-les apparaître correctement dans la commande avant de les promettre ici.',
+                ],
+                [
+                    'id' => 'access_after_refund',
+                    'title' => 'Licences et téléchargements après un remboursement',
+                    'body' => 'Ce que fait le code aujourd\'hui : un remboursement ne révoque ni les clés de licence ni l\'accès aux téléchargements de la commande — ils restent actifs. Note de rédaction : décidez si un remboursement met fin à l\'accès ; si oui, ajoutez une révocation automatique avant de l\'indiquer ici.',
+                ],
+                [
+                    'id' => 'subscriptions',
+                    'title' => 'Abonnements',
+                    'body' => 'Note de rédaction : précisez si la résiliation d\'un abonnement est remboursée au prorata ou court simplement jusqu\'à la fin de la période payée.',
+                ],
+                [
+                    'id' => 'vendor_products',
+                    'title' => 'Produits vendus par des vendeurs',
+                    'body' => 'Note de rédaction : précisez qui décide des remboursements sur les produits d\'autres vendeurs — la plateforme ou le vendeur — et si la part du vendeur lui est reprise.',
+                ],
+                [
+                    'id' => 'chargebacks',
+                    'title' => 'Rétrofacturations et abus',
+                    'body' => 'Note de rédaction : expliquez ce qui se passe après une rétrofacturation par carte, et si des demandes de remboursement répétées peuvent entraîner des restrictions sur un compte.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Modifications de cette politique',
+                    'body' => 'Note de rédaction : précisez si les modifications s\'appliquent aux achats déjà effectués, et affichez une date de mise à jour dès que ce texte sera réel.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Besoin d\'un remboursement ?',
+                'body' => 'Envoyez un message avec votre numéro de commande et nous vous répondrons par e-mail.',
+                'action' => 'Nous contacter',
+            ],
+        ],
         'terms' => [
             'meta_title' => 'Conditions d\'utilisation',
             'title' => 'Conditions d\'utilisation',

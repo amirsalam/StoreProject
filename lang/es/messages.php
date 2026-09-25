@@ -527,6 +527,63 @@ return [
                 'action' => 'Contacto',
             ],
         ],
+        'refunds' => [
+            'meta_title' => 'Política de reembolsos',
+            'title' => 'Política de reembolsos',
+            'lead' => 'Cuándo puedes recuperar el dinero de una compra y qué pasa con tu acceso cuando lo haces.',
+            'sections' => [
+                [
+                    'id' => 'eligibility',
+                    'title' => 'Quién puede pedir un reembolso',
+                    'body' => 'Nota de redacción: indica qué compras se pueden reembolsar y en qué plazo. Decide si se excluyen los productos digitales ya descargados o activados, y revisa el derecho de desistimiento que aplica donde viven tus compradores.',
+                ],
+                [
+                    'id' => 'how_to_request',
+                    'title' => 'Cómo pedir un reembolso',
+                    'body' => 'Lo que hace el código hoy: no hay botón ni formulario de reembolso — el reembolso lo emite el marketplace a través del proveedor de pagos (Stripe). Nota de redacción: explica a los compradores cómo pedirlo (por ejemplo, desde el formulario de contacto con su número de pedido) y en qué plazo respondes.',
+                ],
+                [
+                    'id' => 'processing',
+                    'title' => 'Cómo se procesa un reembolso',
+                    'body' => 'Lo que hace el código hoy: cuando el proveedor de pagos confirma un reembolso, el pago y su pedido se marcan como reembolsados y se registra un apunte equivalente en el libro de la cuenta. Nota de redacción: indica cuánto tarda el dinero en llegar al medio de pago original.',
+                ],
+                [
+                    'id' => 'partial_refunds',
+                    'title' => 'Reembolsos parciales',
+                    'body' => 'Lo que hace el código hoy: cualquier reembolso, aunque sea de parte del importe, marca todo el pedido como reembolsado. Nota de redacción: decide si ofreces reembolsos parciales y haz que el pedido los refleje antes de prometerlo aquí.',
+                ],
+                [
+                    'id' => 'access_after_refund',
+                    'title' => 'Licencias y descargas tras un reembolso',
+                    'body' => 'Lo que hace el código hoy: un reembolso no revoca las claves de licencia ni el acceso a las descargas del pedido — siguen activos. Nota de redacción: decide si un reembolso termina el acceso; si es así, añade la revocación automática antes de indicarlo aquí.',
+                ],
+                [
+                    'id' => 'subscriptions',
+                    'title' => 'Suscripciones',
+                    'body' => 'Nota de redacción: indica si cancelar una suscripción se reembolsa por el tiempo no usado o simplemente dura hasta el final del periodo pagado.',
+                ],
+                [
+                    'id' => 'vendor_products',
+                    'title' => 'Productos de otros vendedores',
+                    'body' => 'Nota de redacción: indica quién decide los reembolsos de productos de otros vendedores — el marketplace o el vendedor — y si se le retira su parte al vendedor.',
+                ],
+                [
+                    'id' => 'chargebacks',
+                    'title' => 'Contracargos y abusos',
+                    'body' => 'Nota de redacción: explica qué ocurre tras un contracargo de tarjeta y si las solicitudes de reembolso repetidas pueden llevar a restricciones en una cuenta.',
+                ],
+                [
+                    'id' => 'changes',
+                    'title' => 'Cambios en esta política',
+                    'body' => 'Nota de redacción: indica si los cambios se aplican a compras ya realizadas y muestra una fecha de última actualización cuando el texto sea real.',
+                ],
+            ],
+            'contact' => [
+                'title' => '¿Necesitas un reembolso?',
+                'body' => 'Envía un mensaje con tu número de pedido y te responderemos por correo.',
+                'action' => 'Contacto',
+            ],
+        ],
         'terms' => [
             'meta_title' => 'Términos del servicio',
             'title' => 'Términos del servicio',
