@@ -74,16 +74,43 @@ class License extends Model
         return $this->belongsTo(OrderItem::class);
     }
 
+    public function isRevoked(): bool
+    {
+        return $this->status === self::STATUS_REVOKED || $this->revoked_at !== null;
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->status === self::STATUS_EXPIRED
+            || ($this->expires_at !== null && $this->expires_at->isPast());
+    }
+
+    /**
+     * Domains / instance identifiers currently holding an activation slot.
+     *
+     * @return list<string>
+     */
+    public function activatedDomains(): array
+    {
+        return array_values($this->activated_domains ?? []);
+    }
+
+    public function hasActivation(string $domain): bool
+    {
+        return in_array($domain, $this->activatedDomains(), true);
+    }
+
+    /**
+     * Whether a new domain could take a slot. Counts `activated_domains`
+     * (the source of truth — see LicenseActivationService), not the
+     * denormalised `activations_count`.
+     */
     public function canActivate(): bool
     {
-        if ($this->status !== self::STATUS_ACTIVE) {
+        if ($this->status !== self::STATUS_ACTIVE || $this->isRevoked() || $this->isExpired()) {
             return false;
         }
 
-        if ($this->expires_at && $this->expires_at->isPast()) {
-            return false;
-        }
-
-        return $this->activations_count < $this->activation_limit;
+        return count($this->activatedDomains()) < $this->activation_limit;
     }
 }
