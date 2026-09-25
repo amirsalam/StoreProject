@@ -478,7 +478,7 @@ return [
                 [
                     'id' => 'activations',
                     'title' => 'Activaciones',
-                    'body' => 'Nota de redacción: define qué cuenta como una activación (un dominio, una instalación, una máquina) y cómo liberar una. Confirma que los límites se aplican de verdad antes de prometerlo aquí.',
+                    'body' => 'Lo que hace el código hoy: una activación es un dominio o un identificador de instalación. El script del comprador llama a la API de licencias de la tienda con la clave y el dominio; volver a activar el mismo dominio no consume una segunda plaza, y desactivarlo libera la plaza para otro sitio. La activación se rechaza cuando se alcanza el límite de la licencia, o si la licencia ha caducado o ha sido revocada. Nota de redacción: mantén este texto alineado con la API de activación de licencias e indica si el comprador también puede liberar una plaza sin su script (desde su cuenta o a través del soporte).',
                 ],
                 [
                     'id' => 'downloads',

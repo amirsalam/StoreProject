@@ -478,7 +478,7 @@ return [
                 [
                     'id' => 'activations',
                     'title' => 'Activations',
-                    'body' => 'Drafting note: define what counts as one activation (a domain, an installation, a machine) and how a buyer frees one up. Confirm activation limits are actually enforced before promising it here.',
+                    'body' => 'What the code does today: one activation is one domain or installation identifier. The buyer’s script calls the store’s license API with the key and the domain; activating the same domain again does not use a second slot, and deactivating frees the slot for another site. Activation is refused once the license’s limit is reached, or if the license has expired or been revoked. Drafting note: keep this in step with the license activation API, and say whether a buyer can also free a slot without their script (from their account or through support).',
                 ],
                 [
                     'id' => 'downloads',

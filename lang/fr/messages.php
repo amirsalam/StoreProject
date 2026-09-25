@@ -478,7 +478,7 @@ return [
                 [
                     'id' => 'activations',
                     'title' => 'Activations',
-                    'body' => 'Note de rédaction : définissez ce qui compte comme une activation (un domaine, une installation, une machine) et comment l\'acheteur en libère une. Vérifiez que les limites sont réellement appliquées avant de le promettre ici.',
+                    'body' => 'Ce que fait le code aujourd\'hui : une activation correspond à un domaine ou à un identifiant d\'installation. Le script de l\'acheteur appelle l\'API de licence de la boutique avec la clé et le domaine ; réactiver le même domaine ne consomme pas un second emplacement, et la désactivation libère l\'emplacement pour un autre site. L\'activation est refusée une fois la limite de la licence atteinte, ou si la licence a expiré ou a été révoquée. Note de rédaction : gardez ce texte aligné sur l\'API d\'activation de licence, et précisez si l\'acheteur peut aussi libérer un emplacement sans son script (depuis son compte ou via le support).',
                 ],
                 [
                     'id' => 'downloads',
