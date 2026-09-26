@@ -5,6 +5,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Paginated, type Product, type ProductType } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import ConfirmDialog from '@/components/confirm-dialog';
 import { FormEvent, useState } from 'react';
 
 interface Option {
@@ -53,9 +54,17 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
         applyFilter({ search });
     };
 
-    const handleDelete = (product: Product) => {
-        if (!confirm(`Delete "${product.title}"? This cannot be undone.`)) return;
-        destroy(route('admin.products.destroy', product.id), { preserveScroll: true });
+    // The product awaiting delete confirmation in the popup, if any.
+    const [pendingDelete, setPendingDelete] = useState<Product | null>(null);
+
+    const handleDelete = (product: Product) => setPendingDelete(product);
+
+    const confirmDelete = () => {
+        if (!pendingDelete) return;
+        // No preserveScroll: the result message is shown at the top of the page.
+        destroy(route('admin.products.destroy', pendingDelete.id), {
+            onFinish: () => setPendingDelete(null),
+        });
     };
 
     return (
@@ -272,6 +281,22 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
                     </nav>
                 )}
             </div>
+
+            <ConfirmDialog
+                open={pendingDelete !== null}
+                onOpenChange={(open) => !open && setPendingDelete(null)}
+                title="Delete this product?"
+                description={
+                    <>
+                        <strong className="text-foreground">{pendingDelete?.title}</strong> will be permanently deleted. If it has already been
+                        sold, it is archived instead — hidden from the store, and buyers keep their access.
+                    </>
+                }
+                confirmLabel="Delete"
+                destructive
+                processing={processing}
+                onConfirm={confirmDelete}
+            />
         </AppLayout>
     );
 }

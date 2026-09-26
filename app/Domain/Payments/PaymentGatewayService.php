@@ -2,9 +2,13 @@
 
 namespace App\Domain\Payments;
 
+use App\Domain\Billing\StripeGateway;
 use App\Models\ActivityLog;
 use App\Models\PaymentGateway;
 use Illuminate\Support\Facades\DB;
+use Stripe\Exception\ApiConnectionException;
+use Stripe\Exception\ApiErrorException;
+use Stripe\Exception\AuthenticationException;
 
 /**
  * Business logic for managing payment-gateway configurations.
@@ -156,6 +160,16 @@ class PaymentGatewayService
             return ['ok' => false, 'message' => 'Missing required credentials: '.implode(', ', $missing)];
         }
 
+        $message = 'Configuration looks complete.';
+
+        if ($gateway->provider === 'stripe') {
+            $problem = $this->checkStripe($gateway);
+            if ($problem !== null) {
+                return ['ok' => false, 'message' => $problem];
+            }
+            $message = 'Connected to Stripe — the keys work.';
+        }
+
         $gateway->update(['last_connection_at' => now()]);
 
         ActivityLog::record('payment_gateway.tested', null, [
@@ -163,7 +177,45 @@ class PaymentGatewayService
             'provider' => $gateway->provider,
         ]);
 
-        return ['ok' => true, 'message' => 'Configuration looks complete.'];
+        return ['ok' => true, 'message' => $message];
+    }
+
+    /**
+     * Stripe-specific checks: key formats, test/live consistency with the
+     * gateway's environment, then a live read-only call with the secret key.
+     * Returns a message describing the first problem, or null if all pass.
+     */
+    private function checkStripe(PaymentGateway $gateway): ?string
+    {
+        $publishable = (string) ($gateway->credentials['publishable_key'] ?? '');
+        $secret = (string) ($gateway->credentials['secret_key'] ?? '');
+
+        if (! preg_match('/^pk_(test|live)_/', $publishable, $pk)) {
+            return 'The publishable key should start with pk_test_ or pk_live_.';
+        }
+        if (! preg_match('/^(?:sk|rk)_(test|live)_/', $secret, $sk)) {
+            return 'The secret key should start with sk_test_ or sk_live_ (or rk_ for a restricted key).';
+        }
+        if ($pk[1] !== $sk[1]) {
+            return 'The publishable and secret keys are from different modes — one is test, the other live.';
+        }
+
+        $expected = $gateway->environment === PaymentGateway::ENV_PRODUCTION ? 'live' : 'test';
+        if ($pk[1] !== $expected) {
+            return "This gateway's environment is {$gateway->environment}, but these are {$pk[1]} keys.";
+        }
+
+        try {
+            app(StripeGateway::class)->verifySecretKey($secret);
+        } catch (AuthenticationException) {
+            return 'Stripe rejected the secret key.';
+        } catch (ApiConnectionException) {
+            return 'Could not reach Stripe — check the server’s internet connection.';
+        } catch (ApiErrorException $e) {
+            return 'Stripe returned an error: '.$e->getMessage();
+        }
+
+        return null;
     }
 
     private function demoteOtherDefaults(PaymentGateway $gateway): void

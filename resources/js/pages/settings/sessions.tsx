@@ -1,3 +1,4 @@
+import { useConfirmDialog } from '@/components/confirm-dialog';
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -47,9 +48,16 @@ export default function SessionsIndex({ sessions, driver }: SessionsIndexProps) 
         });
     };
 
+    const { ask, confirmDialog } = useConfirmDialog();
+
     const revoke = (id: string) => {
-        if (!confirm('Revoke this session? The signed-in device will be logged out immediately.')) return;
-        router.delete(route('sessions.destroy', id), { preserveScroll: true });
+        ask({
+            title: 'Sign out this device?',
+            description: 'The session is revoked and that device is logged out immediately.',
+            confirmLabel: 'Sign out device',
+            destructive: true,
+            action: (finish) => router.delete(route('sessions.destroy', id), { preserveScroll: true, onFinish: finish }),
+        });
     };
 
     const dbDriver = driver === 'database';
@@ -159,6 +167,8 @@ export default function SessionsIndex({ sessions, driver }: SessionsIndexProps) 
                     </div>
                 </div>
             </SettingsLayout>
+
+            {confirmDialog}
         </AppLayout>
     );
 }

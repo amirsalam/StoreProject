@@ -1,3 +1,4 @@
+import { useConfirmDialog } from '@/components/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,9 +56,17 @@ export default function WorkspaceTeamIndex({ members, invitations, roles }: Team
         });
     };
 
+    const { ask, confirmDialog } = useConfirmDialog();
+
     const revoke = (invitation: PendingInvitation) => {
-        if (!confirm(`Revoke invitation for ${invitation.email}?`)) return;
-        router.delete(route('workspace.team.invitations.revoke', invitation.id), { preserveScroll: true });
+        ask({
+            title: 'Revoke this invitation?',
+            description: `The invitation link sent to ${invitation.email} stops working.`,
+            confirmLabel: 'Revoke invitation',
+            destructive: true,
+            action: (finish) =>
+                router.delete(route('workspace.team.invitations.revoke', invitation.id), { preserveScroll: true, onFinish: finish }),
+        });
     };
 
     return (
@@ -168,6 +177,8 @@ export default function WorkspaceTeamIndex({ members, invitations, roles }: Team
                     </ul>
                 </section>
             </div>
+
+            {confirmDialog}
         </AppLayout>
     );
 }

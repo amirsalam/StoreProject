@@ -1,3 +1,4 @@
+import { useConfirmDialog } from '@/components/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,13 +60,17 @@ export default function AdminUsersIndex({ users, filters, roles }: AdminUsersInd
         applyFilter({ search });
     };
 
-    const updateRole = (userId: number, role: string) => {
-        router.patch(
-            route('admin.users.role.update', userId),
-            { role },
-            { preserveScroll: true, preserveState: true },
-        );
-    };
+    const { ask, confirmDialog } = useConfirmDialog();
+
+    // The dropdown shows the saved role, so cancelling leaves it unchanged.
+    const updateRole = (user: { id: number; name: string }, role: string) =>
+        ask({
+            title: 'Change this user’s role?',
+            description: role ? `${user.name} will have the ${role} role and its permissions.` : `${user.name} will lose their role.`,
+            confirmLabel: 'Change role',
+            action: (finish) =>
+                router.patch(route('admin.users.role.update', user.id), { role }, { preserveScroll: true, preserveState: true, onFinish: finish }),
+        });
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -146,7 +151,7 @@ export default function AdminUsersIndex({ users, filters, roles }: AdminUsersInd
                                             <RolePicker
                                                 value={user.role ?? ''}
                                                 roles={roles}
-                                                onChange={(role) => updateRole(user.id, role)}
+                                                onChange={(role) => updateRole(user, role)}
                                             />
                                         </td>
                                         <td className="px-4 py-3">
@@ -187,7 +192,7 @@ export default function AdminUsersIndex({ users, filters, roles }: AdminUsersInd
                                         <RolePicker
                                             value={user.role ?? ''}
                                             roles={roles}
-                                            onChange={(role) => updateRole(user.id, role)}
+                                            onChange={(role) => updateRole(user, role)}
                                         />
                                     </div>
                                 </div>
@@ -204,6 +209,8 @@ export default function AdminUsersIndex({ users, filters, roles }: AdminUsersInd
                     </nav>
                 )}
             </div>
+
+            {confirmDialog}
         </AppLayout>
     );
 }

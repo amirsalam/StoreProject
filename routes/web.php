@@ -14,10 +14,13 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Resources\ApiReferenceController;
+use App\Http\Controllers\Resources\StatusController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Controllers\Workspace\BillingController as WorkspaceBillingController;
 use App\Http\Controllers\Workspace\InvoiceController as WorkspaceInvoiceController;
+use App\Http\Controllers\Workspace\PaymentGatewayController as WorkspacePaymentGatewayController;
 use App\Http\Controllers\Workspace\ProjectController as WorkspaceProjectController;
 use App\Http\Controllers\Workspace\TaskController as WorkspaceTaskController;
 use App\Http\Controllers\Workspace\TeamController as WorkspaceTeamController;
@@ -38,6 +41,13 @@ Route::inertia('terms', 'legal/terms')->name('terms');
 Route::inertia('privacy', 'legal/privacy')->name('privacy');
 Route::inertia('license', 'legal/license')->name('license');
 Route::inertia('refunds', 'legal/refunds')->name('refunds');
+
+// Resources. Docs and guides are marked draft outlines like the legal pages;
+// the API reference and status page are built from live routes and checks.
+Route::inertia('docs', 'resources/docs')->name('docs');
+Route::inertia('guides', 'resources/guides')->name('guides');
+Route::get('api-reference', ApiReferenceController::class)->name('api-reference');
+Route::get('status', StatusController::class)->name('status');
 
 // Public contact form. Messages are stored (admin inbox) and emailed only
 // when contact.notify_to is configured; the POST is rate limited.
@@ -102,6 +112,9 @@ Route::middleware(['auth'])
         Route::post('billing/change-plan', [WorkspaceBillingController::class, 'changePlan'])->name('billing.change');
         Route::post('billing/portal', [WorkspaceBillingController::class, 'portal'])->name('billing.portal');
         Route::post('billing/cancel', [WorkspaceBillingController::class, 'cancel'])->name('billing.cancel');
+        // The workspace's Stripe gateway (checkout keys), managed from the billing page.
+        Route::put('billing/gateway', [WorkspacePaymentGatewayController::class, 'update'])->name('billing.gateway.update');
+        Route::post('billing/gateway/test', [WorkspacePaymentGatewayController::class, 'test'])->name('billing.gateway.test');
 
         // Vendor store — open + manage your own storefront.
         Route::get('vendor', [WorkspaceVendorController::class, 'edit'])->name('vendor.edit');

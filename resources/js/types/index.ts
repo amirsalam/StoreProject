@@ -31,6 +31,8 @@ export interface BrandingSummary {
     has_custom_logo: boolean;
 }
 
+export type SystemStatusState = 'operational' | 'degraded';
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
@@ -40,6 +42,7 @@ export interface SharedData {
     branding: BrandingSummary;
     locale: Locale;
     direction: 'ltr' | 'rtl';
+    system_status: SystemStatusState;
     supportedLocales: Locale[];
     translations: TranslationDict;
     [key: string]: unknown;

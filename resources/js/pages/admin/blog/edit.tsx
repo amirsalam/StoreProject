@@ -1,8 +1,9 @@
+import ConfirmDialog from '@/components/confirm-dialog';
 import AppLayout from '@/layouts/app-layout';
 import BlogPostForm, { type BlogPostFormValues } from '@/pages/admin/blog/blog-post-form';
 import { type BlogPost, type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { FormEvent, useState } from 'react';
 
 interface Option {
     value: string;
@@ -39,9 +40,18 @@ export default function AdminBlogEdit({ post, statuses }: AdminBlogEditProps) {
         { title: post.title, href: `/admin/blog-posts/${post.id}/edit` },
     ];
 
+    // Saving asks for confirmation in a popup first.
+    const [confirming, setConfirming] = useState(false);
+
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        put(route('admin.blog-posts.update', post.id));
+        setConfirming(true);
+    };
+
+    const confirmUpdate = () => {
+        put(route('admin.blog-posts.update', post.id), {
+            onFinish: () => setConfirming(false),
+        });
     };
 
     return (
@@ -65,6 +75,21 @@ export default function AdminBlogEdit({ post, statuses }: AdminBlogEditProps) {
                     cancelHref={route('admin.blog-posts.index')}
                 />
             </div>
+
+            <ConfirmDialog
+                open={confirming}
+                onOpenChange={setConfirming}
+                title="Save changes to this post?"
+                description={
+                    <>
+                        The changes to <strong className="text-foreground">{post.title}</strong> are saved right away — if the post is published,
+                        readers see them immediately.
+                    </>
+                }
+                confirmLabel="Save changes"
+                processing={processing}
+                onConfirm={confirmUpdate}
+            />
         </AppLayout>
     );
 }

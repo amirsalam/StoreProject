@@ -1,3 +1,4 @@
+import { useConfirmDialog } from '@/components/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,9 +73,16 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
     const markSent = (invoice: Invoice) => router.post(route('workspace.invoices.send', invoice.id), {}, { preserveScroll: true });
     const markPaid = (invoice: Invoice) => router.post(route('workspace.invoices.paid', invoice.id), {}, { preserveScroll: true });
 
+    const { ask, confirmDialog } = useConfirmDialog();
+
     const remove = (invoice: Invoice) => {
-        if (!confirm(`Delete invoice ${invoice.number}?`)) return;
-        router.delete(route('workspace.invoices.destroy', invoice.id), { preserveScroll: true });
+        ask({
+            title: 'Delete this invoice?',
+            description: `Invoice ${invoice.number} will be permanently deleted. This cannot be undone.`,
+            confirmLabel: 'Delete invoice',
+            destructive: true,
+            action: (finish) => router.delete(route('workspace.invoices.destroy', invoice.id), { preserveScroll: true, onFinish: finish }),
+        });
     };
 
     const totalOutstanding = invoices.data
@@ -196,6 +204,8 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
                     </div>
                 )}
             </div>
+
+            {confirmDialog}
         </AppLayout>
     );
 }

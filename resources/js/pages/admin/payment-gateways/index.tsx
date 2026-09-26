@@ -1,3 +1,4 @@
+import { useConfirmDialog } from '@/components/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,9 +53,16 @@ export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
         applyFilter({ search });
     };
 
+    const { ask, confirmDialog } = useConfirmDialog();
+
     const handleDelete = (g: PaymentGatewaySummary) => {
-        if (!confirm(`Delete "${g.display_name}"? This cannot be undone.`)) return;
-        destroy(route('admin.payment-gateways.destroy', g.id), { preserveScroll: true });
+        ask({
+            title: 'Delete this payment gateway?',
+            description: `"${g.display_name}" and its saved credentials will be deleted. Checkout stops using it immediately. This cannot be undone.`,
+            confirmLabel: 'Delete',
+            destructive: true,
+            action: (finish) => destroy(route('admin.payment-gateways.destroy', g.id), { preserveScroll: true, onFinish: finish }),
+        });
     };
 
     const toggle = (g: PaymentGatewaySummary) =>
@@ -281,6 +289,8 @@ export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
                     </nav>
                 )}
             </div>
+
+            {confirmDialog}
         </AppLayout>
     );
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domain\Marketplace\CheckoutService;
 use App\Domain\Marketplace\EmptyCartException;
 use App\Domain\Marketplace\InvalidCouponException;
+use App\Domain\Payments\StripeCredentials;
 use App\Http\Requests\Marketplace\PlaceOrderRequest;
 use App\Models\Order;
 use App\Services\CartService;
@@ -16,15 +17,17 @@ use Inertia\Response;
 
 /**
  * Checkout: turns the session cart into an order + a Stripe PaymentIntent,
- * then a confirmation page. The order starts `pending`; the shipped
- * StripeWebhookController -> OrderPaymentProcessor flips it to `paid` and
- * triggers fulfillment once Stripe confirms the charge.
+ * then a confirmation page. The order starts `pending`; StripeWebhookController
+ * queues payment events to ProcessPaymentWebhook -> OrderPaymentProcessor,
+ * which flips it to `paid` and triggers fulfillment once Stripe confirms the
+ * charge (a queue worker must be running).
  */
 class CheckoutController extends Controller
 {
     public function __construct(
         private readonly CartService $cart,
         private readonly CheckoutService $checkout,
+        private readonly StripeCredentials $stripe,
     ) {}
 
     public function show(Request $request): Response|RedirectResponse
@@ -53,10 +56,11 @@ class CheckoutController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
             ],
-            // pk_test_… — the public publishable key. Used by Stripe.js in the
-            // browser to mount the PaymentElement. Null if payments are not
-            // configured (the page then shows a "payments unavailable" state).
-            'stripeKey' => config('services.stripe.key'),
+            // pk_test_… — the store's public publishable key (Admin → Payment
+            // Gateways, else .env). Used by Stripe.js in the browser to mount
+            // the PaymentElement. Null if payments are not configured (the
+            // page then shows a "payments unavailable" state).
+            'stripeKey' => $this->stripe->keys()['publishable_key'],
         ]);
     }
 

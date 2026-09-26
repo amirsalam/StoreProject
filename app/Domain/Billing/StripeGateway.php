@@ -3,6 +3,7 @@
 namespace App\Domain\Billing;
 
 use App\Domain\Marketplace\CheckoutService;
+use App\Domain\Payments\StripeCredentials;
 use Stripe\StripeClient;
 
 /**
@@ -28,6 +29,22 @@ class StripeGateway
         }
 
         return $this->client;
+    }
+
+    /**
+     * Prove a secret key works with a cheap, read-only call (the account
+     * balance). Throws the Stripe SDK's ApiErrorException subclasses —
+     * AuthenticationException for a rejected key. Used by the admin
+     * "Test connection" button; tests fake it via the container.
+     */
+    public function verifySecretKey(string $secret): void
+    {
+        $this->clientFor($secret)->balance->retrieve();
+    }
+
+    private function clientFor(string $secret): StripeClient
+    {
+        return new StripeClient(['api_key' => $secret, 'stripe_version' => '2024-04-10']);
     }
 
     /**
@@ -58,7 +75,14 @@ class StripeGateway
      */
     public function createPaymentIntent(int $amountCents, string $currency, array $metadata = []): array
     {
-        $intent = $this->client()->paymentIntents->create([
+        // Checkout charges on the store's own Stripe account (Admin → Payment
+        // Gateways) — not the platform billing client.
+        $secret = app(StripeCredentials::class)->keys()['secret_key'];
+        if ($secret === null) {
+            throw new \RuntimeException('No Stripe gateway is configured for this store.');
+        }
+
+        $intent = $this->clientFor($secret)->paymentIntents->create([
             'amount' => $amountCents,
             'currency' => strtolower($currency),
             'metadata' => $metadata,

@@ -356,6 +356,218 @@ return [
         ],
     ],
 
+    'help' => [
+        'draft_banner' => [
+            'title' => 'Brouillon non relu — incomplet',
+            'body' => 'Cette page est un plan de ce que la documentation doit couvrir, avec des notes sur ce que fait le produit aujourd’hui. Remplacez chaque section par des instructions finalisées avant le lancement.',
+        ],
+        'status_label' => 'Brouillon · non publié',
+        'toc' => 'Sur cette page',
+        'docs' => [
+            'meta_title' => 'Documentation',
+            'title' => 'Documentation',
+            'lead' => 'Comment fonctionne la plateforme — pour les acheteurs, les vendeurs et les équipes.',
+            'sections' => [
+                [
+                    'id' => 'accounts',
+                    'title' => 'Comptes et connexion',
+                    'body' => 'Ce que fait le code aujourd\'hui : vous pouvez vous inscrire par e-mail et mot de passe (avec vérification de l\'e-mail) ou vous connecter avec Google ou GitHub. La double authentification, la gestion des sessions actives et un journal d\'activité du compte se trouvent dans Paramètres. Note de rédaction : expliquez chaque option, avec des captures d\'écran.',
+                ],
+                [
+                    'id' => 'buying',
+                    'title' => 'Acheter un produit',
+                    'body' => 'Ce que fait le code aujourd\'hui : les produits vont dans un panier ; le paiement recueille les informations de facturation, applique un code promo facultatif et confirme le paiement par carte avec Stripe. Les commandes gratuites sautent l\'étape de la carte. Note de rédaction : détaillez le paiement et la page de confirmation.',
+                ],
+                [
+                    'id' => 'downloads',
+                    'title' => 'Téléchargements',
+                    'body' => 'Ce que fait le code aujourd\'hui : le paiement d\'un produit téléchargeable crée un droit de téléchargement sur votre compte, qui peut comporter une limite fixée par produit. Note de rédaction : indiquez où les acheteurs trouvent leurs téléchargements et ce que la limite signifie pour eux.',
+                ],
+                [
+                    'id' => 'licenses',
+                    'title' => 'Clés de licence',
+                    'body' => 'Ce que fait le code aujourd\'hui : les produits de licence et d\'accès API délivrent une clé avec une limite d\'activations ; votre logiciel l\'active, la vérifie et la libère via l\'API de licence. Note de rédaction : reliez chaque étape à la référence API et montrez où les acheteurs trouvent leurs clés.',
+                ],
+                [
+                    'id' => 'subscriptions',
+                    'title' => 'Abonnements',
+                    'body' => 'Ce que fait le code aujourd\'hui : les produits d\'abonnement ne sont pas livrés au paiement comme les autres — ils relèvent du module de facturation. Note de rédaction : documentez ce que reçoit l\'acheteur et le fonctionnement des renouvellements et résiliations une fois arrêtés.',
+                ],
+                [
+                    'id' => 'selling',
+                    'title' => 'Vendre en tant que vendeur',
+                    'body' => 'Ce que fait le code aujourd\'hui : un utilisateur connecté peut ouvrir une boutique depuis l\'espace de travail (« Ma boutique »), remplir un profil public avec logo et bannière, et s\'y voir attribuer des produits ; la boutique a sa propre page publique. Note de rédaction : décrivez la publication des produits et le paiement des vendeurs.',
+                ],
+                [
+                    'id' => 'workspace',
+                    'title' => 'Espace de travail et équipe',
+                    'body' => 'Ce que fait le code aujourd\'hui : l\'espace de travail comprend des projets, des tâches, des factures, une page équipe pour inviter des membres par e-mail et la facturation de l\'offre. Note de rédaction : donnez un court mode d\'emploi pour chaque partie.',
+                ],
+                [
+                    'id' => 'api',
+                    'title' => 'Accès API',
+                    'body' => 'Ce que fait le code aujourd\'hui : les jetons API personnels se créent dans Paramètres → Jetons API et ne s\'affichent qu\'une fois ; la référence API liste chaque endpoint. Note de rédaction : ajoutez des conseils pour garder les jetons secrets et les renouveler.',
+                ],
+                [
+                    'id' => 'languages',
+                    'title' => 'Langue et apparence',
+                    'body' => 'Ce que fait le code aujourd\'hui : le site est disponible en anglais, français, espagnol et arabe (de droite à gauche), avec des thèmes clair et sombre. Note de rédaction : expliquez comment changer, et si les contenus comme les descriptions de produits sont traduits.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Vous ne trouvez pas ce qu’il vous faut ?',
+                'body' => 'Envoyez un message et nous vous répondrons par e-mail.',
+                'action' => 'Nous contacter',
+            ],
+        ],
+        'guides' => [
+            'meta_title' => 'Guides',
+            'title' => 'Guides',
+            'lead' => 'Des tutoriels pas à pas pour les tâches les plus courantes.',
+            'sections' => [
+                [
+                    'id' => 'first_purchase',
+                    'title' => 'Acheter et télécharger votre premier produit',
+                    'body' => 'Note de rédaction : étapes de la navigation dans le catalogue au panier, au paiement et à la page de confirmation, puis où trouver le téléchargement ou la clé de licence.',
+                ],
+                [
+                    'id' => 'activate_license',
+                    'title' => 'Activer une licence depuis votre script',
+                    'body' => 'Ce que fait le code aujourd\'hui : un POST vers /api/v1/licenses/activate sur l\'adresse de la boutique, avec la clé et le domaine du site, occupe un emplacement d\'activation ; réactiver le même domaine est gratuit. Note de rédaction : ajoutez des exemples complets dans les langages courants et la gestion de chaque code d\'erreur.',
+                ],
+                [
+                    'id' => 'open_store',
+                    'title' => 'Ouvrir votre boutique et publier un produit',
+                    'body' => 'Note de rédaction : étapes pour ouvrir une boutique depuis l\'espace de travail, compléter son profil, ajouter un premier produit et vérifier la page publique.',
+                ],
+                [
+                    'id' => 'api_token',
+                    'title' => 'Créer un jeton API et faire votre premier appel',
+                    'body' => 'Ce que fait le code aujourd\'hui : les jetons se créent dans Paramètres → Jetons API et s\'envoient en en-tête Bearer ; GET /api/v1/user est l\'appel le plus simple pour en tester un. Note de rédaction : faites-en un court tutoriel avec un exemple à copier.',
+                ],
+                [
+                    'id' => 'invite_team',
+                    'title' => 'Inviter votre équipe',
+                    'body' => 'Note de rédaction : étapes pour inviter un membre depuis la page équipe, contenu de l\'e-mail d\'invitation et ce que voit le nouveau membre après acceptation.',
+                ],
+                [
+                    'id' => 'secure_account',
+                    'title' => 'Sécuriser votre compte',
+                    'body' => 'Note de rédaction : étapes pour activer la double authentification, enregistrer les codes de récupération et déconnecter les autres sessions.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Il manque un guide ?',
+                'body' => 'Dites-nous ce que vous cherchez à faire et nous vous répondrons par e-mail.',
+                'action' => 'Nous contacter',
+            ],
+        ],
+    ],
+    'api_reference' => [
+        'meta_title' => 'Référence API',
+        'eyebrow' => 'Développeurs',
+        'title' => 'Référence API',
+        'lead' => 'Chaque endpoint de l\'API publique, listé à partir des routes réelles.',
+        'base_url' => [
+            'title' => 'URL de base',
+            'note' => 'Les appels de licence doivent viser l\'adresse de la boutique qui a vendu la clé — une clé ne fonctionne que sur sa boutique. Les exemples ci-dessous utilisent l\'adresse depuis laquelle vous consultez cette page.',
+        ],
+        'auth' => [
+            'title' => 'Authentification',
+            'license_key' => [
+                'title' => 'Endpoints de licence',
+                'body' => 'Aucun jeton requis : la clé de licence dans la requête sert d\'identifiant. Les appels sont limités par adresse IP.',
+            ],
+            'token' => [
+                'title' => 'Endpoints du compte',
+                'body' => 'Envoyez un jeton API personnel en en-tête : Authorization: Bearer <token>. Tout jeton valide fonctionne pour ces endpoints.',
+                'link' => 'Gérer vos jetons API',
+            ],
+        ],
+        'groups' => [
+            'licenses' => [
+                'title' => 'Licences',
+                'description' => 'Activer, vérifier et libérer une clé de licence sur un domaine ou une installation. Les domaines sont normalisés : https://Example.com/shop et example.com ne font qu\'un.',
+            ],
+            'account' => [
+                'title' => 'Compte',
+                'description' => 'Lire le compte auquel appartient le jeton, son tableau de bord et ses notifications.',
+            ],
+        ],
+        'endpoints' => [
+            'licenses_activate' => 'Occuper un emplacement d\'activation pour un domaine. Activer un domaine qui en occupe déjà un réussit sans en consommer un autre.',
+            'licenses_validate' => 'Vérifier que la licence est utilisable et que le domaine occupe l\'un de ses emplacements.',
+            'licenses_deactivate' => 'Libérer l\'emplacement du domaine pour l\'utiliser ailleurs. Fonctionne quel que soit le statut de la licence, et réussit si le domaine n\'en occupait aucun.',
+            'user' => 'L\'utilisateur auquel appartient le jeton, avec ses rôles et les capacités du jeton.',
+            'dashboard' => 'Les widgets du tableau de bord pour le rôle de l\'utilisateur — les mêmes données que le tableau de bord web.',
+            'notifications_index' => 'Les notifications de l\'utilisateur, les plus récentes d\'abord, avec le nombre de non lues. Pagination par curseur.',
+            'notifications_read' => 'Marquer une notification comme lue.',
+            'notifications_read_all' => 'Marquer toutes les notifications comme lues.',
+            'notifications_destroy' => 'Supprimer une notification.',
+        ],
+        'params' => [
+            'in_query' => 'Paramètres de requête',
+            'in_body' => 'Corps JSON',
+            'required' => 'obligatoire',
+            'optional' => 'facultatif',
+            'license_key' => 'La clé de licence, par ex. ABCD-EFGH-IJKL-MNOP. La casse n\'a pas d\'importance.',
+            'domain' => 'Le domaine du site, ou un identifiant de l\'installation.',
+            'product_id' => 'Si fourni, la clé doit appartenir à ce produit.',
+            'status' => 'Uniquement les notifications lues ou non lues : read ou unread.',
+            'per_page' => 'Résultats par page, de 1 à 100 (25 par défaut).',
+            'cursor' => 'La valeur next_cursor de la page précédente.',
+        ],
+        'response' => [
+            'title' => 'Réponse en cas de succès',
+            'body' => 'Chaque endpoint de licence renvoie l\'état actuel de la licence :',
+        ],
+        'errors' => [
+            'title' => 'Erreurs',
+            'body' => 'Les erreurs sont renvoyées en JSON avec un message et un code d\'erreur stable, même sans en-tête Accept :',
+            'status' => 'Statut',
+            'code' => 'Code',
+            'meaning' => 'Signification',
+            'codes' => [
+                'invalid_license' => 'La clé n\'existe pas sur cette boutique ou appartient à un autre produit. Les clés inconnues et étrangères reçoivent exactement la même réponse.',
+                'license_revoked' => 'La licence a été révoquée.',
+                'license_expired' => 'La licence a expiré.',
+                'activation_limit_reached' => 'Tous les emplacements d\'activation sont pris ; libérez-en un d\'abord.',
+                'not_activated' => 'La licence est valide, mais ce domaine n\'occupe aucun emplacement.',
+            ],
+            'validation' => 'Un paramètre est manquant ou invalide ; l\'objet errors liste chaque champ.',
+            'rate_limit' => 'Trop de requêtes : les endpoints de licence autorisent :count appels par minute et par adresse IP. Attendez le délai de l\'en-tête Retry-After.',
+        ],
+    ],
+    'status_page' => [
+        'meta_title' => 'État du système',
+        'title' => 'État du système',
+        'lead' => 'Vérifications en direct des services dont dépend la plateforme.',
+        'overall' => [
+            'operational' => 'Tous les systèmes opérationnels',
+            'degraded' => 'Certains systèmes sont dégradés',
+        ],
+        'components' => [
+            'database' => [
+                'name' => 'Base de données',
+                'description' => 'Stocke les comptes, produits, commandes et licences.',
+            ],
+            'cache' => [
+                'name' => 'Cache',
+                'description' => 'Accélère les pages et conserve des données de courte durée.',
+            ],
+            'queue' => [
+                'name' => 'Tâches en arrière-plan',
+                'description' => 'Traite le travail comme les e-mails et le suivi des paiements.',
+            ],
+        ],
+        'state' => [
+            'operational' => 'Opérationnel',
+            'degraded' => 'Dégradé',
+        ],
+        'latency' => ':ms ms',
+        'checked_at' => 'Dernière vérification : :time. Les résultats sont actualisés au plus toutes les :seconds secondes.',
+        'health_endpoint' => 'Pour une surveillance automatisée, utilisez le point de contrôle de santé',
+    ],
     'legal' => [
         'draft_banner' => [
             'title' => 'Brouillon non relu — sans valeur contractuelle',
@@ -713,6 +925,7 @@ return [
     'footer' => [
         'tagline' => 'La marketplace mono-vendeur pour scripts Laravel, APIs, modèles et SaaS — pensée pour les créateurs qui livrent.',
         'status_ok' => 'Tous les systèmes opérationnels',
+        'status_degraded' => 'Certains systèmes dégradés — voir l’état',
         'copy' => '© :year StoreProject. Tous droits réservés.',
         'columns' => [
             'product' => [

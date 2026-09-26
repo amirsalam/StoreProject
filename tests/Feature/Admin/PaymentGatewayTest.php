@@ -2,10 +2,14 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Domain\Billing\StripeGateway;
+use App\Domain\Payments\OrderPaymentProcessor;
 use App\Models\PaymentGateway;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Inertia\Testing\AssertableInertia as Assert;
+use Stripe\Exception\AuthenticationException;
 use Tests\TestCase;
 
 /**
@@ -163,17 +167,91 @@ class PaymentGatewayTest extends TestCase
         $this->assertNull($gateway->refresh()->last_connection_at);
     }
 
-    public function test_test_connection_succeeds_with_complete_credentials(): void
+    public function test_test_connection_succeeds_when_stripe_accepts_the_keys(): void
     {
+        $verified = $this->fakeStripeVerification();
         $gateway = PaymentGateway::factory()->create([
-            'credentials' => ['publishable_key' => 'pk_x', 'secret_key' => 'sk_x'],
+            'credentials' => ['publishable_key' => 'pk_test_abc', 'secret_key' => 'sk_test_abc'],
         ]);
 
         $this->actingAs($this->admin())
             ->post(route('admin.payment-gateways.test', $gateway))
-            ->assertSessionHas('success');
+            ->assertSessionHas('success', 'Connected to Stripe — the keys work.');
 
+        $this->assertSame(['sk_test_abc'], $verified->keys);
         $this->assertNotNull($gateway->refresh()->last_connection_at);
+    }
+
+    public function test_test_connection_reports_a_key_stripe_rejects(): void
+    {
+        $this->fakeStripeVerification(reject: true);
+        $gateway = PaymentGateway::factory()->create([
+            'credentials' => ['publishable_key' => 'pk_test_abc', 'secret_key' => 'sk_test_revoked'],
+        ]);
+
+        $this->actingAs($this->admin())
+            ->post(route('admin.payment-gateways.test', $gateway))
+            ->assertSessionHas('error', 'Stripe rejected the secret key.');
+
+        $this->assertNull($gateway->refresh()->last_connection_at);
+    }
+
+    public function test_test_connection_catches_mixed_or_wrong_mode_keys_without_calling_stripe(): void
+    {
+        $verified = $this->fakeStripeVerification();
+        $cases = [
+            [['publishable_key' => 'pk_test_a', 'secret_key' => 'sk_live_a'], 'sandbox', 'different modes'],
+            [['publishable_key' => 'pk_live_a', 'secret_key' => 'sk_live_a'], 'sandbox', 'these are live keys'],
+            [['publishable_key' => 'sk_test_a', 'secret_key' => 'pk_test_a'], 'sandbox', 'should start with pk_test_'],
+        ];
+
+        foreach ($cases as [$credentials, $environment, $expected]) {
+            PaymentGateway::query()->delete();
+            $gateway = PaymentGateway::factory()->create(['credentials' => $credentials, 'environment' => $environment]);
+
+            $this->actingAs($this->admin())->post(route('admin.payment-gateways.test', $gateway));
+
+            $this->assertStringContainsString($expected, (string) session('error'));
+        }
+
+        $this->assertSame([], $verified->keys);
+    }
+
+    public function test_the_form_shows_the_stripe_webhook_url_and_events(): void
+    {
+        $this->actingAs($this->admin())
+            ->get(route('admin.payment-gateways.create'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('stripeWebhook.url', route('webhooks.stripe'))
+                ->where('stripeWebhook.events', OrderPaymentProcessor::HANDLED_EVENTS)
+            );
+    }
+
+    /**
+     * Stand-in for the live Stripe call; records the keys it was asked to check.
+     */
+    private function fakeStripeVerification(bool $reject = false): StripeGateway
+    {
+        $fake = new class($reject) extends StripeGateway
+        {
+            /** @var list<string> */
+            public array $keys = [];
+
+            public function __construct(private readonly bool $reject) {}
+
+            public function verifySecretKey(string $secret): void
+            {
+                $this->keys[] = $secret;
+                if ($this->reject) {
+                    throw AuthenticationException::factory('Invalid API Key provided');
+                }
+            }
+        };
+
+        $this->app->instance(StripeGateway::class, $fake);
+
+        return $fake;
     }
 
     public function test_validation_rejects_unknown_provider(): void

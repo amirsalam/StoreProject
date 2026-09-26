@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Domain\Plans\PlanGate;
+use App\Domain\Status\SystemStatus;
 use App\Services\BrandingService;
 use App\Services\CartService;
 use App\Tenancy\TenantContext;
@@ -70,6 +71,8 @@ class HandleInertiaRequests extends Middleware
             'cart' => app(CartService::class)->summary(),
             'branding' => app(BrandingService::class)->summary(),
             'tenant' => fn () => $this->tenantSnapshot(),
+            // Footer status line; cached for a minute by SystemStatus.
+            'system_status' => fn () => app(SystemStatus::class)->current()['overall'],
             'locale' => App::getLocale(),
             'direction' => SetLocale::direction(App::getLocale()),
             'supportedLocales' => SetLocale::SUPPORTED,

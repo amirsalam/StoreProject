@@ -1,3 +1,4 @@
+import { useConfirmDialog } from '@/components/confirm-dialog';
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +10,7 @@ import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { CheckCircle2, Copy, KeyRound, Trash2 } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 
@@ -69,27 +70,18 @@ export default function ApiTokens() {
         setData('abilities', next);
     };
 
-    const revoke = (token: ApiToken) => {
-        if (!confirm(`Revoke "${token.name}"? Apps using it will stop working immediately.`)) return;
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = route('api-tokens.destroy', token.id);
-        const csrf = document.querySelector<HTMLMetaElement>('meta[name=csrf-token]')?.content;
-        if (csrf) {
-            const tok = document.createElement('input');
-            tok.type = 'hidden';
-            tok.name = '_token';
-            tok.value = csrf;
-            form.appendChild(tok);
-        }
-        const method = document.createElement('input');
-        method.type = 'hidden';
-        method.name = '_method';
-        method.value = 'DELETE';
-        form.appendChild(method);
-        document.body.appendChild(form);
-        form.submit();
-    };
+    const { ask, confirmDialog } = useConfirmDialog();
+
+    const revoke = (token: ApiToken) =>
+        ask({
+            title: 'Revoke this token?',
+            description: `"${token.name}" stops working immediately — apps using it will be refused.`,
+            confirmLabel: 'Revoke token',
+            destructive: true,
+            // Through Inertia, which sends the XSRF-TOKEN cookie. (A hand-built
+            // form read a csrf-token <meta> tag the layout doesn't have → 419.)
+            action: (finish) => router.delete(route('api-tokens.destroy', token.id), { preserveScroll: true, onFinish: finish }),
+        });
 
     const copy = async () => {
         if (!newToken) return;
@@ -240,6 +232,8 @@ export default function ApiTokens() {
                     </div>
                 </div>
             </SettingsLayout>
+
+            {confirmDialog}
         </AppLayout>
     );
 }

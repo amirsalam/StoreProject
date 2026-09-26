@@ -1,8 +1,9 @@
+import ConfirmDialog from '@/components/confirm-dialog';
 import AppLayout from '@/layouts/app-layout';
 import ProductForm, { type ProductFormValues } from '@/pages/admin/products/product-form';
 import { type BreadcrumbItem, type Category, type Product, type ProductType } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { FormEvent, useState } from 'react';
 
 interface Option {
     value: string;
@@ -54,9 +55,18 @@ export default function AdminProductsEdit({ product, categories, statuses, types
         { title: product.title, href: `/admin/products/${product.id}/edit` },
     ];
 
+    // Saving asks for confirmation in a popup first.
+    const [confirming, setConfirming] = useState(false);
+
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        put(route('admin.products.update', product.id));
+        setConfirming(true);
+    };
+
+    const confirmUpdate = () => {
+        put(route('admin.products.update', product.id), {
+            onFinish: () => setConfirming(false),
+        });
     };
 
     return (
@@ -66,7 +76,7 @@ export default function AdminProductsEdit({ product, categories, statuses, types
             <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">Edit product</h1>
-                    <p className="text-sm text-muted-foreground">{product.title}</p>
+                    <p className="text-muted-foreground text-sm">{product.title}</p>
                 </div>
 
                 <ProductForm
@@ -82,6 +92,21 @@ export default function AdminProductsEdit({ product, categories, statuses, types
                     cancelHref={route('admin.products.index')}
                 />
             </div>
+
+            <ConfirmDialog
+                open={confirming}
+                onOpenChange={setConfirming}
+                title="Save changes to this product?"
+                description={
+                    <>
+                        The changes to <strong className="text-foreground">{product.title}</strong> go live immediately — price, status and details
+                        included.
+                    </>
+                }
+                confirmLabel="Save changes"
+                processing={processing}
+                onConfirm={confirmUpdate}
+            />
         </AppLayout>
     );
 }

@@ -40,6 +40,19 @@ use Illuminate\Support\Facades\Log;
  */
 class OrderPaymentProcessor
 {
+    /**
+     * Event types this processor applies. StripeWebhookController routes
+     * exactly these here (and everything else to the billing processor) —
+     * both write webhook_events, so an event must go to only one of them.
+     */
+    public const HANDLED_EVENTS = [
+        'payment_intent.succeeded',
+        'charge.succeeded',
+        'charge.refunded',
+        'payment_intent.payment_failed',
+        'charge.failed',
+    ];
+
     public function __construct(
         private readonly WalletService $wallets,
     ) {}

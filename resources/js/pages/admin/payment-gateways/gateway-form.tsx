@@ -1,3 +1,4 @@
+import { StripeWebhookSteps, type StripeWebhookInfo } from '@/components/stripe-webhook-steps';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,9 +30,10 @@ export interface GatewayFormValues {
 interface Props {
     providers: PaymentProvider[];
     gateway?: GatewayFormValues;
+    stripeWebhook?: StripeWebhookInfo;
 }
 
-export default function GatewayForm({ providers, gateway }: Props) {
+export default function GatewayForm({ providers, gateway, stripeWebhook }: Props) {
     const isEdit = Boolean(gateway?.id);
 
     const form = useForm({
@@ -176,6 +178,7 @@ export default function GatewayForm({ providers, gateway }: Props) {
             {activeProvider?.supports_webhook && (
                 <section className="rounded-lg border bg-card p-6">
                     <h2 className="mb-4 text-base font-semibold">Webhook</h2>
+                    {form.data.provider === 'stripe' && stripeWebhook && <StripeWebhookSteps info={stripeWebhook} />}
                     <Field label="Webhook secret" error={form.errors.webhook_secret}>
                         <Input
                             type="password"

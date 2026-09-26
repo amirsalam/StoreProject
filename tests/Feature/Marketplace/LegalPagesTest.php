@@ -62,7 +62,7 @@ class LegalPagesTest extends TestCase
     public function test_the_page_is_not_indexable_while_it_is_a_draft(string $routeName, string $component): void
     {
         $source = file_get_contents(resource_path("js/pages/{$component}.tsx"));
-        $shared = file_get_contents(resource_path('js/pages/legal/legal-document.tsx'));
+        $shared = file_get_contents(resource_path('js/components/draft-document.tsx'));
 
         $this->assertTrue(
             str_contains($source.$shared, 'name="robots" content="noindex"'),

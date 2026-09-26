@@ -99,6 +99,22 @@ class Product extends Model
         return $this->hasMany(Subscription::class);
     }
 
+    /**
+     * Whether anything a customer bought still points at this product —
+     * the rows whose foreign keys block deleting it (restrictOnDelete).
+     * Checked across tenants, exactly like the constraint itself.
+     */
+    public function hasSalesHistory(): bool
+    {
+        foreach ([$this->orderItems(), $this->licenses(), $this->downloads(), $this->subscriptions()] as $relation) {
+            if ($relation->withoutGlobalScope('tenant')->exists()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function getCurrentPriceAttribute(): string
     {
         return $this->sale_price ?? $this->price;

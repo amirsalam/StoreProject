@@ -1,3 +1,4 @@
+import { useConfirmDialog } from '@/components/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -83,9 +84,16 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
         });
     };
 
+    const { ask, confirmDialog } = useConfirmDialog();
+
     const archive = (project: Project) => {
-        if (!confirm(`Archive "${project.name}"?`)) return;
-        router.delete(route('workspace.projects.destroy', project.slug), { preserveScroll: true });
+        ask({
+            title: 'Archive this project?',
+            description: `"${project.name}" will be archived and removed from the active project list.`,
+            confirmLabel: 'Archive project',
+            destructive: true,
+            action: (finish) => router.delete(route('workspace.projects.destroy', project.slug), { preserveScroll: true, onFinish: finish }),
+        });
     };
 
     return (
@@ -244,6 +252,8 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
                     </div>
                 )}
             </div>
+
+            {confirmDialog}
         </AppLayout>
     );
 }

@@ -1,3 +1,4 @@
+import ConfirmDialog from '@/components/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,9 +48,17 @@ export default function AdminBlogIndex({ posts, filters, statuses }: AdminBlogIn
         applyFilter({ search });
     };
 
-    const handleDelete = (post: BlogPost) => {
-        if (!confirm(`Delete "${post.title}"? This cannot be undone.`)) return;
-        destroy(route('admin.blog-posts.destroy', post.id), { preserveScroll: true });
+    // The post awaiting delete confirmation in the popup, if any.
+    const [pendingDelete, setPendingDelete] = useState<BlogPost | null>(null);
+
+    const handleDelete = (post: BlogPost) => setPendingDelete(post);
+
+    const confirmDelete = () => {
+        if (!pendingDelete) return;
+        // No preserveScroll: the result message is shown at the top of the page.
+        destroy(route('admin.blog-posts.destroy', pendingDelete.id), {
+            onFinish: () => setPendingDelete(null),
+        });
     };
 
     return (
@@ -195,6 +204,22 @@ export default function AdminBlogIndex({ posts, filters, statuses }: AdminBlogIn
                     </nav>
                 )}
             </div>
+
+            <ConfirmDialog
+                open={pendingDelete !== null}
+                onOpenChange={(open) => !open && setPendingDelete(null)}
+                title="Delete this post?"
+                description={
+                    <>
+                        <strong className="text-foreground">{pendingDelete?.title}</strong> will be permanently deleted and disappear from the
+                        blog. This cannot be undone.
+                    </>
+                }
+                confirmLabel="Delete"
+                destructive
+                processing={processing}
+                onConfirm={confirmDelete}
+            />
         </AppLayout>
     );
 }

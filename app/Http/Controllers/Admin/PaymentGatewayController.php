@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Payments\OrderPaymentProcessor;
 use App\Domain\Payments\PaymentGatewayService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePaymentGatewayRequest;
@@ -54,6 +55,7 @@ class PaymentGatewayController extends Controller
     {
         return Inertia::render('admin/payment-gateways/create', [
             'providers' => $this->providers(),
+            'stripeWebhook' => $this->stripeWebhook(),
         ]);
     }
 
@@ -71,6 +73,7 @@ class PaymentGatewayController extends Controller
         return Inertia::render('admin/payment-gateways/edit', [
             'gateway' => $this->editPayload($paymentGateway),
             'providers' => $this->providers(),
+            'stripeWebhook' => $this->stripeWebhook(),
         ]);
     }
 
@@ -159,6 +162,21 @@ class PaymentGatewayController extends Controller
      *
      * @return array<string, mixed>
      */
+    /**
+     * What to register in the Stripe Dashboard: this store's webhook URL
+     * (built from the current host, so it resolves to this store) and the
+     * event types checkout handles.
+     *
+     * @return array{url: string, events: list<string>}
+     */
+    private function stripeWebhook(): array
+    {
+        return [
+            'url' => route('webhooks.stripe'),
+            'events' => OrderPaymentProcessor::HANDLED_EVENTS,
+        ];
+    }
+
     private function editPayload(PaymentGateway $g): array
     {
         return [

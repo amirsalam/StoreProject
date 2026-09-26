@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Licensing\LicenseActivationService;
 use App\Tenancy\TenantContext;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -25,6 +26,6 @@ class AppServiceProvider extends ServiceProvider
 
         // Public license API (/api/v1/licenses/*): unauthenticated, so
         // throttle per client IP.
-        RateLimiter::for('license-api', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
+        RateLimiter::for('license-api', fn (Request $request) => Limit::perMinute(LicenseActivationService::RATE_LIMIT_PER_MINUTE)->by($request->ip()));
     }
 }

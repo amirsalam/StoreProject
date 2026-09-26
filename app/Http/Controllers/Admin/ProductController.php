@@ -95,6 +95,19 @@ class ProductController extends Controller
     public function destroy(Product $product): RedirectResponse
     {
         $title = $product->title;
+
+        // A sold product is referenced by order lines, licenses, downloads
+        // or subscriptions, and deleting it would erase customers' purchase
+        // history and access (the database refuses anyway). Archive it
+        // instead: hidden from the store, buyers keep what they paid for.
+        if ($product->hasSalesHistory()) {
+            $product->update(['status' => Product::STATUS_ARCHIVED]);
+
+            return redirect()
+                ->route('admin.products.index')
+                ->with('success', "Product \"{$title}\" has been sold, so it was archived instead of deleted — it's hidden from the store and buyers keep their access.");
+        }
+
         $product->delete();
 
         return redirect()

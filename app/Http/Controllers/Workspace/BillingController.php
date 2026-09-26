@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Workspace;
 
 use App\Domain\Billing\BillingService;
+use App\Domain\Payments\OrderPaymentProcessor;
 use App\Domain\Plans\PlanGate;
 use App\Http\Controllers\Controller;
+use App\Models\PaymentGateway;
 use App\Models\Plan;
 use App\Models\TenantSubscription;
 use App\Tenancy\TenantContext;
@@ -17,10 +19,15 @@ class BillingController extends Controller
 {
     public function __construct(private readonly BillingService $billing) {}
 
-    public function index(PlanGate $gate): Response
+    public function index(Request $request, PlanGate $gate): Response
     {
         $tenant = app(TenantContext::class)->current();
         abort_unless($tenant, 404);
+
+        $canManagePayments = $tenant->canManagePayments($request->user());
+        $gateway = $canManagePayments
+            ? PaymentGateway::query()->where('provider', 'stripe')->first()
+            : null;
 
         $subscription = $tenant->currentSubscription;
         $plans = Plan::query()
@@ -43,6 +50,22 @@ class BillingController extends Controller
             'plans' => $plans,
             'usage' => $gate->snapshot($tenant),
             'is_stripe_configured' => $this->stripeConfigured(),
+            'can_manage_payments' => $canManagePayments,
+            // Never the secret values — only whether they are set. The
+            // publishable key is public by design, so it is shown to confirm
+            // which account is connected.
+            'payment_gateway' => $gateway ? [
+                'environment' => $gateway->environment,
+                'is_active' => $gateway->is_active,
+                'publishable_key' => $gateway->credentials['publishable_key'] ?? null,
+                'has_secret_key' => filled($gateway->credentials['secret_key'] ?? null),
+                'has_webhook_secret' => filled($gateway->getRawOriginal('webhook_secret')),
+                'last_connection_at' => $gateway->last_connection_at,
+            ] : null,
+            'stripe_webhook' => $canManagePayments ? [
+                'url' => route('webhooks.stripe'),
+                'events' => OrderPaymentProcessor::HANDLED_EVENTS,
+            ] : null,
         ]);
     }
 

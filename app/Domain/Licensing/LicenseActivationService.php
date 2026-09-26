@@ -24,6 +24,9 @@ use Illuminate\Support\Facades\DB;
  */
 class LicenseActivationService
 {
+    /** Per-IP cap for the `license-api` rate limiter (AppServiceProvider). */
+    public const RATE_LIMIT_PER_MINUTE = 60;
+
     /**
      * Compared against when no license matched, so a miss costs the same
      * hash_equals() call as a hit.

@@ -47,19 +47,28 @@ class LicenseController extends Controller
 
     private function respond(License $license, string $domain): JsonResponse
     {
+        return response()->json(['data' => self::payload($license, $domain)]);
+    }
+
+    /**
+     * The success payload. Public so the API reference page can render an
+     * example from the same code the endpoints use.
+     *
+     * @return array<string, mixed>
+     */
+    public static function payload(License $license, string $domain): array
+    {
         $used = count($license->activatedDomains());
 
-        return response()->json([
-            'data' => [
-                'domain' => $domain,
-                'activated' => $license->hasActivation($domain),
-                'status' => $license->status,
-                'product_id' => $license->product_id,
-                'activation_limit' => $license->activation_limit,
-                'activations_count' => $used,
-                'activations_remaining' => max(0, $license->activation_limit - $used),
-                'expires_at' => $license->expires_at?->toIso8601String(),
-            ],
-        ]);
+        return [
+            'domain' => $domain,
+            'activated' => $license->hasActivation($domain),
+            'status' => $license->status,
+            'product_id' => $license->product_id,
+            'activation_limit' => $license->activation_limit,
+            'activations_count' => $used,
+            'activations_remaining' => max(0, $license->activation_limit - $used),
+            'expires_at' => $license->expires_at?->toIso8601String(),
+        ];
     }
 }

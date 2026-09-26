@@ -1,3 +1,4 @@
+import { useConfirmDialog } from '@/components/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,9 +53,16 @@ export default function AdminContactIndex({ messages, filters, statuses, unreadC
         router.patch(route('admin.contact.update', message.id), { status }, { preserveScroll: true });
     };
 
+    const { ask, confirmDialog } = useConfirmDialog();
+
     const handleDelete = (message: ContactMessage) => {
-        if (!confirm(`Delete the message from ${message.name}? This cannot be undone.`)) return;
-        destroy(route('admin.contact.destroy', message.id), { preserveScroll: true });
+        ask({
+            title: 'Delete this message?',
+            description: `The message from ${message.name} will be permanently deleted. This cannot be undone.`,
+            confirmLabel: 'Delete',
+            destructive: true,
+            action: (finish) => destroy(route('admin.contact.destroy', message.id), { preserveScroll: true, onFinish: finish }),
+        });
     };
 
     return (
@@ -197,6 +205,8 @@ export default function AdminContactIndex({ messages, filters, statuses, unreadC
                     </nav>
                 )}
             </div>
+
+            {confirmDialog}
         </AppLayout>
     );
 }

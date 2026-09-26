@@ -356,6 +356,218 @@ return [
         ],
     ],
 
+    'help' => [
+        'draft_banner' => [
+            'title' => 'Unreviewed draft — incomplete',
+            'body' => 'This page is an outline of what the documentation needs to cover, with notes on what the product does today. Replace each section with finished instructions before launch.',
+        ],
+        'status_label' => 'Draft · not yet published',
+        'toc' => 'On this page',
+        'docs' => [
+            'meta_title' => 'Documentation',
+            'title' => 'Documentation',
+            'lead' => 'How the marketplace works — for buyers, vendors and teams.',
+            'sections' => [
+                [
+                    'id' => 'accounts',
+                    'title' => 'Accounts and sign-in',
+                    'body' => 'What the code does today: you can register with email and password (with email verification) or sign in with Google or GitHub. Two-factor authentication, active-session management and an account activity log are under Settings. Drafting note: explain each option, with screenshots.',
+                ],
+                [
+                    'id' => 'buying',
+                    'title' => 'Buying a product',
+                    'body' => 'What the code does today: products go into a cart; checkout takes billing details, applies an optional coupon and confirms the card payment with Stripe. Free orders skip the card step. Drafting note: walk through checkout and the confirmation page.',
+                ],
+                [
+                    'id' => 'downloads',
+                    'title' => 'Downloads',
+                    'body' => 'What the code does today: paying for a downloadable product creates a download grant on your account, which can carry a download limit set per product. Drafting note: say where buyers find their downloads and what the limit means for them.',
+                ],
+                [
+                    'id' => 'licenses',
+                    'title' => 'License keys',
+                    'body' => 'What the code does today: license and API-access products issue a key with an activation limit; your software activates, checks and releases it through the license API. Drafting note: link each step to the API reference and show where buyers find their keys.',
+                ],
+                [
+                    'id' => 'subscriptions',
+                    'title' => 'Subscriptions',
+                    'body' => 'What the code does today: subscription products are not fulfilled at checkout like other products — they belong to the billing module. Drafting note: document what a buyer receives and how renewals and cancellations work once that is final.',
+                ],
+                [
+                    'id' => 'selling',
+                    'title' => 'Selling as a vendor',
+                    'body' => 'What the code does today: a signed-in user can open a store from the workspace (“My store”), fill in a public profile with a logo and banner, and have products attributed to it; the store gets its own public page. Drafting note: describe how products are published and how vendors get paid.',
+                ],
+                [
+                    'id' => 'workspace',
+                    'title' => 'Workspace and team',
+                    'body' => 'What the code does today: the workspace has projects, tasks, invoices, a team page for inviting members by email, and billing for the workspace plan. Drafting note: give each area a short how-to.',
+                ],
+                [
+                    'id' => 'api',
+                    'title' => 'API access',
+                    'body' => 'What the code does today: personal API tokens are created under Settings → API tokens and shown only once; the API reference lists every endpoint. Drafting note: add guidance on keeping tokens secret and rotating them.',
+                ],
+                [
+                    'id' => 'languages',
+                    'title' => 'Language and appearance',
+                    'body' => 'What the code does today: the site is available in English, French, Spanish and Arabic (right-to-left), with light and dark themes. Drafting note: say how to switch, and whether content such as product descriptions is translated.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Can’t find what you need?',
+                'body' => 'Send a message and we will get back to you by email.',
+                'action' => 'Contact us',
+            ],
+        ],
+        'guides' => [
+            'meta_title' => 'Guides',
+            'title' => 'Guides',
+            'lead' => 'Step-by-step walkthroughs for the most common tasks.',
+            'sections' => [
+                [
+                    'id' => 'first_purchase',
+                    'title' => 'Buy and download your first product',
+                    'body' => 'Drafting note: steps from browsing the catalogue to cart, checkout and the confirmation page, then where to find the download or license key.',
+                ],
+                [
+                    'id' => 'activate_license',
+                    'title' => 'Activate a license from your script',
+                    'body' => 'What the code does today: one POST to /api/v1/licenses/activate on the store’s own address, with the key and the site’s domain, takes an activation slot; activating the same domain again is free. Drafting note: add complete examples in common languages and how to handle each error code.',
+                ],
+                [
+                    'id' => 'open_store',
+                    'title' => 'Open your store and publish a product',
+                    'body' => 'Drafting note: steps to open a store from the workspace, complete its profile, add a first product and check the public store page.',
+                ],
+                [
+                    'id' => 'api_token',
+                    'title' => 'Create an API token and make your first call',
+                    'body' => 'What the code does today: tokens are created under Settings → API tokens and sent as a Bearer header; GET /api/v1/user is the simplest call to test one. Drafting note: turn this into a short tutorial with a copy-paste example.',
+                ],
+                [
+                    'id' => 'invite_team',
+                    'title' => 'Invite your team',
+                    'body' => 'Drafting note: steps to invite a member from the team page, what the invitation email contains, and what the new member sees after accepting.',
+                ],
+                [
+                    'id' => 'secure_account',
+                    'title' => 'Secure your account',
+                    'body' => 'Drafting note: steps to turn on two-factor authentication, save the recovery codes and sign out other sessions.',
+                ],
+            ],
+            'contact' => [
+                'title' => 'Missing a guide?',
+                'body' => 'Tell us what you are trying to do and we will get back to you by email.',
+                'action' => 'Contact us',
+            ],
+        ],
+    ],
+    'api_reference' => [
+        'meta_title' => 'API reference',
+        'eyebrow' => 'Developers',
+        'title' => 'API reference',
+        'lead' => 'Every endpoint of the public API, listed from the live routes.',
+        'base_url' => [
+            'title' => 'Base URL',
+            'note' => 'License calls must go to the address of the store that sold the key — a key only works on its own store. The examples below use the address you are viewing this page on.',
+        ],
+        'auth' => [
+            'title' => 'Authentication',
+            'license_key' => [
+                'title' => 'License endpoints',
+                'body' => 'No token needed: the license key in the request is the credential. Calls are rate-limited per IP address.',
+            ],
+            'token' => [
+                'title' => 'Account endpoints',
+                'body' => 'Send a personal API token as a header: Authorization: Bearer <token>. Any valid token works for these endpoints.',
+                'link' => 'Manage your API tokens',
+            ],
+        ],
+        'groups' => [
+            'licenses' => [
+                'title' => 'Licenses',
+                'description' => 'Activate, check and release a license key on a domain or installation. Domains are normalised, so https://Example.com/shop and example.com count as one.',
+            ],
+            'account' => [
+                'title' => 'Account',
+                'description' => 'Read the account the token belongs to, its dashboard and its notifications.',
+            ],
+        ],
+        'endpoints' => [
+            'licenses_activate' => 'Take an activation slot for a domain. Activating a domain that already holds a slot succeeds without using another.',
+            'licenses_validate' => 'Check that the license is usable and that the domain holds one of its slots.',
+            'licenses_deactivate' => 'Release the domain’s slot so it can be used elsewhere. Works whatever the license status, and succeeds if the domain held no slot.',
+            'user' => 'The user the token belongs to, with their roles and the token’s abilities.',
+            'dashboard' => 'The dashboard widgets for the user’s role — the same data as the web dashboard.',
+            'notifications_index' => 'The user’s notifications, newest first, with the unread count. Paginated with a cursor.',
+            'notifications_read' => 'Mark one notification as read.',
+            'notifications_read_all' => 'Mark all notifications as read.',
+            'notifications_destroy' => 'Delete one notification.',
+        ],
+        'params' => [
+            'in_query' => 'Query parameters',
+            'in_body' => 'JSON body',
+            'required' => 'required',
+            'optional' => 'optional',
+            'license_key' => 'The license key, e.g. ABCD-EFGH-IJKL-MNOP. Letter case does not matter.',
+            'domain' => 'The site’s domain, or an identifier for the installation.',
+            'product_id' => 'If given, the key must belong to this product.',
+            'status' => 'Only read or only unread notifications: read or unread.',
+            'per_page' => 'Results per page, 1–100 (default 25).',
+            'cursor' => 'The next_cursor value from the previous page.',
+        ],
+        'response' => [
+            'title' => 'Successful response',
+            'body' => 'Every license endpoint returns the license’s current state:',
+        ],
+        'errors' => [
+            'title' => 'Errors',
+            'body' => 'Errors come back as JSON with a message and a stable error code, even without an Accept header:',
+            'status' => 'Status',
+            'code' => 'Code',
+            'meaning' => 'Meaning',
+            'codes' => [
+                'invalid_license' => 'The key does not exist on this store or belongs to another product. Unknown and foreign keys get the identical response.',
+                'license_revoked' => 'The license has been revoked.',
+                'license_expired' => 'The license has expired.',
+                'activation_limit_reached' => 'Every activation slot is taken; release one first.',
+                'not_activated' => 'The license is valid, but this domain holds no slot.',
+            ],
+            'validation' => 'A parameter is missing or invalid; the errors object lists each field.',
+            'rate_limit' => 'Too many requests: license endpoints allow :count per minute per IP address. Wait for the time in the Retry-After header.',
+        ],
+    ],
+    'status_page' => [
+        'meta_title' => 'System status',
+        'title' => 'System status',
+        'lead' => 'Live checks of the services the marketplace depends on.',
+        'overall' => [
+            'operational' => 'All systems operational',
+            'degraded' => 'Some systems are degraded',
+        ],
+        'components' => [
+            'database' => [
+                'name' => 'Database',
+                'description' => 'Stores accounts, products, orders and licenses.',
+            ],
+            'cache' => [
+                'name' => 'Cache',
+                'description' => 'Speeds up pages and holds short-lived data.',
+            ],
+            'queue' => [
+                'name' => 'Background jobs',
+                'description' => 'Processes work such as emails and payment follow-ups.',
+            ],
+        ],
+        'state' => [
+            'operational' => 'Operational',
+            'degraded' => 'Degraded',
+        ],
+        'latency' => ':ms ms',
+        'checked_at' => 'Last checked :time. Results are refreshed at most every :seconds seconds.',
+        'health_endpoint' => 'For automated monitoring, use the health-check endpoint',
+    ],
     'legal' => [
         'draft_banner' => [
             'title' => 'Unreviewed draft — not binding',
@@ -713,6 +925,7 @@ return [
     'footer' => [
         'tagline' => 'The single-vendor marketplace for Laravel scripts, APIs, templates, and SaaS — built for makers who ship.',
         'status_ok' => 'All systems operational',
+        'status_degraded' => 'Some systems degraded — see status',
         'copy' => '© :year StoreProject. All rights reserved.',
         'columns' => [
             'product' => [

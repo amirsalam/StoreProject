@@ -1,3 +1,4 @@
+import { type StripeWebhookInfo } from '@/components/stripe-webhook-steps';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type PaymentProvider } from '@/types';
 import { Head } from '@inertiajs/react';
@@ -12,9 +13,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface Props {
     gateway: GatewayFormValues;
     providers: PaymentProvider[];
+    stripeWebhook: StripeWebhookInfo;
 }
 
-export default function EditPaymentGateway({ gateway, providers }: Props) {
+export default function EditPaymentGateway({ gateway, providers, stripeWebhook }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Admin · Edit ${gateway.display_name}`} />
@@ -22,12 +24,10 @@ export default function EditPaymentGateway({ gateway, providers }: Props) {
             <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">Edit {gateway.display_name}</h1>
-                    <p className="text-sm text-muted-foreground">
-                        Update configuration. Leave secret fields blank to keep their stored values.
-                    </p>
+                    <p className="text-muted-foreground text-sm">Update configuration. Leave secret fields blank to keep their stored values.</p>
                 </div>
 
-                <GatewayForm gateway={gateway} providers={providers} />
+                <GatewayForm gateway={gateway} providers={providers} stripeWebhook={stripeWebhook} />
             </div>
         </AppLayout>
     );

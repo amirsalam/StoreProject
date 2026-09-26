@@ -1,3 +1,4 @@
+import { useConfirmDialog } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -94,9 +95,16 @@ export default function AdminBrandingEdit({ branding }: AdminBrandingEditProps) 
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
+    const { ask, confirmDialog } = useConfirmDialog();
+
     const deleteSavedLogo = () => {
-        if (!confirm('Remove the current logo and revert to the default mark?')) return;
-        router.delete(route('admin.branding.logo.destroy'), { preserveScroll: true });
+        ask({
+            title: 'Remove the logo?',
+            description: 'The current logo is removed and the site goes back to the default mark.',
+            confirmLabel: 'Remove logo',
+            destructive: true,
+            action: (finish) => router.delete(route('admin.branding.logo.destroy'), { preserveScroll: true, onFinish: finish }),
+        });
     };
 
     const previewSrc = previewUrl ?? branding.logo_url;
@@ -281,6 +289,8 @@ export default function AdminBrandingEdit({ branding }: AdminBrandingEditProps) 
                     </div>
                 </form>
             </div>
+
+            {confirmDialog}
         </AppLayout>
     );
 }

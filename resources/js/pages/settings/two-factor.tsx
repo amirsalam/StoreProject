@@ -1,3 +1,4 @@
+import { useConfirmDialog } from '@/components/confirm-dialog';
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -246,13 +247,21 @@ function RecoveryCodesSection({
 
 function DisableSection() {
     const { data, setData, delete: destroy, processing, errors, reset } = useForm({ password: '' });
+    const { ask, confirmDialog } = useConfirmDialog();
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        if (!confirm('Disable two-factor authentication? Your account will be less secure.')) return;
-        destroy(route('two-factor.disable'), {
-            preserveScroll: true,
-            onSuccess: () => reset('password'),
+        ask({
+            title: 'Disable two-factor authentication?',
+            description: 'Signing in will only need your password again, so your account will be less secure.',
+            confirmLabel: 'Disable 2FA',
+            destructive: true,
+            action: (finish) =>
+                destroy(route('two-factor.disable'), {
+                    preserveScroll: true,
+                    onSuccess: () => reset('password'),
+                    onFinish: finish,
+                }),
         });
     };
 
@@ -281,6 +290,7 @@ function DisableSection() {
                     Disable 2FA
                 </Button>
             </form>
+            {confirmDialog}
         </div>
     );
 }

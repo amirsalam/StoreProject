@@ -356,6 +356,218 @@ return [
         ],
     ],
 
+    'help' => [
+        'draft_banner' => [
+            'title' => 'Borrador sin revisar — incompleto',
+            'body' => 'Esta página es un esquema de lo que debe cubrir la documentación, con notas sobre lo que hace hoy el producto. Sustituye cada sección por instrucciones definitivas antes del lanzamiento.',
+        ],
+        'status_label' => 'Borrador · sin publicar',
+        'toc' => 'En esta página',
+        'docs' => [
+            'meta_title' => 'Documentación',
+            'title' => 'Documentación',
+            'lead' => 'Cómo funciona el marketplace — para compradores, vendedores y equipos.',
+            'sections' => [
+                [
+                    'id' => 'accounts',
+                    'title' => 'Cuentas e inicio de sesión',
+                    'body' => 'Lo que hace el código hoy: puedes registrarte con correo y contraseña (con verificación del correo) o entrar con Google o GitHub. La verificación en dos pasos, la gestión de sesiones activas y un registro de actividad de la cuenta están en Ajustes. Nota de redacción: explica cada opción, con capturas.',
+                ],
+                [
+                    'id' => 'buying',
+                    'title' => 'Comprar un producto',
+                    'body' => 'Lo que hace el código hoy: los productos van a un carrito; el pago recoge los datos de facturación, aplica un cupón opcional y confirma el pago con tarjeta mediante Stripe. Los pedidos gratuitos se saltan el paso de la tarjeta. Nota de redacción: explica el pago y la página de confirmación.',
+                ],
+                [
+                    'id' => 'downloads',
+                    'title' => 'Descargas',
+                    'body' => 'Lo que hace el código hoy: pagar un producto descargable crea un derecho de descarga en tu cuenta, que puede tener un límite fijado por producto. Nota de redacción: indica dónde encuentran los compradores sus descargas y qué significa el límite.',
+                ],
+                [
+                    'id' => 'licenses',
+                    'title' => 'Claves de licencia',
+                    'body' => 'Lo que hace el código hoy: los productos de licencia y de acceso API emiten una clave con un límite de activaciones; tu software la activa, la comprueba y la libera mediante la API de licencias. Nota de redacción: enlaza cada paso con la referencia de la API y muestra dónde encuentran los compradores sus claves.',
+                ],
+                [
+                    'id' => 'subscriptions',
+                    'title' => 'Suscripciones',
+                    'body' => 'Lo que hace el código hoy: los productos de suscripción no se entregan en el pago como los demás — pertenecen al módulo de facturación. Nota de redacción: documenta qué recibe el comprador y cómo funcionan renovaciones y cancelaciones cuando esté definido.',
+                ],
+                [
+                    'id' => 'selling',
+                    'title' => 'Vender como vendedor',
+                    'body' => 'Lo que hace el código hoy: un usuario con sesión iniciada puede abrir una tienda desde el espacio de trabajo («Mi tienda»), completar un perfil público con logo y banner y tener productos atribuidos; la tienda tiene su propia página pública. Nota de redacción: describe cómo se publican los productos y cómo cobran los vendedores.',
+                ],
+                [
+                    'id' => 'workspace',
+                    'title' => 'Espacio de trabajo y equipo',
+                    'body' => 'Lo que hace el código hoy: el espacio de trabajo incluye proyectos, tareas, facturas, una página de equipo para invitar miembros por correo y la facturación del plan. Nota de redacción: da una breve guía de cada parte.',
+                ],
+                [
+                    'id' => 'api',
+                    'title' => 'Acceso a la API',
+                    'body' => 'Lo que hace el código hoy: los tokens de API personales se crean en Ajustes → Tokens de API y solo se muestran una vez; la referencia de la API lista cada endpoint. Nota de redacción: añade consejos para mantener los tokens en secreto y rotarlos.',
+                ],
+                [
+                    'id' => 'languages',
+                    'title' => 'Idioma y apariencia',
+                    'body' => 'Lo que hace el código hoy: el sitio está disponible en inglés, francés, español y árabe (de derecha a izquierda), con temas claro y oscuro. Nota de redacción: explica cómo cambiar y si contenidos como las descripciones de productos se traducen.',
+                ],
+            ],
+            'contact' => [
+                'title' => '¿No encuentras lo que necesitas?',
+                'body' => 'Envía un mensaje y te responderemos por correo.',
+                'action' => 'Contacto',
+            ],
+        ],
+        'guides' => [
+            'meta_title' => 'Guías',
+            'title' => 'Guías',
+            'lead' => 'Tutoriales paso a paso para las tareas más habituales.',
+            'sections' => [
+                [
+                    'id' => 'first_purchase',
+                    'title' => 'Compra y descarga tu primer producto',
+                    'body' => 'Nota de redacción: pasos desde el catálogo al carrito, el pago y la página de confirmación, y dónde encontrar la descarga o la clave de licencia.',
+                ],
+                [
+                    'id' => 'activate_license',
+                    'title' => 'Activa una licencia desde tu script',
+                    'body' => 'Lo que hace el código hoy: un POST a /api/v1/licenses/activate en la dirección de la tienda, con la clave y el dominio del sitio, ocupa una plaza de activación; volver a activar el mismo dominio es gratis. Nota de redacción: añade ejemplos completos en lenguajes habituales y cómo tratar cada código de error.',
+                ],
+                [
+                    'id' => 'open_store',
+                    'title' => 'Abre tu tienda y publica un producto',
+                    'body' => 'Nota de redacción: pasos para abrir una tienda desde el espacio de trabajo, completar su perfil, añadir un primer producto y revisar la página pública.',
+                ],
+                [
+                    'id' => 'api_token',
+                    'title' => 'Crea un token de API y haz tu primera llamada',
+                    'body' => 'Lo que hace el código hoy: los tokens se crean en Ajustes → Tokens de API y se envían como cabecera Bearer; GET /api/v1/user es la llamada más sencilla para probar uno. Nota de redacción: conviértelo en un tutorial breve con un ejemplo para copiar.',
+                ],
+                [
+                    'id' => 'invite_team',
+                    'title' => 'Invita a tu equipo',
+                    'body' => 'Nota de redacción: pasos para invitar a un miembro desde la página de equipo, qué contiene el correo de invitación y qué ve el nuevo miembro al aceptar.',
+                ],
+                [
+                    'id' => 'secure_account',
+                    'title' => 'Protege tu cuenta',
+                    'body' => 'Nota de redacción: pasos para activar la verificación en dos pasos, guardar los códigos de recuperación y cerrar las demás sesiones.',
+                ],
+            ],
+            'contact' => [
+                'title' => '¿Falta una guía?',
+                'body' => 'Cuéntanos qué intentas hacer y te responderemos por correo.',
+                'action' => 'Contacto',
+            ],
+        ],
+    ],
+    'api_reference' => [
+        'meta_title' => 'Referencia de la API',
+        'eyebrow' => 'Desarrolladores',
+        'title' => 'Referencia de la API',
+        'lead' => 'Cada endpoint de la API pública, listado a partir de las rutas reales.',
+        'base_url' => [
+            'title' => 'URL base',
+            'note' => 'Las llamadas de licencias deben ir a la dirección de la tienda que vendió la clave — una clave solo funciona en su tienda. Los ejemplos usan la dirección desde la que ves esta página.',
+        ],
+        'auth' => [
+            'title' => 'Autenticación',
+            'license_key' => [
+                'title' => 'Endpoints de licencias',
+                'body' => 'No hace falta token: la clave de licencia de la petición es la credencial. Las llamadas tienen un límite por dirección IP.',
+            ],
+            'token' => [
+                'title' => 'Endpoints de la cuenta',
+                'body' => 'Envía un token de API personal como cabecera: Authorization: Bearer <token>. Cualquier token válido sirve para estos endpoints.',
+                'link' => 'Gestionar tus tokens de API',
+            ],
+        ],
+        'groups' => [
+            'licenses' => [
+                'title' => 'Licencias',
+                'description' => 'Activa, comprueba y libera una clave de licencia en un dominio o instalación. Los dominios se normalizan: https://Example.com/shop y example.com cuentan como uno.',
+            ],
+            'account' => [
+                'title' => 'Cuenta',
+                'description' => 'Lee la cuenta a la que pertenece el token, su panel y sus notificaciones.',
+            ],
+        ],
+        'endpoints' => [
+            'licenses_activate' => 'Ocupa una plaza de activación para un dominio. Activar un dominio que ya ocupa una funciona sin gastar otra.',
+            'licenses_validate' => 'Comprueba que la licencia es utilizable y que el dominio ocupa una de sus plazas.',
+            'licenses_deactivate' => 'Libera la plaza del dominio para usarla en otro sitio. Funciona sea cual sea el estado de la licencia y también si el dominio no ocupaba ninguna.',
+            'user' => 'El usuario al que pertenece el token, con sus roles y las capacidades del token.',
+            'dashboard' => 'Los widgets del panel para el rol del usuario — los mismos datos que el panel web.',
+            'notifications_index' => 'Las notificaciones del usuario, las más recientes primero, con el número de no leídas. Paginación por cursor.',
+            'notifications_read' => 'Marca una notificación como leída.',
+            'notifications_read_all' => 'Marca todas las notificaciones como leídas.',
+            'notifications_destroy' => 'Elimina una notificación.',
+        ],
+        'params' => [
+            'in_query' => 'Parámetros de consulta',
+            'in_body' => 'Cuerpo JSON',
+            'required' => 'obligatorio',
+            'optional' => 'opcional',
+            'license_key' => 'La clave de licencia, p. ej. ABCD-EFGH-IJKL-MNOP. No distingue mayúsculas.',
+            'domain' => 'El dominio del sitio, o un identificador de la instalación.',
+            'product_id' => 'Si se indica, la clave debe pertenecer a este producto.',
+            'status' => 'Solo notificaciones leídas o no leídas: read o unread.',
+            'per_page' => 'Resultados por página, de 1 a 100 (25 por defecto).',
+            'cursor' => 'El valor next_cursor de la página anterior.',
+        ],
+        'response' => [
+            'title' => 'Respuesta correcta',
+            'body' => 'Cada endpoint de licencias devuelve el estado actual de la licencia:',
+        ],
+        'errors' => [
+            'title' => 'Errores',
+            'body' => 'Los errores se devuelven en JSON con un mensaje y un código de error estable, incluso sin cabecera Accept:',
+            'status' => 'Estado',
+            'code' => 'Código',
+            'meaning' => 'Significado',
+            'codes' => [
+                'invalid_license' => 'La clave no existe en esta tienda o pertenece a otro producto. Las claves desconocidas y ajenas reciben exactamente la misma respuesta.',
+                'license_revoked' => 'La licencia ha sido revocada.',
+                'license_expired' => 'La licencia ha caducado.',
+                'activation_limit_reached' => 'Todas las plazas de activación están ocupadas; libera una primero.',
+                'not_activated' => 'La licencia es válida, pero este dominio no ocupa ninguna plaza.',
+            ],
+            'validation' => 'Falta un parámetro o no es válido; el objeto errors lista cada campo.',
+            'rate_limit' => 'Demasiadas peticiones: los endpoints de licencias permiten :count por minuto y dirección IP. Espera el tiempo de la cabecera Retry-After.',
+        ],
+    ],
+    'status_page' => [
+        'meta_title' => 'Estado del sistema',
+        'title' => 'Estado del sistema',
+        'lead' => 'Comprobaciones en directo de los servicios de los que depende el marketplace.',
+        'overall' => [
+            'operational' => 'Todos los sistemas operativos',
+            'degraded' => 'Algunos sistemas están degradados',
+        ],
+        'components' => [
+            'database' => [
+                'name' => 'Base de datos',
+                'description' => 'Guarda cuentas, productos, pedidos y licencias.',
+            ],
+            'cache' => [
+                'name' => 'Caché',
+                'description' => 'Acelera las páginas y guarda datos de corta duración.',
+            ],
+            'queue' => [
+                'name' => 'Tareas en segundo plano',
+                'description' => 'Procesa trabajo como correos y seguimiento de pagos.',
+            ],
+        ],
+        'state' => [
+            'operational' => 'Operativo',
+            'degraded' => 'Degradado',
+        ],
+        'latency' => ':ms ms',
+        'checked_at' => 'Última comprobación: :time. Los resultados se actualizan como máximo cada :seconds segundos.',
+        'health_endpoint' => 'Para monitorización automática, usa el endpoint de comprobación de salud',
+    ],
     'legal' => [
         'draft_banner' => [
             'title' => 'Borrador sin revisar — no vinculante',
@@ -713,6 +925,7 @@ return [
     'footer' => [
         'tagline' => 'El marketplace mono-vendedor para scripts de Laravel, APIs, plantillas y SaaS — hecho para creadores que entregan.',
         'status_ok' => 'Todos los sistemas operativos',
+        'status_degraded' => 'Algunos sistemas degradados — ver estado',
         'copy' => '© :year StoreProject. Todos los derechos reservados.',
         'columns' => [
             'product' => [
