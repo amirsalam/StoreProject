@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from '@inertiajs/react';
 import { FormEvent } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 export interface BlogPostFormValues {
     title: string;
@@ -40,20 +41,21 @@ const TEXTAREA_CLASS =
     'flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring';
 
 export default function BlogPostForm({ data, setData, errors, processing, submitLabel, onSubmit, statuses, cancelHref }: BlogPostFormProps) {
+    const { __ } = useTranslate();
     return (
         <form onSubmit={onSubmit} className="space-y-8">
             <section className="bg-card space-y-4 rounded-lg border p-6">
-                <h2 className="text-base font-semibold">Basics</h2>
+                <h2 className="text-base font-semibold">{__('Basics')}</h2>
 
-                <Field label="Title" htmlFor="title" error={errors.title} required>
+                <Field label={__('Title')} htmlFor="title" error={errors.title} required>
                     <Input id="title" value={data.title} onChange={(e) => setData('title', e.target.value)} required autoFocus />
                 </Field>
 
-                <Field label="Slug" htmlFor="slug" error={errors.slug} hint="URL-safe identifier. Auto-derived from title if left blank.">
+                <Field label={__('Slug')} htmlFor="slug" error={errors.slug} hint={__('URL-safe identifier. Auto-derived from title if left blank.')}>
                     <Input id="slug" value={data.slug} onChange={(e) => setData('slug', e.target.value)} />
                 </Field>
 
-                <Field label="Excerpt" htmlFor="excerpt" error={errors.excerpt} hint="Short summary shown on the blog index.">
+                <Field label={__('Excerpt')} htmlFor="excerpt" error={errors.excerpt} hint={__('Short summary shown on the blog index.')}>
                     <textarea
                         id="excerpt"
                         value={data.excerpt}
@@ -64,7 +66,7 @@ export default function BlogPostForm({ data, setData, errors, processing, submit
                     />
                 </Field>
 
-                <Field label="Content" htmlFor="content" error={errors.content} hint="Markdown. Raw HTML is stripped when rendered." required>
+                <Field label={__('Content')} htmlFor="content" error={errors.content} hint={__('Markdown. Raw HTML is stripped when rendered.')} required>
                     <textarea
                         id="content"
                         value={data.content}
@@ -77,10 +79,10 @@ export default function BlogPostForm({ data, setData, errors, processing, submit
             </section>
 
             <section className="bg-card space-y-4 rounded-lg border p-6">
-                <h2 className="text-base font-semibold">Publishing</h2>
+                <h2 className="text-base font-semibold">{__('Publishing')}</h2>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Status" htmlFor="status" error={errors.status} required>
+                    <Field label={__('Status')} htmlFor="status" error={errors.status} required>
                         <Select value={data.status} onValueChange={(v) => setData('status', v)}>
                             <SelectTrigger id="status">
                                 <SelectValue />
@@ -96,10 +98,10 @@ export default function BlogPostForm({ data, setData, errors, processing, submit
                     </Field>
 
                     <Field
-                        label="Publish date"
+                        label={__('Publish date')}
                         htmlFor="published_at"
                         error={errors.published_at}
-                        hint="Leave blank to publish now. A future date keeps the post hidden until then."
+                        hint={__('Leave blank to publish now. A future date keeps the post hidden until then.')}
                     >
                         <Input
                             id="published_at"
@@ -110,21 +112,21 @@ export default function BlogPostForm({ data, setData, errors, processing, submit
                     </Field>
                 </div>
 
-                <Field label="Tags" htmlFor="tags" error={errors.tags} hint="Comma-separated, up to 10.">
+                <Field label={__('Tags')} htmlFor="tags" error={errors.tags} hint={__('Comma-separated, up to 10.')}>
                     <Input id="tags" value={data.tags} onChange={(e) => setData('tags', e.target.value)} placeholder="laravel, release" />
                 </Field>
 
-                <Field label="Thumbnail path" htmlFor="thumbnail" error={errors.thumbnail}>
+                <Field label={__('Thumbnail path')} htmlFor="thumbnail" error={errors.thumbnail}>
                     <Input id="thumbnail" value={data.thumbnail} onChange={(e) => setData('thumbnail', e.target.value)} />
                 </Field>
             </section>
 
             <section className="bg-card space-y-4 rounded-lg border p-6">
-                <h2 className="text-base font-semibold">SEO</h2>
-                <Field label="SEO title" htmlFor="seo_title" error={errors.seo_title}>
+                <h2 className="text-base font-semibold">{__('SEO')}</h2>
+                <Field label={__('SEO title')} htmlFor="seo_title" error={errors.seo_title}>
                     <Input id="seo_title" value={data.seo_title} onChange={(e) => setData('seo_title', e.target.value)} />
                 </Field>
-                <Field label="SEO description" htmlFor="seo_description" error={errors.seo_description}>
+                <Field label={__('SEO description')} htmlFor="seo_description" error={errors.seo_description}>
                     <textarea
                         id="seo_description"
                         value={data.seo_description}
@@ -138,7 +140,7 @@ export default function BlogPostForm({ data, setData, errors, processing, submit
 
             <div className="flex items-center justify-end gap-2">
                 <Button asChild variant="ghost">
-                    <Link href={cancelHref}>Cancel</Link>
+                    <Link href={cancelHref}>{__('Cancel')}</Link>
                 </Button>
                 <Button type="submit" disabled={processing}>
                     {submitLabel}

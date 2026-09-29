@@ -63,7 +63,7 @@ class TeamController extends Controller
 
         return redirect()
             ->route('workspace.team.index')
-            ->with('success', "Invitation sent to {$data['email']}.");
+            ->with('success', __('Invitation sent to :email.', ['email' => $data['email']]));
     }
 
     public function revoke(TeamInvitation $invitation): RedirectResponse
@@ -75,7 +75,7 @@ class TeamController extends Controller
 
         return redirect()
             ->route('workspace.team.index')
-            ->with('success', 'Invitation revoked.');
+            ->with('success', __('Invitation revoked.'));
     }
 
     /**
@@ -84,9 +84,9 @@ class TeamController extends Controller
     private function roles(): array
     {
         return [
-            ['value' => Tenant::ROLE_OWNER, 'label' => 'Owner'],
-            ['value' => Tenant::ROLE_ADMIN, 'label' => 'Admin'],
-            ['value' => Tenant::ROLE_MEMBER, 'label' => 'Member'],
+            ['value' => Tenant::ROLE_OWNER, 'label' => __('Owner')],
+            ['value' => Tenant::ROLE_ADMIN, 'label' => __('Admin')],
+            ['value' => Tenant::ROLE_MEMBER, 'label' => __('Member')],
         ];
     }
 }

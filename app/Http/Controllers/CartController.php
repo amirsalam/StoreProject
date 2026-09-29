@@ -51,7 +51,7 @@ class CartController extends Controller
 
         $this->cart->add($product, $data['quantity'] ?? 1);
 
-        return back()->with('success', "Added \"{$product->title}\" to your cart.");
+        return back()->with('success', __('Added ":title" to your cart.', ['title' => $product->title]));
     }
 
     public function update(Request $request, Product $product): RedirectResponse
@@ -69,13 +69,13 @@ class CartController extends Controller
     {
         $this->cart->remove($product);
 
-        return back()->with('success', 'Item removed from cart.');
+        return back()->with('success', __('Item removed from cart.'));
     }
 
     public function clear(): RedirectResponse
     {
         $this->cart->clear();
 
-        return back()->with('success', 'Cart cleared.');
+        return back()->with('success', __('Cart cleared.'));
     }
 }

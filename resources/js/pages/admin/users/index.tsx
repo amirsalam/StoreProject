@@ -15,6 +15,7 @@ import { type BreadcrumbItem, type Paginated } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ShieldCheck, ShieldOff } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface UserRow {
     id: number;
@@ -38,6 +39,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function AdminUsersIndex({ users, filters, roles }: AdminUsersIndexProps) {
+    const { __ } = useTranslate();
     const { flash, errors } = usePage<{
         flash: { success: string | null; error: string | null };
         errors: Record<string, string>;
@@ -65,16 +67,18 @@ export default function AdminUsersIndex({ users, filters, roles }: AdminUsersInd
     // The dropdown shows the saved role, so cancelling leaves it unchanged.
     const updateRole = (user: { id: number; name: string }, role: string) =>
         ask({
-            title: 'Change this user’s role?',
-            description: role ? `${user.name} will have the ${role} role and its permissions.` : `${user.name} will lose their role.`,
-            confirmLabel: 'Change role',
+            title: __('Change this user’s role?'),
+            description: role
+                ? __(':name will have the :role role and its permissions.', { name: user.name, role })
+                : __(':name will lose their role.', { name: user.name }),
+            confirmLabel: __('Change role'),
             action: (finish) =>
                 router.patch(route('admin.users.role.update', user.id), { role }, { preserveScroll: true, preserveState: true, onFinish: finish }),
         });
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Users · Admin" />
+            <Head title={__('Users · Admin')} />
 
             <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 {flash?.success && (
@@ -90,9 +94,9 @@ export default function AdminUsersIndex({ users, filters, roles }: AdminUsersInd
 
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                        <h1 className="font-display text-2xl font-semibold tracking-tight">Users</h1>
+                        <h1 className="font-display text-2xl font-semibold tracking-tight">{__('Users')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            {users.total} {users.total === 1 ? 'user' : 'users'} · {roles.length} roles
+                            {users.total === 1 ? __('1 user') : __(':count users', { count: users.total })} · {__(':count roles', { count: roles.length })}
                         </p>
                     </div>
                 </div>
@@ -100,7 +104,7 @@ export default function AdminUsersIndex({ users, filters, roles }: AdminUsersInd
                 <form onSubmit={submitSearch} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <Input
                         type="search"
-                        placeholder="Search by name or email…"
+                        placeholder={__('Search by name or email…')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full sm:w-72"
@@ -110,12 +114,12 @@ export default function AdminUsersIndex({ users, filters, roles }: AdminUsersInd
                         onChange={(e) => applyFilter({ role: e.target.value })}
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-auto"
                     >
-                        <option value="">All roles</option>
+                        <option value="">{__('All roles')}</option>
                         {roles.map((r) => (
-                            <option key={r} value={r}>{r}</option>
+                            <option key={r} value={r}>{__(r)}</option>
                         ))}
                     </select>
-                    <Button type="submit" variant="secondary">Filter</Button>
+                    <Button type="submit" variant="secondary">{__('Filter')}</Button>
                 </form>
 
                 {/* Desktop / tablet: table */}
@@ -123,18 +127,18 @@ export default function AdminUsersIndex({ users, filters, roles }: AdminUsersInd
                     <table className="w-full text-sm">
                         <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
                             <tr>
-                                <th className="px-4 py-3 font-medium">Name</th>
-                                <th className="px-4 py-3 font-medium">Email</th>
-                                <th className="px-4 py-3 font-medium">Role</th>
-                                <th className="px-4 py-3 font-medium">2FA</th>
-                                <th className="px-4 py-3 font-medium">Joined</th>
+                                <th className="px-4 py-3 font-medium">{__('Name')}</th>
+                                <th className="px-4 py-3 font-medium">{__('Email')}</th>
+                                <th className="px-4 py-3 font-medium">{__('Role')}</th>
+                                <th className="px-4 py-3 font-medium">{__('2FA')}</th>
+                                <th className="px-4 py-3 font-medium">{__('Joined')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y">
                             {users.data.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
-                                        No users match these filters.
+                                        {__('No users match these filters.')}
                                     </td>
                                 </tr>
                             ) : (
@@ -171,7 +175,7 @@ export default function AdminUsersIndex({ users, filters, roles }: AdminUsersInd
                 <div className="space-y-3 md:hidden">
                     {users.data.length === 0 ? (
                         <div className="rounded-lg border border-dashed bg-card p-8 text-center text-sm text-muted-foreground">
-                            No users match these filters.
+                            {__('No users match these filters.')}
                         </div>
                     ) : (
                         users.data.map((user) => (
@@ -186,7 +190,7 @@ export default function AdminUsersIndex({ users, filters, roles }: AdminUsersInd
                                 </div>
                                 <div className="mt-3 border-t pt-3">
                                     <label className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                                        Role
+                                        {__('Role')}
                                     </label>
                                     <div className="mt-1">
                                         <RolePicker
@@ -239,6 +243,7 @@ function RolePicker({
     roles: string[];
     onChange: (role: string) => void;
 }) {
+    const { __ } = useTranslate();
     return (
         <Select value={value} onValueChange={onChange}>
             <SelectTrigger className="h-8 w-36">
@@ -247,7 +252,7 @@ function RolePicker({
             <SelectContent>
                 {roles.map((r) => (
                     <SelectItem key={r} value={r} className="capitalize">
-                        {r}
+                        {__(r)}
                     </SelectItem>
                 ))}
             </SelectContent>
@@ -256,15 +261,16 @@ function RolePicker({
 }
 
 function TwoFactorBadge({ enabled }: { enabled: boolean }) {
+    const { __ } = useTranslate();
     return enabled ? (
         <Badge variant="default" className="bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400">
             <ShieldCheck className="size-3" />
-            On
+            {__('On')}
         </Badge>
     ) : (
         <Badge variant="secondary" className="text-muted-foreground">
             <ShieldOff className="size-3" />
-            Off
+            {__('Off')}
         </Badge>
     );
 }

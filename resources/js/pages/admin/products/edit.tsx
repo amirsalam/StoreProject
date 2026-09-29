@@ -4,6 +4,7 @@ import ProductForm, { type ProductFormValues } from '@/pages/admin/products/prod
 import { type BreadcrumbItem, type Category, type Product, type ProductType } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface Option {
     value: string;
@@ -28,6 +29,7 @@ interface AdminProductsEditProps {
 }
 
 export default function AdminProductsEdit({ product, categories, statuses, types }: AdminProductsEditProps) {
+    const { __, __el } = useTranslate();
     const { data, setData, put, processing, errors } = useForm<ProductFormValues>({
         category_id: product.category_id ? String(product.category_id) : '',
         title: product.title,
@@ -75,7 +77,7 @@ export default function AdminProductsEdit({ product, categories, statuses, types
 
             <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">Edit product</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight">{__('Edit product')}</h1>
                     <p className="text-muted-foreground text-sm">{product.title}</p>
                 </div>
 
@@ -84,7 +86,7 @@ export default function AdminProductsEdit({ product, categories, statuses, types
                     setData={setData}
                     errors={errors as Partial<Record<keyof ProductFormValues, string>>}
                     processing={processing}
-                    submitLabel="Save changes"
+                    submitLabel={__('Save changes')}
                     onSubmit={submit}
                     categories={categories}
                     statuses={statuses}
@@ -96,14 +98,15 @@ export default function AdminProductsEdit({ product, categories, statuses, types
             <ConfirmDialog
                 open={confirming}
                 onOpenChange={setConfirming}
-                title="Save changes to this product?"
+                title={__('Save changes to this product?')}
                 description={
                     <>
-                        The changes to <strong className="text-foreground">{product.title}</strong> go live immediately — price, status and details
-                        included.
+                        {__el('The changes to :title go live immediately — price, status and details included.', {
+                            title: <strong className="text-foreground">{product.title}</strong>,
+                        })}
                     </>
                 }
-                confirmLabel="Save changes"
+                confirmLabel={__('Save changes')}
                 processing={processing}
                 onConfirm={confirmUpdate}
             />

@@ -3,7 +3,8 @@ import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-import { Activity, Globe, LogIn, LogOut, ShieldAlert, ShieldCheck, UserPlus } from 'lucide-react';
+import { Activity, CreditCard, Globe, KeyRound, LogIn, LogOut, ShieldAlert, ShieldCheck, Store, UserPlus } from 'lucide-react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface ActivityEntry {
     id: number;
@@ -37,6 +38,23 @@ const EVENT_META: Record<string, { label: string; icon: typeof Activity; tone: '
     '2fa.recovery_codes_regenerated': { label: 'Recovery codes regenerated', icon: ShieldCheck, tone: 'info' },
     'session.revoked': { label: 'Session revoked', icon: Globe, tone: 'info' },
     'session.revoked_others': { label: 'Signed out of other devices', icon: Globe, tone: 'info' },
+    'api_token.created': { label: 'API token created', icon: KeyRound, tone: 'info' },
+    'api_token.revoked': { label: 'API token revoked', icon: KeyRound, tone: 'info' },
+    'license.activated': { label: 'License activated', icon: ShieldCheck, tone: 'ok' },
+    'license.deactivated': { label: 'License deactivated', icon: ShieldAlert, tone: 'info' },
+    'mail_settings.updated': { label: 'Email settings updated', icon: Activity, tone: 'info' },
+    'payment_gateway.created': { label: 'Payment gateway created', icon: CreditCard, tone: 'info' },
+    'payment_gateway.updated': { label: 'Payment gateway updated', icon: CreditCard, tone: 'info' },
+    'payment_gateway.enabled': { label: 'Payment gateway enabled', icon: CreditCard, tone: 'ok' },
+    'payment_gateway.disabled': { label: 'Payment gateway disabled', icon: CreditCard, tone: 'warn' },
+    'payment_gateway.deleted': { label: 'Payment gateway deleted', icon: CreditCard, tone: 'warn' },
+    'payment_gateway.tested': { label: 'Payment gateway tested', icon: CreditCard, tone: 'ok' },
+    'payment_gateway.default_set': { label: 'Default payment gateway changed', icon: CreditCard, tone: 'info' },
+    'payment_gateway.reordered': { label: 'Payment gateways reordered', icon: CreditCard, tone: 'info' },
+    'vendor.registered': { label: 'Store opened', icon: Store, tone: 'ok' },
+    'vendor.profile_updated': { label: 'Store profile updated', icon: Store, tone: 'info' },
+    'vendor.verified': { label: 'Store verified', icon: Store, tone: 'ok' },
+    'vendor.suspended': { label: 'Store suspended', icon: Store, tone: 'warn' },
 };
 
 function meta(event: string) {
@@ -45,32 +63,33 @@ function meta(event: string) {
 
 function relative(iso: string): string {
     const date = new Date(iso);
-    const diff = Date.now() - date.getTime();
-    const minutes = Math.round(diff / 60_000);
-    if (minutes < 1) return 'just now';
-    if (minutes < 60) return `${minutes}m ago`;
+    // Locale-aware ("5 minutes ago" / "منذ 5 دقائق") via the <html lang> set by useTranslate.
+    const rtf = new Intl.RelativeTimeFormat(document.documentElement.lang || undefined, { numeric: 'auto' });
+    const minutes = Math.round((date.getTime() - Date.now()) / 60_000);
+    if (Math.abs(minutes) < 60) return rtf.format(minutes, 'minute');
     const hours = Math.round(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
+    if (Math.abs(hours) < 24) return rtf.format(hours, 'hour');
     const days = Math.round(hours / 24);
-    if (days < 30) return `${days}d ago`;
+    if (Math.abs(days) < 30) return rtf.format(days, 'day');
     return date.toLocaleDateString();
 }
 
 export default function ActivityIndex({ entries }: ActivityIndexProps) {
+    const { __ } = useTranslate();
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Activity · Settings" />
+            <Head title={__('Activity · Settings')} />
 
             <SettingsLayout>
                 <div className="space-y-6">
                     <HeadingSmall
-                        title="Activity log"
-                        description="Recent security events on your account. We keep the last 50 events."
+                        title={__('Activity log')}
+                        description={__('Recent security events on your account. We keep the last 50 events.')}
                     />
 
                     {entries.length === 0 ? (
                         <div className="rounded-lg border border-dashed bg-muted/20 p-8 text-center text-sm text-muted-foreground">
-                            No recent activity yet.
+                            {__('No recent activity yet.')}
                         </div>
                     ) : (
                         <ul className="space-y-2">
@@ -96,7 +115,7 @@ export default function ActivityIndex({ entries }: ActivityIndexProps) {
                                         </span>
                                         <div className="min-w-0 flex-1">
                                             <div className="flex flex-wrap items-baseline justify-between gap-2">
-                                                <span className="text-sm font-medium">{m.label}</span>
+                                                <span className="text-sm font-medium">{__(m.label)}</span>
                                                 <time className="font-mono text-[11px] text-muted-foreground">
                                                     {relative(entry.created_at)}
                                                 </time>

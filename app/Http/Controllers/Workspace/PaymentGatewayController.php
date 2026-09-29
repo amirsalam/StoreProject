@@ -55,7 +55,7 @@ class PaymentGatewayController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Payment gateway saved. Use “Test connection” to check the keys with Stripe.');
+        return back()->with('success', __('Payment gateway saved. Use “Test connection” to check the keys with Stripe.'));
     }
 
     public function test(Request $request): RedirectResponse
@@ -66,7 +66,7 @@ class PaymentGatewayController extends Controller
 
         $gateway = $this->stripeGateway();
         if (! $gateway) {
-            return back()->with('error', 'Save your Stripe keys first.');
+            return back()->with('error', __('Save your Stripe keys first.'));
         }
 
         $result = $this->service->testConnection($gateway);

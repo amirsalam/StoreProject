@@ -44,7 +44,7 @@ class VendorController extends Controller
 
         return redirect()
             ->route('workspace.vendor.edit')
-            ->with('success', 'Your store is live. Add your details below.');
+            ->with('success', __('Your store is live. Add your details below.'));
     }
 
     public function update(UpdateVendorProfileRequest $request): RedirectResponse
@@ -61,6 +61,6 @@ class VendorController extends Controller
 
         return redirect()
             ->route('workspace.vendor.edit')
-            ->with('success', 'Store profile updated.');
+            ->with('success', __('Store profile updated.'));
     }
 }

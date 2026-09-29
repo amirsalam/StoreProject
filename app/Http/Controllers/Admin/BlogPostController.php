@@ -54,7 +54,7 @@ class BlogPostController extends Controller
 
         return redirect()
             ->route('admin.blog-posts.index')
-            ->with('success', "Post \"{$post->title}\" created.");
+            ->with('success', __('Post ":title" created.', ['title' => $post->title]));
     }
 
     public function edit(BlogPost $blogPost): Response
@@ -71,7 +71,7 @@ class BlogPostController extends Controller
 
         return redirect()
             ->route('admin.blog-posts.index')
-            ->with('success', "Post \"{$blogPost->title}\" updated.");
+            ->with('success', __('Post ":title" updated.', ['title' => $blogPost->title]));
     }
 
     public function destroy(BlogPost $blogPost): RedirectResponse
@@ -81,7 +81,7 @@ class BlogPostController extends Controller
 
         return redirect()
             ->route('admin.blog-posts.index')
-            ->with('success', "Post \"{$title}\" deleted.");
+            ->with('success', __('Post ":title" deleted.', ['title' => $title]));
     }
 
     /**
@@ -90,8 +90,8 @@ class BlogPostController extends Controller
     private function statuses(): array
     {
         return [
-            ['value' => BlogPost::STATUS_DRAFT, 'label' => 'Draft'],
-            ['value' => BlogPost::STATUS_PUBLISHED, 'label' => 'Published'],
+            ['value' => BlogPost::STATUS_DRAFT, 'label' => __('Draft')],
+            ['value' => BlogPost::STATUS_PUBLISHED, 'label' => __('Published')],
         ];
     }
 }

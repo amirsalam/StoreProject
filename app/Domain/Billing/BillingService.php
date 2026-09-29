@@ -35,13 +35,13 @@ class BillingService
             return $tenant->stripe_customer_id;
         }
 
-        $customer = $this->stripe->client()->customers->create([
+        $customer = $this->stripe->call(fn () => $this->stripe->client()->customers->create([
             'name' => $tenant->name,
             'metadata' => [
                 'tenant_id' => (string) $tenant->id,
                 'tenant_slug' => $tenant->slug,
             ],
-        ]);
+        ]));
 
         $tenant->update(['stripe_customer_id' => $customer->id]);
 
@@ -63,7 +63,7 @@ class BillingService
             throw new \InvalidArgumentException("No Stripe price configured for {$planSlug}/{$cycle}.");
         }
 
-        $session = $this->stripe->client()->checkout->sessions->create([
+        $session = $this->stripe->call(fn () => $this->stripe->client()->checkout->sessions->create([
             'mode' => 'subscription',
             'customer' => $this->ensureCustomer($tenant),
             'line_items' => [[
@@ -83,7 +83,7 @@ class BillingService
                 'tenant_id' => (string) $tenant->id,
             ],
             'allow_promotion_codes' => true,
-        ]);
+        ]));
 
         return (string) $session->url;
     }
@@ -94,10 +94,10 @@ class BillingService
      */
     public function portalSession(Tenant $tenant, string $returnUrl): string
     {
-        $session = $this->stripe->client()->billingPortal->sessions->create([
+        $session = $this->stripe->call(fn () => $this->stripe->client()->billingPortal->sessions->create([
             'customer' => $this->ensureCustomer($tenant),
             'return_url' => $returnUrl,
-        ]);
+        ]));
 
         return (string) $session->url;
     }
@@ -115,9 +115,9 @@ class BillingService
             return;
         }
 
-        $this->stripe->client()->subscriptions->update($subscription->stripe_subscription_id, [
+        $this->stripe->call(fn () => $this->stripe->client()->subscriptions->update($subscription->stripe_subscription_id, [
             'cancel_at_period_end' => true,
-        ]);
+        ]));
 
         // Mirror the intent locally so the UI updates immediately; the
         // webhook will confirm by stamping cancel_at on the row.

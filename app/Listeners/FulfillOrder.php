@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Events\OrderFulfilled;
 use App\Events\PaymentCompleted;
 use App\Models\Download;
 use App\Models\License;
@@ -51,6 +52,9 @@ class FulfillOrder
                 default => null, // subscriptions are handled by the billing module
             };
         }
+
+        // Licenses and downloads now exist — e.g. for the confirmation email.
+        OrderFulfilled::dispatch($order);
     }
 
     private function issueLicense(Order $order, OrderItem $item, Product $product): void

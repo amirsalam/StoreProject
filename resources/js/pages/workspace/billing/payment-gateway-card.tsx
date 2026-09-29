@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { router, useForm } from '@inertiajs/react';
 import { CreditCard } from 'lucide-react';
 import { FormEvent } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 export interface WorkspacePaymentGateway {
     environment: 'sandbox' | 'production';
@@ -22,6 +23,7 @@ export interface WorkspacePaymentGateway {
  * blank secret field on save keeps the stored one.
  */
 export default function PaymentGatewayCard({ gateway, webhook }: { gateway: WorkspacePaymentGateway | null; webhook: StripeWebhookInfo }) {
+    const { __ } = useTranslate();
     const form = useForm({
         environment: gateway?.environment ?? 'sandbox',
         publishable_key: gateway?.publishable_key ?? '',
@@ -41,22 +43,22 @@ export default function PaymentGatewayCard({ gateway, webhook }: { gateway: Work
     const test = () => router.post(route('workspace.billing.gateway.test'), {}, { preserveScroll: true });
 
     const status = !gateway
-        ? { label: 'Not configured', variant: 'outline' as const }
+        ? { label: __('Not configured'), variant: 'outline' as const }
         : !gateway.is_active
-          ? { label: 'Inactive', variant: 'outline' as const }
+          ? { label: __('Inactive'), variant: 'outline' as const }
           : gateway.last_connection_at
-            ? { label: 'Connected', variant: 'default' as const }
-            : { label: 'Active · not tested', variant: 'secondary' as const };
+            ? { label: __('Connected'), variant: 'default' as const }
+            : { label: __('Active · not tested'), variant: 'secondary' as const };
 
     return (
         <section className="bg-card rounded-xl border p-5 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h2 className="font-display inline-flex items-center gap-2 text-base font-semibold tracking-tight">
-                        <CreditCard className="size-4" /> Payment gateway
+                        <CreditCard className="size-4" /> {__('Payment gateway')}
                     </h2>
                     <p className="text-muted-foreground mt-1 text-xs">
-                        The Stripe account your store checkout charges. Find the keys in the Stripe Dashboard → Developers → API keys.
+                        {__('The Stripe account your store checkout charges. Find the keys in the Stripe Dashboard → Developers → API keys.')}
                     </p>
                 </div>
                 <Badge variant={status.variant}>{status.label}</Badge>
@@ -64,17 +66,17 @@ export default function PaymentGatewayCard({ gateway, webhook }: { gateway: Work
 
             <form onSubmit={submit} className="mt-5 space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Mode" error={form.errors.environment}>
+                    <Field label={__('Mode')} error={form.errors.environment}>
                         <select
                             value={form.data.environment}
                             onChange={(e) => form.setData('environment', e.target.value as 'sandbox' | 'production')}
                             className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
                         >
-                            <option value="sandbox">Test (pk_test_ / sk_test_ keys)</option>
-                            <option value="production">Live (pk_live_ / sk_live_ keys)</option>
+                            <option value="sandbox">{__('Test (pk_test_ / sk_test_ keys)')}</option>
+                            <option value="production">{__('Live (pk_live_ / sk_live_ keys)')}</option>
                         </select>
                     </Field>
-                    <Field label="Publishable key" error={form.errors.publishable_key}>
+                    <Field label={__('Publishable key')} error={form.errors.publishable_key}>
                         <Input
                             dir="ltr"
                             autoComplete="off"
@@ -84,25 +86,25 @@ export default function PaymentGatewayCard({ gateway, webhook }: { gateway: Work
                             className="font-mono text-xs"
                         />
                     </Field>
-                    <Field label="Secret key" error={form.errors.secret_key}>
+                    <Field label={__('Secret key')} error={form.errors.secret_key}>
                         <Input
                             dir="ltr"
                             type="password"
                             autoComplete="off"
                             value={form.data.secret_key}
                             onChange={(e) => form.setData('secret_key', e.target.value)}
-                            placeholder={gateway?.has_secret_key ? '•••••••• saved — leave blank to keep' : 'sk_test_…'}
+                            placeholder={gateway?.has_secret_key ? __('•••••••• saved — leave blank to keep') : 'sk_test_…'}
                             className="font-mono text-xs"
                         />
                     </Field>
-                    <Field label="Webhook signing secret" error={form.errors.webhook_secret}>
+                    <Field label={__('Webhook signing secret')} error={form.errors.webhook_secret}>
                         <Input
                             dir="ltr"
                             type="password"
                             autoComplete="off"
                             value={form.data.webhook_secret}
                             onChange={(e) => form.setData('webhook_secret', e.target.value)}
-                            placeholder={gateway?.has_webhook_secret ? '•••••••• saved — leave blank to keep' : 'whsec_…'}
+                            placeholder={gateway?.has_webhook_secret ? __('•••••••• saved — leave blank to keep') : 'whsec_…'}
                             className="font-mono text-xs"
                         />
                     </Field>
@@ -117,21 +119,21 @@ export default function PaymentGatewayCard({ gateway, webhook }: { gateway: Work
                         onChange={(e) => form.setData('is_active', e.target.checked)}
                         className="border-input size-4 rounded"
                     />
-                    Accept card payments at checkout
+                    {__('Accept card payments at checkout')}
                 </label>
 
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
                     <p className="text-muted-foreground text-xs">
                         {gateway?.last_connection_at
-                            ? `Last verified with Stripe on ${new Date(gateway.last_connection_at).toLocaleString()}.`
-                            : 'Save, then use “Test connection” to check the keys with Stripe.'}
+                            ? __('Last verified with Stripe on :date.', { date: new Date(gateway.last_connection_at).toLocaleString() })
+                            : __('Save, then use “Test connection” to check the keys with Stripe.')}
                     </p>
                     <div className="flex gap-2">
                         <Button type="button" variant="outline" size="sm" onClick={test} disabled={!gateway || form.isDirty}>
-                            Test connection
+                            {__('Test connection')}
                         </Button>
                         <Button type="submit" size="sm" disabled={form.processing}>
-                            {form.processing ? 'Saving…' : 'Save'}
+                            {form.processing ? __('Saving…') : __('Save')}
                         </Button>
                     </div>
                 </div>

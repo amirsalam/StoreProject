@@ -8,6 +8,7 @@ import { type BreadcrumbItem, type Paginated } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Calendar, FolderKanban, Plus, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface Project {
     id: number;
@@ -44,6 +45,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function WorkspaceProjectsIndex({ projects, filters, statuses }: ProjectsIndexProps) {
+    const { __ } = useTranslate();
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
     const [search, setSearch] = useState(filters.search);
     const [creating, setCreating] = useState(false);
@@ -88,9 +90,9 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
 
     const archive = (project: Project) => {
         ask({
-            title: 'Archive this project?',
-            description: `"${project.name}" will be archived and removed from the active project list.`,
-            confirmLabel: 'Archive project',
+            title: __('Archive this project?'),
+            description: __('":name" will be archived and removed from the active project list.', { name: project.name }),
+            confirmLabel: __('Archive project'),
             destructive: true,
             action: (finish) => router.delete(route('workspace.projects.destroy', project.slug), { preserveScroll: true, onFinish: finish }),
         });
@@ -98,7 +100,7 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Workspace · Projects" />
+            <Head title={__('Workspace · Projects')} />
 
             <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 {flash?.success && (
@@ -109,13 +111,13 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
 
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                        <h1 className="font-display text-2xl font-semibold tracking-tight">Projects</h1>
+                        <h1 className="font-display text-2xl font-semibold tracking-tight">{__('Projects')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            {projects.total} {projects.total === 1 ? 'project' : 'projects'} in this workspace
+                            {projects.total === 1 ? __('1 project in this workspace') : __(':count projects in this workspace', { count: projects.total })}
                         </p>
                     </div>
                     <Button onClick={() => setCreating((s) => !s)}>
-                        <Plus className="mr-1" /> {creating ? 'Cancel' : 'New project'}
+                        <Plus className="mr-1" /> {creating ? __('Cancel') : __('New project')}
                     </Button>
                 </div>
 
@@ -126,7 +128,7 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
                     >
                         <div className="grid gap-3 sm:grid-cols-2">
                             <div>
-                                <label className="text-xs font-medium text-muted-foreground">Name</label>
+                                <label className="text-xs font-medium text-muted-foreground">{__('Name')}</label>
                                 <Input
                                     autoFocus
                                     required
@@ -138,7 +140,7 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label className="text-xs font-medium text-muted-foreground">Starts on</label>
+                                    <label className="text-xs font-medium text-muted-foreground">{__('Starts on')}</label>
                                     <Input
                                         type="date"
                                         value={data.starts_on}
@@ -146,7 +148,7 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-medium text-muted-foreground">Due on</label>
+                                    <label className="text-xs font-medium text-muted-foreground">{__('Due on')}</label>
                                     <Input
                                         type="date"
                                         value={data.due_on}
@@ -156,7 +158,7 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
                             </div>
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-muted-foreground">Description</label>
+                            <label className="text-xs font-medium text-muted-foreground">{__('Description')}</label>
                             <textarea
                                 rows={3}
                                 maxLength={2000}
@@ -167,10 +169,10 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
                         </div>
                         <div className="flex justify-end gap-2">
                             <Button type="button" variant="ghost" onClick={() => setCreating(false)}>
-                                Cancel
+                                {__('Cancel')}
                             </Button>
                             <Button type="submit" disabled={processing}>
-                                Create project
+                                {__('Create project')}
                             </Button>
                         </div>
                     </form>
@@ -179,7 +181,7 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
                 <form onSubmit={submitSearch} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <Input
                         type="search"
-                        placeholder="Search by name or slug…"
+                        placeholder={__('Search by name or slug…')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full sm:w-64"
@@ -189,12 +191,12 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
                         onChange={(e) => applyFilter({ status: e.target.value })}
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-auto"
                     >
-                        <option value="">All statuses</option>
+                        <option value="">{__('All statuses')}</option>
                         {statuses.map((s) => (
                             <option key={s.value} value={s.value}>{s.label}</option>
                         ))}
                     </select>
-                    <Button type="submit" variant="secondary">Filter</Button>
+                    <Button type="submit" variant="secondary">{__('Filter')}</Button>
                 </form>
 
                 {projects.data.length === 0 ? (
@@ -220,15 +222,15 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
                                 )}
                                 <dl className="grid grid-cols-3 gap-2 border-t pt-3 text-xs">
                                     <div>
-                                        <dt className="text-muted-foreground">Tasks</dt>
+                                        <dt className="text-muted-foreground">{__('Tasks')}</dt>
                                         <dd className="mt-0.5 tabular-nums">{p.tasks_count}</dd>
                                     </div>
                                     <div>
-                                        <dt className="text-muted-foreground">Owner</dt>
+                                        <dt className="text-muted-foreground">{__('Owner')}</dt>
                                         <dd className="mt-0.5 truncate">{p.owner?.name ?? '—'}</dd>
                                     </div>
                                     <div>
-                                        <dt className="text-muted-foreground">Due</dt>
+                                        <dt className="text-muted-foreground">{__('Due')}</dt>
                                         <dd className="mt-0.5 inline-flex items-center gap-1 tabular-nums">
                                             {p.due_on ? (
                                                 <>
@@ -243,7 +245,7 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
                                     type="button"
                                     onClick={() => archive(p)}
                                     className="absolute right-3 top-3 hidden text-muted-foreground hover:text-destructive group-hover:inline-flex"
-                                    aria-label="Archive project"
+                                    aria-label={__('Archive project')}
                                 >
                                     <Trash2 className="size-4" />
                                 </button>
@@ -259,6 +261,7 @@ export default function WorkspaceProjectsIndex({ projects, filters, statuses }: 
 }
 
 function StatusBadge({ status }: { status: 'active' | 'paused' | 'archived' }) {
+    const { __ } = useTranslate();
     const variant: Record<string, 'default' | 'secondary' | 'outline'> = {
         active: 'default',
         paused: 'secondary',
@@ -266,12 +269,13 @@ function StatusBadge({ status }: { status: 'active' | 'paused' | 'archived' }) {
     };
     return (
         <Badge variant={variant[status] ?? 'secondary'} className="capitalize">
-            {status}
+            {__(status)}
         </Badge>
     );
 }
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
+    const { __ } = useTranslate();
     return (
         <div className="rounded-xl border border-dashed border-border/80 bg-muted/20 px-6 py-20 text-center">
             <div className={cn(
@@ -280,12 +284,12 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
             )}>
                 <FolderKanban className="size-5" />
             </div>
-            <h2 className="font-display text-lg font-semibold tracking-tight">No projects yet</h2>
+            <h2 className="font-display text-lg font-semibold tracking-tight">{__('No projects yet')}</h2>
             <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                Projects organize the work you deliver to clients. Each one can hold tasks and invoices.
+                {__('Projects organize the work you deliver to clients. Each one can hold tasks and invoices.')}
             </p>
             <Button className="mt-6" onClick={onCreate}>
-                <Plus className="mr-1" /> Create your first project
+                <Plus className="mr-1" /> {__('Create your first project')}
             </Button>
         </div>
     );

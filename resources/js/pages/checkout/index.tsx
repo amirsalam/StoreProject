@@ -27,7 +27,11 @@ interface CheckoutIndexProps {
     currency: string;
     buyer: { name: string; email: string };
     stripeKey: string | null;
+    /** CMI (Morocco), when configured: the amount the buyer is charged in dirhams. */
+    cmi: { amount_mad: string; rate: number } | null;
 }
+
+type PaymentMethod = 'stripe' | 'cmi';
 
 interface BillingData {
     billing_name: string;
@@ -51,7 +55,7 @@ function csrfToken(): string {
     return match ? decodeURIComponent(match[1]) : '';
 }
 
-export default function CheckoutIndex({ items, subtotal, currency, buyer, stripeKey }: CheckoutIndexProps) {
+export default function CheckoutIndex({ items, subtotal, currency, buyer, stripeKey, cmi }: CheckoutIndexProps) {
     const { t } = useTranslate();
 
     // Load Stripe.js once, only when a publishable key is configured.
@@ -69,6 +73,8 @@ export default function CheckoutIndex({ items, subtotal, currency, buyer, stripe
     // Once the order + Stripe PaymentIntent exist, we move to the card phase.
     const [clientSecret, setClientSecret] = useState<string | null>(null);
     const [confirmationUrl, setConfirmationUrl] = useState<string>('');
+    const [method, setMethod] = useState<PaymentMethod>(stripeKey ? 'stripe' : 'cmi');
+    const canPay = Boolean(stripeKey || cmi);
 
     const set = (key: keyof BillingData, value: string) => setBilling((prev) => ({ ...prev, [key]: value }));
 
@@ -91,7 +97,7 @@ export default function CheckoutIndex({ items, subtotal, currency, buyer, stripe
                     'X-XSRF-TOKEN': csrfToken(),
                     'X-Requested-With': 'XMLHttpRequest',
                 },
-                body: JSON.stringify(billing),
+                body: JSON.stringify({ ...billing, payment_method: method }),
             });
 
             const payload = await res.json().catch(() => ({}));
@@ -106,8 +112,19 @@ export default function CheckoutIndex({ items, subtotal, currency, buyer, stripe
                 Object.entries(payload.errors ?? {}).forEach(([k, v]) => {
                     flat[k] = Array.isArray(v) ? String(v[0]) : String(v);
                 });
+                // Never fail silently: a server error without field errors
+                // (e.g. a 500) still tells the buyer something went wrong.
+                if (Object.keys(flat).length === 0) {
+                    flat.cart = t('checkout.payment_error');
+                }
                 setErrors(flat);
                 setPlacing(false);
+                return;
+            }
+
+            // CMI: continue on CMI's secure hosted payment page.
+            if (payload.redirect_url) {
+                window.location.assign(payload.redirect_url);
                 return;
             }
 
@@ -203,6 +220,28 @@ export default function CheckoutIndex({ items, subtotal, currency, buyer, stripe
                                     {errors.coupon_code && <p className="text-destructive mt-1 text-xs">{errors.coupon_code}</p>}
                                 </div>
                             )}
+
+                            {/* Payment method — only when CMI is offered alongside (or instead of) Stripe. */}
+                            {!inPaymentPhase && cmi && (
+                                <fieldset className="bg-card space-y-3 rounded-xl border p-6 shadow-sm">
+                                    <legend className="font-display text-base font-semibold tracking-tight">{t('checkout.payment_method')}</legend>
+                                    {stripeKey && (
+                                        <label className="flex cursor-pointer items-center gap-3 rounded-md border p-3 text-sm has-[:checked]:border-primary">
+                                            <input type="radio" name="payment_method" checked={method === 'stripe'} onChange={() => setMethod('stripe')} />
+                                            {t('checkout.method_card')}
+                                        </label>
+                                    )}
+                                    <label className="flex cursor-pointer items-start gap-3 rounded-md border p-3 text-sm has-[:checked]:border-primary">
+                                        <input type="radio" name="payment_method" className="mt-1" checked={method === 'cmi'} onChange={() => setMethod('cmi')} />
+                                        <span>
+                                            <span className="block">{t('checkout.method_cmi')}</span>
+                                            <span className="text-muted-foreground block text-xs">
+                                                {t('checkout.cmi_amount', { amount: cmi.amount_mad, rate: cmi.rate })}
+                                            </span>
+                                        </span>
+                                    </label>
+                                </fieldset>
+                            )}
                         </form>
 
                         {/* Phase 2 — card payment (Stripe Elements) */}
@@ -249,10 +288,16 @@ export default function CheckoutIndex({ items, subtotal, currency, buyer, stripe
                                 <span className="font-display text-2xl font-semibold tabular-nums">{money(subtotal, currency)}</span>
                             </div>
 
+                            {!inPaymentPhase && method === 'cmi' && cmi && (
+                                <p className="text-muted-foreground text-end text-xs tabular-nums" dir="ltr">
+                                    ≈ {cmi.amount_mad} MAD
+                                </p>
+                            )}
+
                             {!inPaymentPhase &&
-                                (stripeKey ? (
+                                (canPay ? (
                                     <Button type="button" size="lg" className="w-full" disabled={placing} onClick={placeOrder}>
-                                        {placing ? t('checkout.placing') : t('checkout.continue_to_payment')}
+                                        {placing ? t('checkout.placing') : method === 'cmi' ? t('checkout.pay_with_cmi') : t('checkout.continue_to_payment')}
                                     </Button>
                                 ) : (
                                     <p className="bg-muted text-muted-foreground rounded-md px-3 py-2 text-center text-xs">

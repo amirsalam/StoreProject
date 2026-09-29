@@ -65,7 +65,7 @@ class PaymentGatewayController extends Controller
 
         return redirect()
             ->route('admin.payment-gateways.index')
-            ->with('success', "Gateway \"{$gateway->display_name}\" created.");
+            ->with('success', __('Gateway ":name" created.', ['name' => $gateway->display_name]));
     }
 
     public function edit(PaymentGateway $paymentGateway): Response
@@ -83,7 +83,7 @@ class PaymentGatewayController extends Controller
 
         return redirect()
             ->route('admin.payment-gateways.index')
-            ->with('success', "Gateway \"{$paymentGateway->display_name}\" updated.");
+            ->with('success', __('Gateway ":name" updated.', ['name' => $paymentGateway->display_name]));
     }
 
     public function destroy(PaymentGateway $paymentGateway): RedirectResponse
@@ -93,21 +93,21 @@ class PaymentGatewayController extends Controller
 
         return redirect()
             ->route('admin.payment-gateways.index')
-            ->with('success', "Gateway \"{$name}\" deleted.");
+            ->with('success', __('Gateway ":name" deleted.', ['name' => $name]));
     }
 
     public function toggle(Request $request, PaymentGateway $paymentGateway): RedirectResponse
     {
         $this->service->setActive($paymentGateway, ! $paymentGateway->is_active);
 
-        return back()->with('success', 'Gateway status updated.');
+        return back()->with('success', __('Gateway status updated.'));
     }
 
     public function setDefault(PaymentGateway $paymentGateway): RedirectResponse
     {
         $this->service->setDefault($paymentGateway);
 
-        return back()->with('success', "\"{$paymentGateway->display_name}\" is now the default gateway.");
+        return back()->with('success', __('":name" is now the default gateway.', ['name' => $paymentGateway->display_name]));
     }
 
     public function test(PaymentGateway $paymentGateway): RedirectResponse
@@ -126,7 +126,7 @@ class PaymentGatewayController extends Controller
 
         $this->service->reorder($data['ids']);
 
-        return back()->with('success', 'Order updated.');
+        return back()->with('success', __('Order updated.'));
     }
 
     /**
@@ -215,7 +215,7 @@ class PaymentGatewayController extends Controller
             foreach (($meta['fields'] ?? []) as $fieldKey => $field) {
                 $fields[] = [
                     'key' => $fieldKey,
-                    'label' => $field['label'] ?? $fieldKey,
+                    'label' => __($field['label'] ?? $fieldKey),
                     'secret' => (bool) ($field['secret'] ?? false),
                     'required' => (bool) ($field['required'] ?? false),
                 ];
@@ -223,7 +223,7 @@ class PaymentGatewayController extends Controller
 
             $out[] = [
                 'value' => $key,
-                'label' => $meta['label'] ?? $key,
+                'label' => __($meta['label'] ?? $key),
                 'logo' => $meta['logo'] ?? null,
                 'supports_webhook' => (bool) ($meta['supports_webhook'] ?? false),
                 'fields' => $fields,
@@ -240,7 +240,7 @@ class PaymentGatewayController extends Controller
     {
         $out = [];
         foreach ((array) config('payment_gateways.providers', []) as $key => $meta) {
-            $out[] = ['value' => $key, 'label' => $meta['label'] ?? $key];
+            $out[] = ['value' => $key, 'label' => __($meta['label'] ?? $key)];
         }
 
         return $out;

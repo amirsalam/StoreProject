@@ -5,8 +5,6 @@ namespace App\Domain\Dashboard;
 use App\Models\DailyMetric;
 use App\Models\Notification;
 use App\Models\Order;
-use App\Models\Payment;
-use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Money;
@@ -14,6 +12,7 @@ use App\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 /**
  * Role-aware dashboard payload builder.
@@ -73,11 +72,15 @@ class DashboardService
         if ($user) {
             $layout = $this->resolveRole($user);
             Cache::forget($this->cacheKey($layout, $tenant?->id, $user->id));
+
             return;
         }
         // Coarse-grained bust: bump the version key so every dashboard payload
         // misses the cache on next read. Useful after a major data event.
-        Cache::increment('cache:dashboard:version', 1);
+        // (Not Cache::increment(): on a missing key the database store does
+        // nothing and the array store writes 1 — the default — so the bust
+        // silently never happened.)
+        Cache::forever('cache:dashboard:version', (int) Cache::get('cache:dashboard:version', 1) + 1);
     }
 
     /**
@@ -94,11 +97,12 @@ class DashboardService
         if ($user->hasRole('team-member')) {
             return 'team';
         }
+
         return 'customer';
     }
 
     /* ──────────────────────────────────────────────────────────────── */
-    /*  SUPER-ADMIN                                                     */
+    /*  SUPER-ADMIN */
     /* ──────────────────────────────────────────────────────────────── */
 
     private function superAdminWidgets(): array
@@ -107,12 +111,16 @@ class DashboardService
         $thirtyDays = $today->subDays(30)->toDateString();
 
         // Platform-wide totals (tenant_id IS NULL) summed across the last 30 days.
+        // The per-store rows hold the same money split by store; adding them
+        // too counted every order twice.
         $revenueCents = (int) DB::table('daily_metrics')
+            ->whereNull('tenant_id')
             ->where('metric_key', DailyMetric::KEY_REVENUE_CENTS)
             ->where('recorded_on', '>=', $thirtyDays)
             ->sum('value');
 
         $ordersCount = (int) DB::table('daily_metrics')
+            ->whereNull('tenant_id')
             ->where('metric_key', DailyMetric::KEY_ORDERS_COUNT)
             ->where('recorded_on', '>=', $thirtyDays)
             ->sum('value');
@@ -128,23 +136,26 @@ class DashboardService
         );
 
         return [
-            $this->statWidget('total_revenue_30d', 'Revenue (30 days)', $revenueCents, 'money', 'USD'),
-            $this->statWidget('orders_30d', 'Orders (30 days)', $ordersCount, 'integer'),
-            $this->statWidget('active_vendors', 'Active vendors', $activeVendors, 'integer', cta: ['href' => '/admin/vendors', 'label' => 'Manage']),
-            $this->statWidget('total_customers', 'Total customers', $totalCustomers, 'integer'),
-            $this->statWidget('pending_approvals', 'Pending approvals', $pendingApprovals, 'integer', cta: ['href' => '/admin/approvals', 'label' => 'Review']),
-            $this->revenueTrendChart($thirtyDays, $today->toDateString()),
+            $this->statWidget('total_revenue_30d', __('Revenue (30 days)'), $revenueCents, 'money', 'USD'),
+            $this->statWidget('orders_30d', __('Orders (30 days)'), $ordersCount, 'integer'),
+            // admin.vendors.index ships with vendor approval (feat/vendor-approval);
+            // until then these links are simply not shown.
+            $this->statWidget('active_vendors', __('Active vendors'), $activeVendors, 'integer', cta: $this->cta('admin.vendors.index', __('Manage'))),
+            $this->statWidget('total_customers', __('Total customers'), $totalCustomers, 'integer'),
+            $this->statWidget('pending_approvals', __('Pending approvals'), $pendingApprovals, 'integer', cta: $this->cta('admin.vendors.index', __('Review'), ['status' => 'pending'])),
+            $this->revenueTrendChart($thirtyDays, $today->toDateString(), cta: $this->cta('admin.orders.index', __('View orders'), ['status' => 'paid'])),
+            $this->recentOrdersTable(cta: $this->cta('admin.orders.index', __('View all'))),
             $this->quickActions([
-                ['label' => 'Approve vendor', 'href' => '/admin/approvals', 'icon' => 'check', 'primary' => true],
-                ['label' => 'Create coupon', 'href' => '/admin/coupons/new', 'icon' => 'percent'],
-                ['label' => 'Reconcile', 'href' => '/admin/reconcile', 'icon' => 'refresh'],
-                ['label' => 'Announcement', 'href' => '/admin/announcements/new', 'icon' => 'megaphone'],
+                ['label' => __('Add product'), 'href' => $this->link('admin.products.create'), 'icon' => 'plus', 'primary' => true],
+                ['label' => __('View orders'), 'href' => $this->link('admin.orders.index'), 'icon' => 'receipt'],
+                ['label' => __('Payment gateways'), 'href' => $this->link('admin.payment-gateways.index'), 'icon' => 'wallet'],
+                ['label' => __('Email settings'), 'href' => $this->link('admin.mail.edit'), 'icon' => 'mail'],
             ]),
         ];
     }
 
     /* ──────────────────────────────────────────────────────────────── */
-    /*  VENDOR                                                          */
+    /*  VENDOR */
     /* ──────────────────────────────────────────────────────────────── */
 
     private function vendorWidgets(?Tenant $tenant, User $user): array
@@ -176,22 +187,22 @@ class DashboardService
         );
 
         return [
-            $this->statWidget('revenue_month', 'Revenue this month', $monthRevenueCents, 'money', $tenant->settings['currency'] ?? 'USD'),
-            $this->statWidget('total_sales', 'Total sales', $totalSales, 'integer'),
-            $this->statWidget('pending_payout', 'Pending payout', $pendingPayoutCents, 'money', $tenant->settings['currency'] ?? 'USD', cta: ['href' => '/payouts', 'label' => 'Request']),
-            $this->statWidget('conversion_rate', 'Conversion rate', 0, 'percent'),
+            $this->statWidget('revenue_month', __('Revenue this month'), $monthRevenueCents, 'money', $tenant->settings['currency'] ?? 'USD'),
+            $this->statWidget('total_sales', __('Total sales'), $totalSales, 'integer'),
+            $this->statWidget('pending_payout', __('Pending payout'), $pendingPayoutCents, 'money', $tenant->settings['currency'] ?? 'USD', cta: $this->cta('payouts.index', __('Request'))),
+            $this->statWidget('conversion_rate', __('Conversion rate'), 0, 'percent'),
             $this->revenueTrendChart($thirtyDays, $today->toDateString(), $tenant->id),
             $this->recentOrdersTable($tenant->id),
             $this->quickActions([
-                ['label' => 'Add product', 'href' => '/admin/products/create', 'icon' => 'plus', 'primary' => true],
-                ['label' => 'Create coupon', 'href' => '/admin/coupons/new', 'icon' => 'percent'],
-                ['label' => 'Request payout', 'href' => '/payouts/new', 'icon' => 'wallet'],
+                ['label' => __('Add product'), 'href' => $this->link('admin.products.create'), 'icon' => 'plus', 'primary' => true],
+                ['label' => __('My store'), 'href' => $this->link('workspace.vendor.edit'), 'icon' => 'store'],
+                ['label' => __('Payment gateway'), 'href' => $this->link('workspace.billing.index'), 'icon' => 'wallet'],
             ]),
         ];
     }
 
     /* ──────────────────────────────────────────────────────────────── */
-    /*  CUSTOMER                                                        */
+    /*  CUSTOMER */
     /* ──────────────────────────────────────────────────────────────── */
 
     private function customerWidgets(User $user): array
@@ -213,20 +224,20 @@ class DashboardService
             ->value('balance_cents') ?? 0;
 
         return [
-            $this->statWidget('total_spent', 'Total spent', (int) $totalSpentCents, 'money', 'USD'),
-            $this->statWidget('active_subs', 'Active subscriptions', $activeSubs, 'integer'),
-            $this->statWidget('wallet_balance', 'Wallet balance', $walletCents, 'money', 'USD', cta: ['href' => '/wallet', 'label' => 'View']),
-            $this->recentOrdersTable(null, $user->id, title: 'Your recent orders'),
+            $this->statWidget('total_spent', __('Total spent'), (int) $totalSpentCents, 'money', 'USD'),
+            $this->statWidget('active_subs', __('Active subscriptions'), $activeSubs, 'integer'),
+            $this->statWidget('wallet_balance', __('Wallet balance'), $walletCents, 'money', 'USD', cta: $this->cta('wallet.index', __('View'))),
+            $this->recentOrdersTable(null, $user->id, title: __('Your recent orders')),
             $this->quickActions([
-                ['label' => 'Browse products', 'href' => '/products', 'icon' => 'shopping-bag', 'primary' => true],
-                ['label' => 'Downloads', 'href' => '/downloads', 'icon' => 'download'],
-                ['label' => 'Support', 'href' => '/support', 'icon' => 'help'],
+                ['label' => __('Browse products'), 'href' => $this->link('products.index'), 'icon' => 'shopping-bag', 'primary' => true],
+                ['label' => __('Downloads'), 'href' => $this->link('downloads.index'), 'icon' => 'download'],
+                ['label' => __('Contact support'), 'href' => $this->link('contact'), 'icon' => 'help'],
             ]),
         ];
     }
 
     /* ──────────────────────────────────────────────────────────────── */
-    /*  TEAM-MEMBER                                                     */
+    /*  TEAM-MEMBER */
     /* ──────────────────────────────────────────────────────────────── */
 
     private function teamWidgets(?Tenant $tenant, User $user): array
@@ -244,17 +255,17 @@ class DashboardService
             ->count();
 
         return [
-            $this->statWidget('open_tasks', 'Open tasks', $openTasks, 'integer', cta: ['href' => '/tasks', 'label' => 'View']),
-            $this->statWidget('unread_alerts', 'Unread notifications', $unreadNotifications, 'integer'),
+            $this->statWidget('open_tasks', __('Open tasks'), $openTasks, 'integer', cta: $this->cta('workspace.tasks.index', __('View'))),
+            $this->statWidget('unread_alerts', __('Unread notifications'), $unreadNotifications, 'integer'),
             $this->quickActions([
-                ['label' => 'Open my tasks', 'href' => '/tasks', 'icon' => 'check-square', 'primary' => true],
-                ['label' => 'Team activity', 'href' => '/activity', 'icon' => 'activity'],
+                ['label' => __('Open my tasks'), 'href' => $this->link('workspace.tasks.index'), 'icon' => 'check-square', 'primary' => true],
+                ['label' => __('Activity log'), 'href' => $this->link('activity.index'), 'icon' => 'activity'],
             ]),
         ];
     }
 
     /* ──────────────────────────────────────────────────────────────── */
-    /*  WIDGET BUILDERS                                                 */
+    /*  WIDGET BUILDERS */
     /* ──────────────────────────────────────────────────────────────── */
 
     /**
@@ -289,31 +300,37 @@ class DashboardService
     /**
      * Time series from daily_metrics. Returns one point per day in the range.
      */
-    private function revenueTrendChart(string $from, string $to, ?int $tenantId = null): array
+    private function revenueTrendChart(string $from, string $to, ?int $tenantId = null, ?array $cta = null): array
     {
-        $rows = DailyMetric::query()
+        // One series: the platform-wide rows (tenant_id NULL) for the super
+        // admin, the store's own rows otherwise, never a mix. The tenant
+        // scope is skipped because it would hide the platform rows.
+        $rows = DailyMetric::query()->withoutGlobalScope('tenant')
             ->where('metric_key', DailyMetric::KEY_REVENUE_CENTS)
-            ->whereBetween('recorded_on', [$from, $to])
-            ->when($tenantId !== null, fn ($q) => $q->where('tenant_id', $tenantId))
+            // whereDate, not whereBetween: a stored "Y-m-d 00:00:00" would
+            // sort after "$to" and drop today's bar.
+            ->whereDate('recorded_on', '>=', $from)
+            ->whereDate('recorded_on', '<=', $to)
+            ->when($tenantId !== null, fn ($q) => $q->where('tenant_id', $tenantId), fn ($q) => $q->whereNull('tenant_id'))
             ->orderBy('recorded_on')
             ->get(['recorded_on', 'value']);
 
         return [
             'type' => 'chart',
             'key' => 'revenue_trend',
-            'title' => 'Revenue trend',
+            'title' => __('Revenue trend'),
             'data' => [
                 'kind' => 'line',
                 'series' => [[
                     'name' => 'Revenue',
-                    'points' => $rows->map(fn ($r) => [$r->recorded_on->toDateString(), $r->value])->all(),
+                    'points' => $rows->map(fn ($r) => [$r->recorded_on->toDateString(), (int) $r->value])->all(),
                 ]],
             ],
-            'meta' => ['cta' => ['href' => '/analytics/revenue', 'label' => 'View report']],
+            'meta' => array_filter(['cta' => $cta]),
         ];
     }
 
-    private function recentOrdersTable(?int $tenantId = null, ?int $userId = null, string $title = 'Recent orders'): array
+    private function recentOrdersTable(?int $tenantId = null, ?int $userId = null, ?string $title = null, ?array $cta = null): array
     {
         $query = Order::query()->latest()->limit(10);
         if ($tenantId !== null) {
@@ -337,18 +354,41 @@ class DashboardService
         return [
             'type' => 'table',
             'key' => 'recent_orders',
-            'title' => $title,
+            'title' => $title ?? __('Recent orders'),
             'data' => [
                 'columns' => [
-                    ['key' => 'order_number', 'label' => '#'],
-                    ['key' => 'total', 'label' => 'Total', 'align' => 'right', 'format' => 'money'],
-                    ['key' => 'status', 'label' => 'Status'],
-                    ['key' => 'created_at', 'label' => 'Date'],
+                    ['key' => 'order_number', 'label' => __('#')],
+                    ['key' => 'total', 'label' => __('Total'), 'align' => 'right', 'format' => 'money'],
+                    ['key' => 'status', 'label' => __('Status')],
+                    ['key' => 'created_at', 'label' => __('Date')],
                 ],
                 'rows' => $rows,
             ],
-            'meta' => ['cta' => ['href' => '/orders', 'label' => 'View all']],
+            'meta' => array_filter(['cta' => $cta]),
         ];
+    }
+
+    /**
+     * Relative URL of a named route, or null if the app has no such page,
+     * so the dashboard never links to a 404. Features that land later
+     * (vendor approval, payouts, downloads) light their links up by name.
+     *
+     * @param  array<string, mixed>  $params
+     */
+    private function link(string $routeName, array $params = []): ?string
+    {
+        return Route::has($routeName) ? route($routeName, $params, false) : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array{href: string, label: string}|null
+     */
+    private function cta(string $routeName, string $label, array $params = []): ?array
+    {
+        $href = $this->link($routeName, $params);
+
+        return $href === null ? null : ['href' => $href, 'label' => $label];
     }
 
     private function quickActions(array $actions): array
@@ -356,19 +396,23 @@ class DashboardService
         return [
             'type' => 'quick-actions',
             'key' => 'quick_actions',
-            'title' => 'Quick actions',
-            'data' => ['actions' => $actions],
+            'title' => __('Quick actions'),
+            // Actions whose page doesn't exist (yet) are left out.
+            'data' => ['actions' => array_values(array_filter($actions, fn (array $a) => $a['href'] !== null))],
         ];
     }
 
     /* ──────────────────────────────────────────────────────────────── */
-    /*  HELPERS                                                         */
+    /*  HELPERS */
     /* ──────────────────────────────────────────────────────────────── */
 
     private function cacheKey(string $layout, ?int $tenantId, int $userId): string
     {
         $version = (int) Cache::get('cache:dashboard:version', 1);
-        return "dashboard:tenant:{$tenantId}:role:{$layout}:user:{$userId}:v{$version}";
+        // Locale in the key: widget titles are translated (lang/{locale}.json).
+        $locale = app()->getLocale();
+
+        return "dashboard:tenant:{$tenantId}:role:{$layout}:user:{$userId}:{$locale}:v{$version}";
     }
 
     /**

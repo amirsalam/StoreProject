@@ -195,6 +195,21 @@ return [
             ],
         ],
 
+        // Centre Monétique Interbancaire (Morocco) — hosted payment page,
+        // wired to checkout by App\Domain\Payments\Cmi\CmiGateway. Charges
+        // in MAD: USD prices are converted with `mad_rate`. The environment
+        // (sandbox/production) picks the CMI test or live platform.
+        'cmi' => [
+            'label' => 'CMI (Maroc)',
+            'logo' => '🇲🇦',
+            'supports_webhook' => false, // CMI's callback is verified with the Store Key hash
+            'fields' => [
+                'client_id' => ['label' => 'Client ID (Merchant ID)', 'secret' => false, 'required' => true],
+                'store_key' => ['label' => 'Store Key', 'secret' => true, 'required' => true],
+                'mad_rate' => ['label' => 'Exchange rate — 1 USD = ? MAD', 'secret' => false, 'required' => true],
+            ],
+        ],
+
         'custom' => [
             'label' => 'Custom Gateway',
             'logo' => '🧩',

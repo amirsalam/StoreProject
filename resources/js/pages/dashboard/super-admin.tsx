@@ -2,6 +2,7 @@ import { DashboardGrid, type WidgetPayload } from '@/components/widgets';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface PageProps {
     user: { id: number; name: string; role: string };
@@ -14,13 +15,14 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function SuperAdminDashboard({ user, widgets }: PageProps) {
+    const { __ } = useTranslate();
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Platform dashboard" />
+            <Head title={__('Platform dashboard')} />
             <DashboardGrid
                 user={user}
                 widgets={widgets}
-                intro="Platform-wide metrics — revenue, vendors, approvals."
+                intro={__('Platform-wide metrics — revenue, vendors, approvals.')}
             />
         </AppLayout>
     );

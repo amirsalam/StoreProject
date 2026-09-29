@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Domain\Marketplace\CheckoutService;
 use App\Domain\Marketplace\EmptyCartException;
 use App\Domain\Marketplace\InvalidCouponException;
+use App\Domain\Marketplace\PaymentUnavailableException;
+use App\Domain\Payments\Cmi\CmiGateway;
+use App\Domain\Payments\PaymentStatusSync;
 use App\Domain\Payments\StripeCredentials;
 use App\Http\Requests\Marketplace\PlaceOrderRequest;
 use App\Models\Order;
@@ -28,6 +31,7 @@ class CheckoutController extends Controller
         private readonly CartService $cart,
         private readonly CheckoutService $checkout,
         private readonly StripeCredentials $stripe,
+        private readonly CmiGateway $cmi,
     ) {}
 
     public function show(Request $request): Response|RedirectResponse
@@ -61,6 +65,12 @@ class CheckoutController extends Controller
             // the PaymentElement. Null if payments are not configured (the
             // page then shows a "payments unavailable" state).
             'stripeKey' => $this->stripe->keys()['publishable_key'],
+            // CMI (Morocco) as a second way to pay, when configured: the page
+            // shows the dirham amount the buyer will be charged.
+            'cmi' => ($cmi = $this->cmi->gateway()) ? [
+                'amount_mad' => $this->cmi->madAmount($this->cart->subtotal(), $cmi),
+                'rate' => $this->cmi->rate($cmi),
+            ] : null,
         ]);
     }
 
@@ -81,6 +91,7 @@ class CheckoutController extends Controller
                 $request->user(),
                 $data,
                 $data['coupon_code'] ?? null,
+                $data['payment_method'] ?? CheckoutService::METHOD_STRIPE,
             );
         } catch (EmptyCartException $e) {
             if ($request->expectsJson()) {
@@ -94,6 +105,14 @@ class CheckoutController extends Controller
             }
 
             return back()->withErrors(['coupon_code' => $e->getMessage()])->withInput();
+        } catch (PaymentUnavailableException $e) {
+            // Stripe refused (e.g. bad keys) — the order was rolled back and
+            // the real error logged; the buyer gets a plain message.
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage(), 'errors' => ['cart' => [$e->getMessage()]]], 503);
+            }
+
+            return back()->withErrors(['cart' => $e->getMessage()])->withInput();
         }
 
         $confirmationUrl = route('checkout.confirmation', $result->order->order_number);
@@ -106,17 +125,22 @@ class CheckoutController extends Controller
                 // confirmation.
                 'client_secret' => $result->clientSecret,
                 'confirmation_url' => $confirmationUrl,
+                // CMI: continue on CMI's hosted payment page.
+                'redirect_url' => $result->redirectUrl,
             ]);
         }
 
-        return redirect($confirmationUrl);
+        return redirect($result->redirectUrl ?? $confirmationUrl);
     }
 
-    public function confirmation(Request $request, Order $order): Response
+    public function confirmation(Request $request, Order $order, PaymentStatusSync $sync): Response
     {
         abort_unless($order->user_id === $request->user()->id, 403);
 
-        $order->load('items');
+        // Stripe sends the buyer back here after paying: confirm the payment
+        // with Stripe now instead of waiting for the webhook.
+        $sync->sync($order);
+        $order->refresh()->load('items');
 
         return Inertia::render('checkout/confirmation', [
             'order' => [
@@ -135,6 +159,12 @@ class CheckoutController extends Controller
                     'total_price' => (string) $item->total_price,
                 ]),
             ],
+            // Back from a declined/cancelled CMI payment: say so and offer to
+            // try again (the order stays pending until paid).
+            'paymentFailed' => $request->query('payment') === 'failed' && $order->status === Order::STATUS_PENDING,
+            'retryUrl' => $order->status === Order::STATUS_PENDING && $order->payment_method === CheckoutService::METHOD_CMI
+                ? route('checkout.cmi.redirect', $order->order_number)
+                : null,
         ]);
     }
 }

@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { useTranslate } from '@/hooks/use-translate';
 
 /**
  * Show/hide button for the app sidebar. The icon reflects the current
@@ -11,13 +12,14 @@ import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from '
  * The open state persists via AppShell (localStorage); Ctrl/⌘+B also toggles.
  */
 export function SidebarToggle({ className }: { className?: string }) {
+    const { __ } = useTranslate();
     const { open, openMobile, isMobile, toggleSidebar } = useSidebar();
     const { direction } = usePage<SharedData>().props;
 
     const isOpen = isMobile ? openMobile : open;
     const rtl = direction === 'rtl';
     const Icon = isOpen ? (rtl ? PanelRightClose : PanelLeftClose) : rtl ? PanelRightOpen : PanelLeftOpen;
-    const label = isOpen ? 'Hide sidebar' : 'Show sidebar';
+    const label = isOpen ? __('Hide sidebar') : __('Show sidebar');
 
     return (
         <Button

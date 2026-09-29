@@ -77,6 +77,10 @@ class HandleInertiaRequests extends Middleware
             'direction' => SetLocale::direction(App::getLocale()),
             'supportedLocales' => SetLocale::SUPPORTED,
             'translations' => fn () => $this->loadTranslations(App::getLocale()),
+            // Dashboard phrases (lang/{locale}.json — English text as the key).
+            'phrases' => fn () => App::getLocale() === 'en'
+                ? (object) []
+                : (object) app('translator')->getLoader()->load(App::getLocale(), '*', '*'),
         ]);
     }
 

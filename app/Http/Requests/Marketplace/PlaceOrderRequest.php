@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Marketplace;
 
+use App\Domain\Marketplace\CheckoutService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PlaceOrderRequest extends FormRequest
@@ -28,6 +29,7 @@ class PlaceOrderRequest extends FormRequest
             'billing_address.postal_code' => ['nullable', 'string', 'max:32'],
             'coupon_code' => ['nullable', 'string', 'max:64'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'payment_method' => ['nullable', 'in:'.CheckoutService::METHOD_STRIPE.','.CheckoutService::METHOD_CMI],
         ];
     }
 }

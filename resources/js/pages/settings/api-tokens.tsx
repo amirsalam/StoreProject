@@ -13,6 +13,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { CheckCircle2, Copy, KeyRound, Trash2 } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface ApiToken {
     id: number;
@@ -41,6 +42,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function ApiTokens() {
+    const { __, __el } = useTranslate();
     const { tokens, abilities, newToken, newTokenName } = usePage<ApiTokensPageProps>().props;
     const [copied, setCopied] = useState(false);
 
@@ -74,9 +76,9 @@ export default function ApiTokens() {
 
     const revoke = (token: ApiToken) =>
         ask({
-            title: 'Revoke this token?',
-            description: `"${token.name}" stops working immediately — apps using it will be refused.`,
-            confirmLabel: 'Revoke token',
+            title: __('Revoke this token?'),
+            description: __('":name" stops working immediately — apps using it will be refused.', { name: token.name }),
+            confirmLabel: __('Revoke token'),
             destructive: true,
             // Through Inertia, which sends the XSRF-TOKEN cookie. (A hand-built
             // form read a csrf-token <meta> tag the layout doesn't have → 419.)
@@ -91,13 +93,13 @@ export default function ApiTokens() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="API tokens" />
+            <Head title={__('API tokens')} />
 
             <SettingsLayout>
                 <div className="space-y-6">
                     <HeadingSmall
-                        title="API tokens"
-                        description="Personal access tokens authenticate against the /api/v1 endpoints. Send each token as a Bearer header."
+                        title={__('API tokens')}
+                        description={__('Personal access tokens authenticate against the /api/v1 endpoints. Send each token as a Bearer header.')}
                     />
 
                     {/* One-time freshly issued token banner */}
@@ -106,11 +108,11 @@ export default function ApiTokens() {
                             <div className="flex items-center gap-2">
                                 <KeyRound className="size-4 text-primary" />
                                 <h3 className="font-display text-sm font-semibold tracking-tight">
-                                    Token <span className="font-mono">{newTokenName}</span> created
+                                    {__el('Token :name created', { name: <span className="font-mono">{newTokenName}</span> })}
                                 </h3>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                Copy this token now — it won't be shown again. Treat it like a password.
+                                {__("Copy this token now — it won't be shown again. Treat it like a password.")}
                             </p>
                             <div className="flex items-stretch gap-2">
                                 <code className="flex-1 truncate rounded-md border border-border bg-background px-3 py-2 font-mono text-xs">
@@ -118,7 +120,7 @@ export default function ApiTokens() {
                                 </code>
                                 <Button type="button" onClick={copy} size="sm" variant="outline" className="shrink-0">
                                     {copied ? <CheckCircle2 className="text-emerald-600" /> : <Copy />}
-                                    {copied ? 'Copied' : 'Copy'}
+                                    {copied ? __('Copied') : __('Copy')}
                                 </Button>
                             </div>
                             <pre className="overflow-x-auto rounded-md border border-border/60 bg-background/60 p-3 text-[11px] text-muted-foreground">
@@ -130,13 +132,13 @@ export default function ApiTokens() {
 
                     {/* Create token form */}
                     <form onSubmit={submit} className="space-y-4 rounded-xl border bg-card p-5 sm:p-6">
-                        <h3 className="font-display text-sm font-semibold tracking-tight">Create a new token</h3>
+                        <h3 className="font-display text-sm font-semibold tracking-tight">{__('Create a new token')}</h3>
 
                         <div className="space-y-1.5">
-                            <Label htmlFor="name">Name</Label>
+                            <Label htmlFor="name">{__('Name')}</Label>
                             <Input
                                 id="name"
-                                placeholder="e.g. CI deploy, mobile app"
+                                placeholder={__('e.g. CI deploy, mobile app')}
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
                                 maxLength={80}
@@ -147,7 +149,7 @@ export default function ApiTokens() {
                         </div>
 
                         <fieldset className="space-y-3">
-                            <legend className="text-sm font-medium">Abilities</legend>
+                            <legend className="text-sm font-medium">{__('Abilities')}</legend>
                             <div className="grid gap-2 sm:grid-cols-3">
                                 {Object.entries(abilities).map(([key, label]) => {
                                     const checked = data.abilities.includes(key);
@@ -182,17 +184,17 @@ export default function ApiTokens() {
                         <div className="flex justify-end">
                             <Button type="submit" disabled={processing || data.abilities.length === 0}>
                                 <KeyRound />
-                                Create token
+                                {__('Create token')}
                             </Button>
                         </div>
                     </form>
 
                     {/* Existing tokens */}
                     <div className="space-y-3">
-                        <h3 className="font-display text-sm font-semibold tracking-tight">Active tokens</h3>
+                        <h3 className="font-display text-sm font-semibold tracking-tight">{__('Active tokens')}</h3>
                         {tokens.length === 0 ? (
                             <div className="rounded-xl border border-dashed bg-muted/20 p-8 text-center text-sm text-muted-foreground">
-                                No tokens yet. Create one above to authenticate against the API.
+                                {__('No tokens yet. Create one above to authenticate against the API.')}
                             </div>
                         ) : (
                             <ul className="overflow-hidden rounded-xl border bg-card divide-y">
@@ -202,10 +204,10 @@ export default function ApiTokens() {
                                             <div className="truncate font-medium">{t.name}</div>
                                             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                                                 <span className="font-mono">
-                                                    {t.last_used_at ? `Last used ${relative(t.last_used_at)}` : 'Never used'}
+                                                    {t.last_used_at ? __('Last used :time', { time: relative(t.last_used_at) }) : __('Never used')}
                                                 </span>
                                                 <span aria-hidden>·</span>
-                                                <span className="font-mono">Created {relative(t.created_at)}</span>
+                                                <span className="font-mono">{__('Created :time', { time: relative(t.created_at) })}</span>
                                             </div>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {t.abilities.map((a) => (
@@ -223,7 +225,7 @@ export default function ApiTokens() {
                                             className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                         >
                                             <Trash2 />
-                                            Revoke
+                                            {__('Revoke')}
                                         </Button>
                                     </li>
                                 ))}
@@ -240,13 +242,13 @@ export default function ApiTokens() {
 
 function relative(iso: string): string {
     const date = new Date(iso);
-    const diff = Date.now() - date.getTime();
-    const minutes = Math.round(diff / 60_000);
-    if (minutes < 1) return 'just now';
-    if (minutes < 60) return `${minutes}m ago`;
+    // Locale-aware ("5 minutes ago" / "منذ 5 دقائق") via the <html lang> set by useTranslate.
+    const rtf = new Intl.RelativeTimeFormat(document.documentElement.lang || undefined, { numeric: 'auto' });
+    const minutes = Math.round((date.getTime() - Date.now()) / 60_000);
+    if (Math.abs(minutes) < 60) return rtf.format(minutes, 'minute');
     const hours = Math.round(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
+    if (Math.abs(hours) < 24) return rtf.format(hours, 'hour');
     const days = Math.round(hours / 24);
-    if (days < 30) return `${days}d ago`;
+    if (Math.abs(days) < 30) return rtf.format(days, 'day');
     return date.toLocaleDateString();
 }

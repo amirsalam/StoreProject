@@ -4,6 +4,7 @@ import BlogPostForm, { type BlogPostFormValues } from '@/pages/admin/blog/blog-p
 import { type BlogPost, type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface Option {
     value: string;
@@ -21,6 +22,7 @@ function toDateTimeLocal(value: string | null): string {
 }
 
 export default function AdminBlogEdit({ post, statuses }: AdminBlogEditProps) {
+    const { __, __el } = useTranslate();
     const { data, setData, put, processing, errors } = useForm<BlogPostFormValues>({
         title: post.title,
         slug: post.slug,
@@ -60,7 +62,7 @@ export default function AdminBlogEdit({ post, statuses }: AdminBlogEditProps) {
 
             <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">Edit post</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight">{__('Edit post')}</h1>
                     <p className="text-muted-foreground text-sm">{post.title}</p>
                 </div>
 
@@ -69,7 +71,7 @@ export default function AdminBlogEdit({ post, statuses }: AdminBlogEditProps) {
                     setData={setData}
                     errors={errors as Partial<Record<keyof BlogPostFormValues, string>>}
                     processing={processing}
-                    submitLabel="Save changes"
+                    submitLabel={__('Save changes')}
                     onSubmit={submit}
                     statuses={statuses}
                     cancelHref={route('admin.blog-posts.index')}
@@ -79,14 +81,15 @@ export default function AdminBlogEdit({ post, statuses }: AdminBlogEditProps) {
             <ConfirmDialog
                 open={confirming}
                 onOpenChange={setConfirming}
-                title="Save changes to this post?"
+                title={__('Save changes to this post?')}
                 description={
                     <>
-                        The changes to <strong className="text-foreground">{post.title}</strong> are saved right away — if the post is published,
-                        readers see them immediately.
+                        {__el('The changes to :title are saved right away — if the post is published, readers see them immediately.', {
+                            title: <strong className="text-foreground">{post.title}</strong>,
+                        })}
                     </>
                 }
-                confirmLabel="Save changes"
+                confirmLabel={__('Save changes')}
                 processing={processing}
                 onConfirm={confirmUpdate}
             />

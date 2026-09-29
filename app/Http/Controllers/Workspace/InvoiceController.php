@@ -65,7 +65,7 @@ class InvoiceController extends Controller
 
         return redirect()
             ->route('workspace.invoices.index')
-            ->with('success', "Invoice {$invoice->number} created.");
+            ->with('success', __('Invoice :number created.', ['number' => $invoice->number]));
     }
 
     public function markSent(Invoice $invoice): RedirectResponse
@@ -98,7 +98,7 @@ class InvoiceController extends Controller
 
         return redirect()
             ->route('workspace.invoices.index')
-            ->with('success', 'Invoice removed.');
+            ->with('success', __('Invoice removed.'));
     }
 
     /**
@@ -107,11 +107,11 @@ class InvoiceController extends Controller
     private function statuses(): array
     {
         return [
-            ['value' => Invoice::STATUS_DRAFT, 'label' => 'Draft'],
-            ['value' => Invoice::STATUS_SENT, 'label' => 'Sent'],
-            ['value' => Invoice::STATUS_PAID, 'label' => 'Paid'],
-            ['value' => Invoice::STATUS_OVERDUE, 'label' => 'Overdue'],
-            ['value' => Invoice::STATUS_VOID, 'label' => 'Void'],
+            ['value' => Invoice::STATUS_DRAFT, 'label' => __('Draft')],
+            ['value' => Invoice::STATUS_SENT, 'label' => __('Sent')],
+            ['value' => Invoice::STATUS_PAID, 'label' => __('Paid')],
+            ['value' => Invoice::STATUS_OVERDUE, 'label' => __('Overdue')],
+            ['value' => Invoice::STATUS_VOID, 'label' => __('Void')],
         ];
     }
 

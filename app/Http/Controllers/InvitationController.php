@@ -67,6 +67,6 @@ class InvitationController extends Controller
 
         return redirect()
             ->route('workspace.team.index')
-            ->with('success', "You've joined {$tenant->name}.");
+            ->with('success', __('You\'ve joined :name.', ['name' => $tenant->name]));
     }
 }

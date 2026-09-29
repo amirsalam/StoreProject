@@ -7,6 +7,7 @@ import { type BreadcrumbItem, type ContactMessage, type Paginated } from '@/type
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Archive, MailOpen, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface Option {
     value: string;
@@ -31,6 +32,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function AdminContactIndex({ messages, filters, statuses, unreadCount }: AdminContactIndexProps) {
+    const { __ } = useTranslate();
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
     const [search, setSearch] = useState(filters.search);
     const { delete: destroy, processing } = useForm({});
@@ -57,9 +59,9 @@ export default function AdminContactIndex({ messages, filters, statuses, unreadC
 
     const handleDelete = (message: ContactMessage) => {
         ask({
-            title: 'Delete this message?',
-            description: `The message from ${message.name} will be permanently deleted. This cannot be undone.`,
-            confirmLabel: 'Delete',
+            title: __('Delete this message?'),
+            description: __('The message from :name will be permanently deleted. This cannot be undone.', { name: message.name }),
+            confirmLabel: __('Delete'),
             destructive: true,
             action: (finish) => destroy(route('admin.contact.destroy', message.id), { preserveScroll: true, onFinish: finish }),
         });
@@ -67,7 +69,7 @@ export default function AdminContactIndex({ messages, filters, statuses, unreadC
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Admin · Contact" />
+            <Head title={__('Admin · Contact')} />
 
             <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 {flash?.success && (
@@ -78,9 +80,9 @@ export default function AdminContactIndex({ messages, filters, statuses, unreadC
 
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Contact inbox</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{__('Contact inbox')}</h1>
                         <p className="text-muted-foreground text-sm">
-                            {messages.total} {messages.total === 1 ? 'message' : 'messages'}
+                            {messages.total === 1 ? __('1 message') : __(':count messages', { count: messages.total })}
                             {unreadCount > 0 && ` · ${unreadCount} unread`}
                         </p>
                     </div>
@@ -89,7 +91,7 @@ export default function AdminContactIndex({ messages, filters, statuses, unreadC
                 <form onSubmit={submitSearch} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <Input
                         type="search"
-                        placeholder="Search name, email or subject…"
+                        placeholder={__('Search name, email or subject…')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full sm:w-72"
@@ -99,7 +101,7 @@ export default function AdminContactIndex({ messages, filters, statuses, unreadC
                         onChange={(e) => applyFilter({ status: e.target.value })}
                         className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm sm:w-auto"
                     >
-                        <option value="">All statuses</option>
+                        <option value="">{__('All statuses')}</option>
                         {statuses.map((s) => (
                             <option key={s.value} value={s.value}>
                                 {s.label}
@@ -107,13 +109,13 @@ export default function AdminContactIndex({ messages, filters, statuses, unreadC
                         ))}
                     </select>
                     <Button type="submit" variant="secondary">
-                        Filter
+                        {__('Filter')}
                     </Button>
                 </form>
 
                 {messages.data.length === 0 ? (
                     <div className="bg-card text-muted-foreground rounded-lg border border-dashed p-12 text-center text-sm">
-                        No messages match these filters.
+                        {__('No messages match these filters.')}
                     </div>
                 ) : (
                     <ul className="space-y-3">
@@ -138,7 +140,7 @@ export default function AdminContactIndex({ messages, filters, statuses, unreadC
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
-                                                title="Mark as read"
+                                                title={__('Mark as read')}
                                                 disabled={processing}
                                                 onClick={() => setStatus(message, 'read')}
                                             >
@@ -149,7 +151,7 @@ export default function AdminContactIndex({ messages, filters, statuses, unreadC
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
-                                                title="Archive"
+                                                title={__('Archive')}
                                                 disabled={processing}
                                                 onClick={() => setStatus(message, 'archived')}
                                             >
@@ -159,7 +161,7 @@ export default function AdminContactIndex({ messages, filters, statuses, unreadC
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            title="Delete"
+                                            title={__('Delete')}
                                             disabled={processing}
                                             onClick={() => handleDelete(message)}
                                             className="text-destructive hover:bg-destructive/10 hover:text-destructive"
@@ -173,7 +175,7 @@ export default function AdminContactIndex({ messages, filters, statuses, unreadC
 
                                 <div>
                                     <Button asChild size="sm" variant="outline">
-                                        <a href={`mailto:${message.email}?subject=${encodeURIComponent(`Re: ${message.subject}`)}`}>Reply by email</a>
+                                        <a href={`mailto:${message.email}?subject=${encodeURIComponent(`Re: ${message.subject}`)}`}>{__('Reply by email')}</a>
                                     </Button>
                                 </div>
                             </li>
@@ -212,8 +214,9 @@ export default function AdminContactIndex({ messages, filters, statuses, unreadC
 }
 
 function StatusBadge({ status }: { status: string }) {
-    if (status === 'new') return <Badge>New</Badge>;
-    if (status === 'archived') return <Badge variant="outline">Archived</Badge>;
+    const { __ } = useTranslate();
+    if (status === 'new') return <Badge>{__('New')}</Badge>;
+    if (status === 'archived') return <Badge variant="outline">{__('Archived')}</Badge>;
 
-    return <Badge variant="secondary">Read</Badge>;
+    return <Badge variant="secondary">{__('Read')}</Badge>;
 }

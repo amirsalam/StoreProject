@@ -14,5 +14,7 @@ class CheckoutResult
     public function __construct(
         public readonly Order $order,
         public readonly ?string $clientSecret,
+        // Set when the buyer must continue on a hosted payment page (CMI).
+        public readonly ?string $redirectUrl = null,
     ) {}
 }

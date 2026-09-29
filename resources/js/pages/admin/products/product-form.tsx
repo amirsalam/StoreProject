@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { type Category, type ProductType } from '@/types';
 import { Link } from '@inertiajs/react';
 import { FormEvent } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 export interface ProductFormValues {
     category_id: string;
@@ -60,12 +61,13 @@ export default function ProductForm({
     types,
     cancelHref,
 }: ProductFormProps) {
+    const { __ } = useTranslate();
     return (
         <form onSubmit={onSubmit} className="space-y-8">
             <section className="space-y-4 rounded-lg border bg-card p-6">
-                <h2 className="text-base font-semibold">Basics</h2>
+                <h2 className="text-base font-semibold">{__('Basics')}</h2>
 
-                <Field label="Title" htmlFor="title" error={errors.title} required>
+                <Field label={__('Title')} htmlFor="title" error={errors.title} required>
                     <Input
                         id="title"
                         value={data.title}
@@ -75,15 +77,15 @@ export default function ProductForm({
                     />
                 </Field>
 
-                <Field label="Slug" htmlFor="slug" error={errors.slug} hint="URL-safe identifier. Auto-derived from title if left blank.">
+                <Field label={__('Slug')} htmlFor="slug" error={errors.slug} hint={__('URL-safe identifier. Auto-derived from title if left blank.')}>
                     <Input id="slug" value={data.slug} onChange={(e) => setData('slug', e.target.value)} />
                 </Field>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                    <Field label="Type" htmlFor="type" error={errors.type} required>
+                    <Field label={__('Type')} htmlFor="type" error={errors.type} required>
                         <Select value={data.type} onValueChange={(v) => setData('type', v as ProductType)}>
                             <SelectTrigger id="type">
-                                <SelectValue placeholder="Select type" />
+                                <SelectValue placeholder={__('Select type')} />
                             </SelectTrigger>
                             <SelectContent>
                                 {types.map((opt) => (
@@ -95,16 +97,16 @@ export default function ProductForm({
                         </Select>
                     </Field>
 
-                    <Field label="Category" htmlFor="category_id" error={errors.category_id}>
+                    <Field label={__('Category')} htmlFor="category_id" error={errors.category_id}>
                         <Select
                             value={data.category_id}
                             onValueChange={(v) => setData('category_id', v === '__none__' ? '' : v)}
                         >
                             <SelectTrigger id="category_id">
-                                <SelectValue placeholder="Uncategorized" />
+                                <SelectValue placeholder={__('Uncategorized')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="__none__">Uncategorized</SelectItem>
+                                <SelectItem value="__none__">{__('Uncategorized')}</SelectItem>
                                 {categories.map((cat) => (
                                     <SelectItem key={cat.id} value={String(cat.id)}>
                                         {cat.name}
@@ -115,7 +117,7 @@ export default function ProductForm({
                     </Field>
                 </div>
 
-                <Field label="Short description" htmlFor="short_description" error={errors.short_description}>
+                <Field label={__('Short description')} htmlFor="short_description" error={errors.short_description}>
                     <Input
                         id="short_description"
                         value={data.short_description}
@@ -124,7 +126,7 @@ export default function ProductForm({
                     />
                 </Field>
 
-                <Field label="Description" htmlFor="description" error={errors.description}>
+                <Field label={__('Description')} htmlFor="description" error={errors.description}>
                     <textarea
                         id="description"
                         value={data.description}
@@ -136,10 +138,10 @@ export default function ProductForm({
             </section>
 
             <section className="space-y-4 rounded-lg border bg-card p-6">
-                <h2 className="text-base font-semibold">Pricing</h2>
+                <h2 className="text-base font-semibold">{__('Pricing')}</h2>
 
                 <div className="grid gap-4 md:grid-cols-3">
-                    <Field label="Price" htmlFor="price" error={errors.price} required>
+                    <Field label={__('Price')} htmlFor="price" error={errors.price} required>
                         <Input
                             id="price"
                             type="number"
@@ -150,7 +152,7 @@ export default function ProductForm({
                             required
                         />
                     </Field>
-                    <Field label="Sale price" htmlFor="sale_price" error={errors.sale_price} hint="Optional. Must be lower than price.">
+                    <Field label={__('Sale price')} htmlFor="sale_price" error={errors.sale_price} hint={__('Optional. Must be lower than price.')}>
                         <Input
                             id="sale_price"
                             type="number"
@@ -160,7 +162,7 @@ export default function ProductForm({
                             onChange={(e) => setData('sale_price', e.target.value)}
                         />
                     </Field>
-                    <Field label="Currency" htmlFor="currency" error={errors.currency} required>
+                    <Field label={__('Currency')} htmlFor="currency" error={errors.currency} required>
                         <Input
                             id="currency"
                             value={data.currency}
@@ -173,13 +175,13 @@ export default function ProductForm({
             </section>
 
             <section className="space-y-4 rounded-lg border bg-card p-6">
-                <h2 className="text-base font-semibold">Delivery</h2>
+                <h2 className="text-base font-semibold">{__('Delivery')}</h2>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                    <Field label="Version" htmlFor="version" error={errors.version}>
+                    <Field label={__('Version')} htmlFor="version" error={errors.version}>
                         <Input id="version" value={data.version} onChange={(e) => setData('version', e.target.value)} />
                     </Field>
-                    <Field label="License type" htmlFor="license_type" error={errors.license_type} hint="e.g. single-site, unlimited, developer">
+                    <Field label={__('License type')} htmlFor="license_type" error={errors.license_type} hint={__('e.g. single-site, unlimited, developer')}>
                         <Input
                             id="license_type"
                             value={data.license_type}
@@ -190,7 +192,7 @@ export default function ProductForm({
 
                 <div className="grid gap-4 md:grid-cols-2">
                     <Field
-                        label="Default activation limit"
+                        label={__('Default activation limit')}
                         htmlFor="default_activation_limit"
                         error={errors.default_activation_limit}
                         required
@@ -204,7 +206,7 @@ export default function ProductForm({
                             required
                         />
                     </Field>
-                    <Field label="Download limit" htmlFor="download_limit" error={errors.download_limit} hint="Leave blank for unlimited.">
+                    <Field label={__('Download limit')} htmlFor="download_limit" error={errors.download_limit} hint={__('Leave blank for unlimited.')}>
                         <Input
                             id="download_limit"
                             type="number"
@@ -215,16 +217,16 @@ export default function ProductForm({
                     </Field>
                 </div>
 
-                <Field label="Thumbnail URL" htmlFor="thumbnail" error={errors.thumbnail}>
+                <Field label={__('Thumbnail URL')} htmlFor="thumbnail" error={errors.thumbnail}>
                     <Input id="thumbnail" value={data.thumbnail} onChange={(e) => setData('thumbnail', e.target.value)} />
                 </Field>
             </section>
 
             <section className="space-y-4 rounded-lg border bg-card p-6">
-                <h2 className="text-base font-semibold">Visibility</h2>
+                <h2 className="text-base font-semibold">{__('Visibility')}</h2>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                    <Field label="Status" htmlFor="status" error={errors.status} required>
+                    <Field label={__('Status')} htmlFor="status" error={errors.status} required>
                         <Select value={data.status} onValueChange={(v) => setData('status', v)}>
                             <SelectTrigger id="status">
                                 <SelectValue />
@@ -245,18 +247,18 @@ export default function ProductForm({
                             onCheckedChange={(v) => setData('is_featured', v === true)}
                         />
                         <Label htmlFor="is_featured" className="cursor-pointer">
-                            Featured product
+                            {__('Featured product')}
                         </Label>
                     </div>
                 </div>
             </section>
 
             <section className="space-y-4 rounded-lg border bg-card p-6">
-                <h2 className="text-base font-semibold">SEO</h2>
-                <Field label="SEO title" htmlFor="seo_title" error={errors.seo_title}>
+                <h2 className="text-base font-semibold">{__('SEO')}</h2>
+                <Field label={__('SEO title')} htmlFor="seo_title" error={errors.seo_title}>
                     <Input id="seo_title" value={data.seo_title} onChange={(e) => setData('seo_title', e.target.value)} />
                 </Field>
-                <Field label="SEO description" htmlFor="seo_description" error={errors.seo_description}>
+                <Field label={__('SEO description')} htmlFor="seo_description" error={errors.seo_description}>
                     <textarea
                         id="seo_description"
                         value={data.seo_description}
@@ -270,7 +272,7 @@ export default function ProductForm({
 
             <div className="flex items-center justify-end gap-2">
                 <Button asChild variant="ghost">
-                    <Link href={cancelHref}>Cancel</Link>
+                    <Link href={cancelHref}>{__('Cancel')}</Link>
                 </Button>
                 <Button type="submit" disabled={processing}>
                     {submitLabel}

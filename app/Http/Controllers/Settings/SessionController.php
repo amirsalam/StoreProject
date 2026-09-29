@@ -38,7 +38,7 @@ class SessionController extends Controller
     {
         $current = $request->session()->getId();
         if ($sessionId === $current) {
-            return back()->with('error', 'Cannot revoke the current session here. Use Logout instead.');
+            return back()->with('error', __('Cannot revoke the current session here. Use Logout instead.'));
         }
 
         DB::table('sessions')
@@ -50,7 +50,7 @@ class SessionController extends Controller
             'session_id' => substr(hash('sha256', $sessionId), 0, 10),
         ]);
 
-        return back()->with('success', 'Session revoked.');
+        return back()->with('success', __('Session revoked.'));
     }
 
     /**
@@ -71,7 +71,9 @@ class SessionController extends Controller
 
         ActivityLog::record('session.revoked_others', $request->user(), ['count' => $count]);
 
-        return back()->with('success', "Signed out from {$count} other " . ($count === 1 ? 'session' : 'sessions') . '.');
+        return back()->with('success', $count === 1
+            ? __('Signed out from 1 other session.')
+            : __('Signed out from :count other sessions.', ['count' => $count]));
     }
 
     /**
@@ -102,10 +104,10 @@ class SessionController extends Controller
             (bool) preg_match('/Windows NT 10/i', $ua) => 'Windows 10/11',
             (bool) preg_match('/Windows NT 6\.3/i', $ua) => 'Windows 8.1',
             (bool) preg_match('/Windows NT 6\.[0-2]/i', $ua) => 'Windows 7/8',
-            (bool) preg_match('/Mac OS X 10[._]([0-9]+)/i', $ua, $m) => 'macOS 10.' . $m[1],
+            (bool) preg_match('/Mac OS X 10[._]([0-9]+)/i', $ua, $m) => 'macOS 10.'.$m[1],
             (bool) preg_match('/Mac OS X/i', $ua) => 'macOS',
-            (bool) preg_match('/Android ([0-9]+)/i', $ua, $m) => 'Android ' . $m[1],
-            (bool) preg_match('/iPhone OS ([0-9]+)/i', $ua, $m) => 'iOS ' . $m[1],
+            (bool) preg_match('/Android ([0-9]+)/i', $ua, $m) => 'Android '.$m[1],
+            (bool) preg_match('/iPhone OS ([0-9]+)/i', $ua, $m) => 'iOS '.$m[1],
             (bool) preg_match('/iPad/i', $ua) => 'iPadOS',
             (bool) preg_match('/Linux/i', $ua) => 'Linux',
             default => 'Unknown OS',
@@ -121,6 +123,6 @@ class SessionController extends Controller
             default => 'Browser',
         };
 
-        return $os . ' · ' . $browser;
+        return $os.' · '.$browser;
     }
 }

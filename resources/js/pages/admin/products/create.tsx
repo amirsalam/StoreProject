@@ -3,6 +3,7 @@ import ProductForm, { type ProductFormValues } from '@/pages/admin/products/prod
 import { type BreadcrumbItem, type Category, type ProductType } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface Option {
     value: string;
@@ -22,6 +23,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function AdminProductsCreate({ categories, statuses, types }: AdminProductsCreateProps) {
+    const { __ } = useTranslate();
     const { data, setData, post, processing, errors } = useForm<ProductFormValues>({
         category_id: '',
         title: '',
@@ -50,12 +52,12 @@ export default function AdminProductsCreate({ categories, statuses, types }: Adm
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="New product" />
+            <Head title={__('New product')} />
 
             <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">New product</h1>
-                    <p className="text-sm text-muted-foreground">Add a new digital product to your store.</p>
+                    <h1 className="text-2xl font-semibold tracking-tight">{__('New product')}</h1>
+                    <p className="text-sm text-muted-foreground">{__('Add a new digital product to your store.')}</p>
                 </div>
 
                 <ProductForm
@@ -63,7 +65,7 @@ export default function AdminProductsCreate({ categories, statuses, types }: Adm
                     setData={setData}
                     errors={errors as Partial<Record<keyof ProductFormValues, string>>}
                     processing={processing}
-                    submitLabel="Create product"
+                    submitLabel={__('Create product')}
                     onSubmit={submit}
                     categories={categories}
                     statuses={statuses}

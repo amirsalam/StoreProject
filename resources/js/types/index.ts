@@ -45,6 +45,8 @@ export interface SharedData {
     system_status: SystemStatusState;
     supportedLocales: Locale[];
     translations: TranslationDict;
+    /** Dashboard phrase translations for the current locale (English text → translation). */
+    phrases: Record<string, string>;
     [key: string]: unknown;
 }
 

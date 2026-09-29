@@ -26,6 +26,10 @@ interface ConfirmationProps {
         paid_at: string | null;
         items: ConfirmationItem[];
     };
+    /** Back from a declined/cancelled CMI payment. */
+    paymentFailed?: boolean;
+    /** CMI order still unpaid: send the buyer back to CMI to try again. */
+    retryUrl?: string | null;
 }
 
 function money(value: string, currency = 'USD') {
@@ -37,7 +41,7 @@ function money(value: string, currency = 'USD') {
     }
 }
 
-export default function CheckoutConfirmation({ order }: ConfirmationProps) {
+export default function CheckoutConfirmation({ order, paymentFailed = false, retryUrl = null }: ConfirmationProps) {
     const { t } = useTranslate();
     const isPaid = order.status === 'paid';
 
@@ -56,6 +60,16 @@ export default function CheckoutConfirmation({ order }: ConfirmationProps) {
                         </h1>
                         <p className="mt-2 text-sm text-muted-foreground">{t('checkout.confirm_thank_you')}</p>
                     </div>
+
+                    {paymentFailed && (
+                        <div
+                            role="alert"
+                            className="mt-8 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
+                        >
+                            <p className="font-semibold">{t('checkout.payment_failed_title')}</p>
+                            <p className="mt-1">{t('checkout.payment_failed_body')}</p>
+                        </div>
+                    )}
 
                     <div className="mt-8 rounded-xl border bg-card p-6 shadow-sm">
                         <div className="flex items-center justify-between border-b pb-4">
@@ -107,7 +121,13 @@ export default function CheckoutConfirmation({ order }: ConfirmationProps) {
                     </p>
 
                     <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-                        <Button asChild>
+                        {retryUrl && (
+                            // A plain link: the retry page posts a form to CMI's own site.
+                            <Button asChild>
+                                <a href={retryUrl}>{t('checkout.retry_payment')}</a>
+                            </Button>
+                        )}
+                        <Button asChild variant={retryUrl ? 'outline' : 'default'}>
                             <Link href={route('dashboard')}>{t('checkout.view_dashboard')}</Link>
                         </Button>
                         <Button asChild variant="outline">

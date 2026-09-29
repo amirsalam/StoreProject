@@ -17,6 +17,8 @@ import {
     Newspaper,
     Package,
     Palette,
+    Receipt,
+    Send,
     Store,
     UserCog,
     Users,
@@ -72,6 +74,11 @@ const adminNavItems: NavItem[] = [
         icon: Package,
     },
     {
+        title: 'Orders',
+        url: '/admin/orders',
+        icon: Receipt,
+    },
+    {
         title: 'Blog',
         url: '/admin/blog-posts',
         icon: Newspaper,
@@ -95,6 +102,11 @@ const adminNavItems: NavItem[] = [
         title: 'Payment Gateways',
         url: '/admin/payment-gateways',
         icon: Wallet,
+    },
+    {
+        title: 'Email',
+        url: '/admin/mail',
+        icon: Send,
     },
 ];
 

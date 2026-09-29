@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { cn } from '@/lib/utils';
 import { AlertTriangle, CircleHelp } from 'lucide-react';
 import { type ReactNode, useCallback, useState } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface ConfirmDialogProps {
     open: boolean;
@@ -27,11 +28,12 @@ export default function ConfirmDialog({
     title,
     description,
     confirmLabel,
-    cancelLabel = 'Cancel',
+    cancelLabel,
     destructive = false,
     processing = false,
     onConfirm,
 }: ConfirmDialogProps) {
+    const { __ } = useTranslate();
     const Icon = destructive ? AlertTriangle : CircleHelp;
 
     return (
@@ -53,10 +55,10 @@ export default function ConfirmDialog({
                 </DialogHeader>
                 <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={processing}>
-                        {cancelLabel}
+                        {cancelLabel ?? __('Cancel')}
                     </Button>
                     <Button type="button" variant={destructive ? 'destructive' : 'default'} onClick={onConfirm} disabled={processing}>
-                        {processing ? 'Working…' : confirmLabel}
+                        {processing ? __('Working…') : confirmLabel}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -85,6 +87,7 @@ export interface ConfirmOptions {
  * The popup shows "Working…" until `finish` is called, then closes.
  */
 export function useConfirmDialog() {
+    const { __ } = useTranslate();
     const [open, setOpen] = useState(false);
     const [processing, setProcessing] = useState(false);
     // Kept after closing so the text doesn't vanish during the close animation.
@@ -107,7 +110,7 @@ export function useConfirmDialog() {
             onOpenChange={setOpen}
             title={options?.title ?? ''}
             description={options?.description ?? ''}
-            confirmLabel={options?.confirmLabel ?? 'Confirm'}
+            confirmLabel={options?.confirmLabel ?? __('Confirm')}
             destructive={options?.destructive}
             processing={processing}
             onConfirm={() => {

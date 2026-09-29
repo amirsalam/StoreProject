@@ -9,6 +9,7 @@ import { type BrandingSummary, type BreadcrumbItem } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Image as ImageIcon, ImageUp, Loader2, Trash2, UploadCloud } from 'lucide-react';
 import { ChangeEvent, DragEvent, FormEvent, useRef, useState } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface AdminBrandingEditProps {
     branding: BrandingSummary;
@@ -29,6 +30,7 @@ const ACCEPTED_MIMES = 'image/png,image/jpeg,image/svg+xml,image/webp';
 const MAX_BYTES = 2 * 1024 * 1024;
 
 export default function AdminBrandingEdit({ branding }: AdminBrandingEditProps) {
+    const { __, __el } = useTranslate();
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -99,9 +101,9 @@ export default function AdminBrandingEdit({ branding }: AdminBrandingEditProps) 
 
     const deleteSavedLogo = () => {
         ask({
-            title: 'Remove the logo?',
-            description: 'The current logo is removed and the site goes back to the default mark.',
-            confirmLabel: 'Remove logo',
+            title: __('Remove the logo?'),
+            description: __('The current logo is removed and the site goes back to the default mark.'),
+            confirmLabel: __('Remove logo'),
             destructive: true,
             action: (finish) => router.delete(route('admin.branding.logo.destroy'), { preserveScroll: true, onFinish: finish }),
         });
@@ -111,13 +113,13 @@ export default function AdminBrandingEdit({ branding }: AdminBrandingEditProps) 
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Branding · Admin" />
+            <Head title={__('Branding · Admin')} />
 
             <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-6 sm:py-8">
                 <div>
-                    <h1 className="font-display text-2xl font-semibold tracking-tight">Branding</h1>
+                    <h1 className="font-display text-2xl font-semibold tracking-tight">{__('Branding')}</h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Customize the site title and logo. Changes apply across the storefront, dashboard, and auth pages.
+                        {__('Customize the site title and logo. Changes apply across the storefront, dashboard, and auth pages.')}
                     </p>
                 </div>
 
@@ -131,14 +133,14 @@ export default function AdminBrandingEdit({ branding }: AdminBrandingEditProps) 
                     {/* TITLE */}
                     <section className="space-y-4 rounded-xl border border-border bg-card p-6 shadow-sm sm:p-8">
                         <header className="space-y-1">
-                            <h2 className="font-display text-base font-semibold tracking-tight">Site title</h2>
+                            <h2 className="font-display text-base font-semibold tracking-tight">{__('Site title')}</h2>
                             <p className="text-sm text-muted-foreground">
-                                Shown next to the logo in the header, footer, browser tab, and emails.
+                                {__('Shown next to the logo in the header, footer, browser tab, and emails.')}
                             </p>
                         </header>
 
                         <div className="space-y-1.5">
-                            <Label htmlFor="title">Title</Label>
+                            <Label htmlFor="title">{__('Title')}</Label>
                             <Input
                                 id="title"
                                 value={data.title}
@@ -159,9 +161,9 @@ export default function AdminBrandingEdit({ branding }: AdminBrandingEditProps) 
                     {/* LOGO */}
                     <section className="space-y-5 rounded-xl border border-border bg-card p-6 shadow-sm sm:p-8">
                         <header className="space-y-1">
-                            <h2 className="font-display text-base font-semibold tracking-tight">Logo</h2>
+                            <h2 className="font-display text-base font-semibold tracking-tight">{__('Logo')}</h2>
                             <p className="text-sm text-muted-foreground">
-                                PNG, JPG, SVG, or WebP. Maximum 2 MB. Transparent backgrounds work best.
+                                {__('PNG, JPG, SVG, or WebP. Maximum 2 MB. Transparent backgrounds work best.')}
                             </p>
                         </header>
 
@@ -169,7 +171,7 @@ export default function AdminBrandingEdit({ branding }: AdminBrandingEditProps) 
                             {/* Preview card */}
                             <div className="space-y-2">
                                 <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                                    {previewUrl ? 'Preview (unsaved)' : 'Current logo'}
+                                    {previewUrl ? __('Preview (unsaved)') : __('Current logo')}
                                 </div>
                                 <div
                                     className={cn(
@@ -182,13 +184,13 @@ export default function AdminBrandingEdit({ branding }: AdminBrandingEditProps) 
                                     {previewSrc ? (
                                         <img
                                             src={previewSrc}
-                                            alt="Logo preview"
+                                            alt={__('Logo preview')}
                                             className="size-3/4 object-contain"
                                         />
                                     ) : (
                                         <div className="flex flex-col items-center gap-2 text-center text-muted-foreground">
                                             <ImageIcon className="size-8 opacity-50" />
-                                            <span className="text-xs">Default mark</span>
+                                            <span className="text-xs">{__('Default mark')}</span>
                                         </div>
                                     )}
                                 </div>
@@ -201,7 +203,7 @@ export default function AdminBrandingEdit({ branding }: AdminBrandingEditProps) 
                                         className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
                                     >
                                         <Trash2 />
-                                        Remove logo
+                                        {__('Remove logo')}
                                     </Button>
                                 )}
                             </div>
@@ -230,10 +232,10 @@ export default function AdminBrandingEdit({ branding }: AdminBrandingEditProps) 
                                 />
                                 <div className="space-y-1">
                                     <div className="text-sm font-medium">
-                                        <span className="text-primary">Click to upload</span> or drag & drop
+                                        {__el(':upload or drag & drop', { upload: <span className="text-primary">{__('Click to upload')}</span> })}
                                     </div>
                                     <p className="text-xs text-muted-foreground">
-                                        PNG · JPG · SVG · WebP · up to 2 MB
+                                        {__('PNG · JPG · SVG · WebP · up to 2 MB')}
                                     </p>
                                 </div>
                                 {data.logo && (
@@ -253,7 +255,7 @@ export default function AdminBrandingEdit({ branding }: AdminBrandingEditProps) 
                                                 removeStagedLogo();
                                             }}
                                             className="ms-1 text-muted-foreground hover:text-destructive"
-                                            aria-label="Clear staged logo"
+                                            aria-label={__('Clear staged logo')}
                                         >
                                             ×
                                         </button>
@@ -280,10 +282,10 @@ export default function AdminBrandingEdit({ branding }: AdminBrandingEditProps) 
                             {processing ? (
                                 <>
                                     <Loader2 className="animate-spin" />
-                                    Saving…
+                                    {__('Saving…')}
                                 </>
                             ) : (
-                                <>Save changes</>
+                                <>{__('Save changes')}</>
                             )}
                         </Button>
                     </div>

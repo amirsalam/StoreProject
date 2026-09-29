@@ -116,6 +116,16 @@ class BillingPaymentGatewayTest extends TestCase
         $this->assertSame(0, PaymentGateway::query()->forTenant($this->tenant)->count());
     }
 
+    public function test_restricted_and_sandbox_key_variants_are_accepted(): void
+    {
+        // Stripe's claimable sandboxes issue rkcs_test_ keys; rk_ is a restricted key.
+        foreach (['rkcs_test_51Abc', 'rk_test_51Abc', 'sk_test_51Abc'] as $secret) {
+            $this->save(['publishable_key' => 'pk_test_51Abc', 'secret_key' => $secret]);
+
+            $this->assertSame($secret, PaymentGateway::query()->forTenant($this->tenant)->sole()->credentials['secret_key']);
+        }
+    }
+
     public function test_members_cannot_see_or_change_the_gateway(): void
     {
         $member = User::factory()->create();

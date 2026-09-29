@@ -7,6 +7,7 @@ import { type BreadcrumbItem, type Paginated } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { CheckCircle2, FileText, Send, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface Invoice {
     id: number;
@@ -53,6 +54,7 @@ function money(cents: number, currency = 'USD'): string {
 }
 
 export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: InvoicesIndexProps) {
+    const { __ } = useTranslate();
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
     const [search, setSearch] = useState(filters.search);
 
@@ -77,9 +79,9 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
 
     const remove = (invoice: Invoice) => {
         ask({
-            title: 'Delete this invoice?',
-            description: `Invoice ${invoice.number} will be permanently deleted. This cannot be undone.`,
-            confirmLabel: 'Delete invoice',
+            title: __('Delete this invoice?'),
+            description: __('Invoice :number will be permanently deleted. This cannot be undone.', { number: invoice.number }),
+            confirmLabel: __('Delete invoice'),
             destructive: true,
             action: (finish) => router.delete(route('workspace.invoices.destroy', invoice.id), { preserveScroll: true, onFinish: finish }),
         });
@@ -91,7 +93,7 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Workspace · Invoices" />
+            <Head title={__('Workspace · Invoices')} />
 
             <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 {flash?.success && (
@@ -102,11 +104,11 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
 
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                        <h1 className="font-display text-2xl font-semibold tracking-tight">Invoices</h1>
+                        <h1 className="font-display text-2xl font-semibold tracking-tight">{__('Invoices')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            {invoices.total} {invoices.total === 1 ? 'invoice' : 'invoices'}
+                            {invoices.total === 1 ? __('1 invoice') : __(':count invoices', { count: invoices.total })}
                             {totalOutstanding > 0 && (
-                                <> · <span className="font-medium text-foreground">{money(totalOutstanding)}</span> outstanding</>
+                                <> · <span className="font-medium text-foreground">{money(totalOutstanding)}</span> {__('outstanding')}</>
                             )}
                         </p>
                     </div>
@@ -115,7 +117,7 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
                 <form onSubmit={submitSearch} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <Input
                         type="search"
-                        placeholder="Search by number or client…"
+                        placeholder={__('Search by number or client…')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full sm:w-72"
@@ -125,12 +127,12 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
                         onChange={(e) => applyFilter({ status: e.target.value })}
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-auto"
                     >
-                        <option value="">All statuses</option>
+                        <option value="">{__('All statuses')}</option>
                         {statuses.map((s) => (
                             <option key={s.value} value={s.value}>{s.label}</option>
                         ))}
                     </select>
-                    <Button type="submit" variant="secondary">Filter</Button>
+                    <Button type="submit" variant="secondary">{__('Filter')}</Button>
                 </form>
 
                 {invoices.data.length === 0 ? (
@@ -140,13 +142,13 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
                         <table className="w-full text-sm">
                             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
                                 <tr>
-                                    <th className="px-4 py-3 font-medium">Number</th>
-                                    <th className="px-4 py-3 font-medium">Client</th>
-                                    <th className="px-4 py-3 font-medium">Status</th>
-                                    <th className="px-4 py-3 font-medium">Issued</th>
-                                    <th className="px-4 py-3 font-medium">Due</th>
-                                    <th className="px-4 py-3 font-medium text-right">Total</th>
-                                    <th className="px-4 py-3 font-medium text-right">Actions</th>
+                                    <th className="px-4 py-3 font-medium">{__('Number')}</th>
+                                    <th className="px-4 py-3 font-medium">{__('Client')}</th>
+                                    <th className="px-4 py-3 font-medium">{__('Status')}</th>
+                                    <th className="px-4 py-3 font-medium">{__('Issued')}</th>
+                                    <th className="px-4 py-3 font-medium">{__('Due')}</th>
+                                    <th className="px-4 py-3 font-medium text-right">{__('Total')}</th>
+                                    <th className="px-4 py-3 font-medium text-right">{__('Actions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y">
@@ -179,12 +181,12 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
                                             <div className="flex justify-end gap-1">
                                                 {inv.status === 'draft' && (
                                                     <Button size="sm" variant="ghost" onClick={() => markSent(inv)}>
-                                                        <Send className="size-3.5" /> Send
+                                                        <Send className="size-3.5" /> {__('Send')}
                                                     </Button>
                                                 )}
                                                 {(inv.status === 'sent' || inv.status === 'overdue') && (
                                                     <Button size="sm" variant="ghost" onClick={() => markPaid(inv)}>
-                                                        <CheckCircle2 className="size-3.5" /> Mark paid
+                                                        <CheckCircle2 className="size-3.5" /> {__('Mark paid')}
                                                     </Button>
                                                 )}
                                                 <Button
@@ -211,6 +213,7 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
 }
 
 function StatusBadge({ status }: { status: 'draft' | 'sent' | 'paid' | 'overdue' | 'void' }) {
+    const { __ } = useTranslate();
     const variant: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
         draft: 'secondary',
         sent: 'default',
@@ -220,20 +223,21 @@ function StatusBadge({ status }: { status: 'draft' | 'sent' | 'paid' | 'overdue'
     };
     return (
         <Badge variant={variant[status] ?? 'secondary'} className="capitalize">
-            {status}
+            {__(status)}
         </Badge>
     );
 }
 
 function EmptyState() {
+    const { __ } = useTranslate();
     return (
         <div className="rounded-xl border border-dashed border-border/80 bg-muted/20 px-6 py-20 text-center">
             <div className="mx-auto mb-5 inline-flex size-12 items-center justify-center rounded-full border border-border/80 bg-background text-muted-foreground">
                 <FileText className="size-5" />
             </div>
-            <h2 className="font-display text-lg font-semibold tracking-tight">No invoices yet</h2>
+            <h2 className="font-display text-lg font-semibold tracking-tight">{__('No invoices yet')}</h2>
             <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                Bill your clients for completed work. Invoices live alongside your projects.
+                {__('Bill your clients for completed work. Invoices live alongside your projects.')}
             </p>
         </div>
     );

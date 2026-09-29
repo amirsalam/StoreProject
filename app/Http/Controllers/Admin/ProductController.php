@@ -70,7 +70,7 @@ class ProductController extends Controller
 
         return redirect()
             ->route('admin.products.index')
-            ->with('success', "Product \"{$product->title}\" created.");
+            ->with('success', __('Product ":title" created.', ['title' => $product->title]));
     }
 
     public function edit(Product $product): Response
@@ -89,7 +89,7 @@ class ProductController extends Controller
 
         return redirect()
             ->route('admin.products.index')
-            ->with('success', "Product \"{$product->title}\" updated.");
+            ->with('success', __('Product ":title" updated.', ['title' => $product->title]));
     }
 
     public function destroy(Product $product): RedirectResponse
@@ -105,14 +105,14 @@ class ProductController extends Controller
 
             return redirect()
                 ->route('admin.products.index')
-                ->with('success', "Product \"{$title}\" has been sold, so it was archived instead of deleted — it's hidden from the store and buyers keep their access.");
+                ->with('success', __('Product ":title" has been sold, so it was archived instead of deleted — it\'s hidden from the store and buyers keep their access.', ['title' => $title]));
         }
 
         $product->delete();
 
         return redirect()
             ->route('admin.products.index')
-            ->with('success', "Product \"{$title}\" deleted.");
+            ->with('success', __('Product ":title" deleted.', ['title' => $title]));
     }
 
     /**
@@ -121,9 +121,9 @@ class ProductController extends Controller
     private function statuses(): array
     {
         return [
-            ['value' => Product::STATUS_DRAFT, 'label' => 'Draft'],
-            ['value' => Product::STATUS_PUBLISHED, 'label' => 'Published'],
-            ['value' => Product::STATUS_ARCHIVED, 'label' => 'Archived'],
+            ['value' => Product::STATUS_DRAFT, 'label' => __('Draft')],
+            ['value' => Product::STATUS_PUBLISHED, 'label' => __('Published')],
+            ['value' => Product::STATUS_ARCHIVED, 'label' => __('Archived')],
         ];
     }
 
@@ -133,10 +133,10 @@ class ProductController extends Controller
     private function types(): array
     {
         return [
-            ['value' => Product::TYPE_DIGITAL_DOWNLOAD, 'label' => 'Digital download'],
-            ['value' => Product::TYPE_SUBSCRIPTION, 'label' => 'Subscription'],
-            ['value' => Product::TYPE_API_ACCESS, 'label' => 'API access'],
-            ['value' => Product::TYPE_LICENSE, 'label' => 'License'],
+            ['value' => Product::TYPE_DIGITAL_DOWNLOAD, 'label' => __('Digital download')],
+            ['value' => Product::TYPE_SUBSCRIPTION, 'label' => __('Subscription')],
+            ['value' => Product::TYPE_API_ACCESS, 'label' => __('API access')],
+            ['value' => Product::TYPE_LICENSE, 'label' => __('License')],
         ];
     }
 

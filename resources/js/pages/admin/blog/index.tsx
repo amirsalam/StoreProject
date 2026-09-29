@@ -7,6 +7,7 @@ import { type BlogPost, type BreadcrumbItem, type Paginated } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { ExternalLink, Pencil, Plus, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface Option {
     value: string;
@@ -30,6 +31,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function AdminBlogIndex({ posts, filters, statuses }: AdminBlogIndexProps) {
+    const { __, __el } = useTranslate();
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
     const [search, setSearch] = useState(filters.search);
     const { delete: destroy, processing } = useForm({});
@@ -63,7 +65,7 @@ export default function AdminBlogIndex({ posts, filters, statuses }: AdminBlogIn
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Admin · Blog" />
+            <Head title={__('Admin · Blog')} />
 
             <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 {flash?.success && (
@@ -74,14 +76,14 @@ export default function AdminBlogIndex({ posts, filters, statuses }: AdminBlogIn
 
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Blog</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{__('Blog')}</h1>
                         <p className="text-muted-foreground text-sm">
-                            {posts.total} {posts.total === 1 ? 'post' : 'posts'} total
+                            {posts.total === 1 ? __('1 post total') : __(':count posts total', { count: posts.total })}
                         </p>
                     </div>
                     <Button asChild>
                         <Link href={route('admin.blog-posts.create')}>
-                            <Plus className="mr-1" /> New post
+                            <Plus className="mr-1" /> {__('New post')}
                         </Link>
                     </Button>
                 </div>
@@ -89,7 +91,7 @@ export default function AdminBlogIndex({ posts, filters, statuses }: AdminBlogIn
                 <form onSubmit={submitSearch} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <Input
                         type="search"
-                        placeholder="Search by title or slug…"
+                        placeholder={__('Search by title or slug…')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full sm:w-64"
@@ -99,7 +101,7 @@ export default function AdminBlogIndex({ posts, filters, statuses }: AdminBlogIn
                         onChange={(e) => applyFilter({ status: e.target.value })}
                         className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm sm:w-auto"
                     >
-                        <option value="">All statuses</option>
+                        <option value="">{__('All statuses')}</option>
                         {statuses.map((s) => (
                             <option key={s.value} value={s.value}>
                                 {s.label}
@@ -107,7 +109,7 @@ export default function AdminBlogIndex({ posts, filters, statuses }: AdminBlogIn
                         ))}
                     </select>
                     <Button type="submit" variant="secondary">
-                        Filter
+                        {__('Filter')}
                     </Button>
                 </form>
 
@@ -116,19 +118,19 @@ export default function AdminBlogIndex({ posts, filters, statuses }: AdminBlogIn
                     <table className="w-full text-sm">
                         <thead className="bg-muted/50 text-muted-foreground text-left text-xs tracking-wider uppercase">
                             <tr>
-                                <th className="px-4 py-3 font-medium">Title</th>
-                                <th className="px-4 py-3 font-medium">Author</th>
-                                <th className="px-4 py-3 font-medium">Status</th>
-                                <th className="px-4 py-3 font-medium">Published</th>
-                                <th className="px-4 py-3 font-medium">Views</th>
-                                <th className="px-4 py-3 text-right font-medium">Actions</th>
+                                <th className="px-4 py-3 font-medium">{__('Title')}</th>
+                                <th className="px-4 py-3 font-medium">{__('Author')}</th>
+                                <th className="px-4 py-3 font-medium">{__('Status')}</th>
+                                <th className="px-4 py-3 font-medium">{__('Published')}</th>
+                                <th className="px-4 py-3 font-medium">{__('Views')}</th>
+                                <th className="px-4 py-3 text-right font-medium">{__('Actions')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y">
                             {posts.data.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="text-muted-foreground px-4 py-12 text-center">
-                                        No posts match these filters.
+                                        {__('No posts match these filters.')}
                                     </td>
                                 </tr>
                             ) : (
@@ -158,7 +160,7 @@ export default function AdminBlogIndex({ posts, filters, statuses }: AdminBlogIn
                 <div className="space-y-3 md:hidden">
                     {posts.data.length === 0 ? (
                         <div className="bg-card text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
-                            No posts match these filters.
+                            {__('No posts match these filters.')}
                         </div>
                     ) : (
                         posts.data.map((post) => (
@@ -171,7 +173,7 @@ export default function AdminBlogIndex({ posts, filters, statuses }: AdminBlogIn
                                     <StatusBadge status={post.status} />
                                 </div>
                                 <div className="text-muted-foreground text-xs">
-                                    {post.author?.name ?? '—'} · {formatDate(post.published_at)} · {post.views_count} views
+                                    {post.author?.name ?? '—'} · {formatDate(post.published_at)} · {__(':count views', { count: post.views_count })}
                                 </div>
                                 <RowActions post={post} onDelete={handleDelete} processing={processing} />
                             </div>
@@ -208,14 +210,15 @@ export default function AdminBlogIndex({ posts, filters, statuses }: AdminBlogIn
             <ConfirmDialog
                 open={pendingDelete !== null}
                 onOpenChange={(open) => !open && setPendingDelete(null)}
-                title="Delete this post?"
+                title={__('Delete this post?')}
                 description={
                     <>
-                        <strong className="text-foreground">{pendingDelete?.title}</strong> will be permanently deleted and disappear from the
-                        blog. This cannot be undone.
+                        {__el(':title will be permanently deleted and disappear from the blog. This cannot be undone.', {
+                            title: <strong className="text-foreground">{pendingDelete?.title}</strong>,
+                        })}
                     </>
                 }
-                confirmLabel="Delete"
+                confirmLabel={__('Delete')}
                 destructive
                 processing={processing}
                 onConfirm={confirmDelete}
@@ -225,16 +228,17 @@ export default function AdminBlogIndex({ posts, filters, statuses }: AdminBlogIn
 }
 
 function RowActions({ post, onDelete, processing }: { post: BlogPost; onDelete: (post: BlogPost) => void; processing: boolean }) {
+    const { __ } = useTranslate();
     return (
         <div className="flex justify-end gap-1">
             {post.status === 'published' && (
-                <Button asChild size="sm" variant="ghost" title="View on site">
+                <Button asChild size="sm" variant="ghost" title={__('View on site')}>
                     <a href={route('blog.show', post.slug)} target="_blank" rel="noopener noreferrer">
                         <ExternalLink />
                     </a>
                 </Button>
             )}
-            <Button asChild size="sm" variant="ghost" title="Edit">
+            <Button asChild size="sm" variant="ghost" title={__('Edit')}>
                 <Link href={route('admin.blog-posts.edit', post.id)}>
                     <Pencil />
                 </Link>
@@ -244,7 +248,7 @@ function RowActions({ post, onDelete, processing }: { post: BlogPost; onDelete: 
                 variant="ghost"
                 onClick={() => onDelete(post)}
                 disabled={processing}
-                title="Delete"
+                title={__('Delete')}
                 className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
                 <Trash2 />
@@ -254,7 +258,8 @@ function RowActions({ post, onDelete, processing }: { post: BlogPost; onDelete: 
 }
 
 function StatusBadge({ status }: { status: string }) {
-    return <Badge variant={status === 'published' ? 'default' : 'secondary'}>{status === 'published' ? 'Published' : 'Draft'}</Badge>;
+    const { __ } = useTranslate();
+    return <Badge variant={status === 'published' ? 'default' : 'secondary'}>{status === 'published' ? __('Published') : __('Draft')}</Badge>;
 }
 
 function formatDate(value: string | null): string {

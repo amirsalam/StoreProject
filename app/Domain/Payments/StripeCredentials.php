@@ -18,6 +18,15 @@ use App\Tenancy\TenantContext;
  */
 class StripeCredentials
 {
+    /** pk_test_… / pk_live_… */
+    public const PUBLISHABLE_KEY_PATTERN = '/^pk_(test|live)_[A-Za-z0-9]+$/';
+
+    /**
+     * Secret (sk_) or restricted key — rk_, and newer variants such as the
+     * rkcs_ keys Stripe issues for claimable sandboxes. Group 1 is the mode.
+     */
+    public const SECRET_KEY_PATTERN = '/^(?:sk|rk[a-z]*)_(test|live)_[A-Za-z0-9]+$/';
+
     public function __construct(
         private readonly TenantContext $tenants,
     ) {}

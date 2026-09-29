@@ -19,9 +19,9 @@ use Laravel\Sanctum\PersonalAccessToken;
 class ApiTokenController extends Controller
 {
     public const SUPPORTED_ABILITIES = [
-        'read'   => 'Read your storefront data',
-        'write'  => 'Create / update products and orders',
-        'admin'  => 'Full admin access (treat as a password)',
+        'read' => 'Read your storefront data',
+        'write' => 'Create / update products and orders',
+        'admin' => 'Full admin access (treat as a password)',
     ];
 
     public function index(Request $request): Response
@@ -39,7 +39,7 @@ class ApiTokenController extends Controller
                     'last_used_at' => $t->last_used_at,
                     'created_at' => $t->created_at,
                 ]),
-            'abilities' => self::SUPPORTED_ABILITIES,
+            'abilities' => array_map(fn (string $label) => __($label), self::SUPPORTED_ABILITIES),
             // Surfaced once via flash on creation, then forgotten.
             'newToken' => session('newToken'),
             'newTokenName' => session('newTokenName'),
@@ -68,7 +68,7 @@ class ApiTokenController extends Controller
             ->route('api-tokens.index')
             ->with('newToken', $token->plainTextToken)
             ->with('newTokenName', $data['name'])
-            ->with('success', 'API token created. Copy it now — you won\'t see it again.');
+            ->with('success', __('API token created. Copy it now — you won\'t see it again.'));
     }
 
     public function destroy(Request $request, int $tokenId): RedirectResponse
@@ -79,6 +79,6 @@ class ApiTokenController extends Controller
 
         ActivityLog::record('api_token.revoked', $request->user(), ['name' => $name]);
 
-        return back()->with('success', "Token \"{$name}\" revoked.");
+        return back()->with('success', __('Token ":name" revoked.', ['name' => $name]));
     }
 }

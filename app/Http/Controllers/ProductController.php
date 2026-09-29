@@ -55,10 +55,10 @@ class ProductController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'slug', 'parent_id']),
             'types' => [
-                ['value' => Product::TYPE_DIGITAL_DOWNLOAD, 'label' => 'Digital download'],
-                ['value' => Product::TYPE_SUBSCRIPTION, 'label' => 'Subscription'],
-                ['value' => Product::TYPE_API_ACCESS, 'label' => 'API access'],
-                ['value' => Product::TYPE_LICENSE, 'label' => 'License'],
+                ['value' => Product::TYPE_DIGITAL_DOWNLOAD, 'label' => __('Digital download')],
+                ['value' => Product::TYPE_SUBSCRIPTION, 'label' => __('Subscription')],
+                ['value' => Product::TYPE_API_ACCESS, 'label' => __('API access')],
+                ['value' => Product::TYPE_LICENSE, 'label' => __('License')],
             ],
             'filters' => $filters,
         ]);

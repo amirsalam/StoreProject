@@ -3,6 +3,8 @@
 use App\Http\Controllers\Admin\BlogPostController as AdminBlogPostController;
 use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
+use App\Http\Controllers\Admin\MailSettingsController as AdminMailSettingsController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PaymentGatewayController as AdminPaymentGatewayController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -13,6 +15,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\Payments\CmiController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Resources\ApiReferenceController;
 use App\Http\Controllers\Resources\StatusController;
@@ -84,6 +87,16 @@ Route::middleware(['auth'])->group(function () {
         ->name('checkout.confirmation');
 });
 
+// CMI hosted payment (Morocco). The redirect needs the buyer's session; the
+// return URLs and callback are POSTed by CMI, so they are CSRF-exempt (see
+// bootstrap/app.php) and verified by the Store Key hash instead of the session.
+Route::get('checkout/{order:order_number}/cmi', [CmiController::class, 'redirect'])
+    ->middleware('auth')
+    ->name('checkout.cmi.redirect');
+Route::match(['get', 'post'], 'checkout/{order:order_number}/cmi/ok', [CmiController::class, 'ok'])->name('checkout.cmi.ok');
+Route::match(['get', 'post'], 'checkout/{order:order_number}/cmi/fail', [CmiController::class, 'fail'])->name('checkout.cmi.fail');
+Route::post('payments/cmi/callback', [CmiController::class, 'callback'])->name('payments.cmi.callback');
+
 Route::middleware(['auth'])
     ->prefix('workspace')
     ->name('workspace.')
@@ -136,6 +149,12 @@ Route::middleware(['auth', 'admin'])
     ->name('admin.')
     ->group(function () {
         Route::resource('products', AdminProductController::class)->except(['show']);
+        Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
+
+        // Outgoing email (SMTP) — replaces MAIL_* in .env.
+        Route::get('mail', [AdminMailSettingsController::class, 'edit'])->name('mail.edit');
+        Route::put('mail', [AdminMailSettingsController::class, 'update'])->name('mail.update');
+        Route::post('mail/test', [AdminMailSettingsController::class, 'test'])->name('mail.test');
         Route::resource('blog-posts', AdminBlogPostController::class)->except(['show']);
 
         // Contact inbox.

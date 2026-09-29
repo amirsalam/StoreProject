@@ -2,18 +2,24 @@
 
 namespace App\Domain\Marketplace;
 
+use App\Domain\Billing\MissingStripeKeysException;
 use App\Domain\Billing\StripeGateway;
+use App\Domain\Payments\Cmi\CmiGateway;
 use App\Domain\Payments\OrderPaymentProcessor;
 use App\Events\PaymentCompleted;
 use App\Listeners\FulfillOrder;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\PaymentGateway;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\CartService;
 use App\Support\Money;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Stripe\Exception\ApiErrorException;
 
 /**
  * Turns the session cart into a persisted order + a pending payment, and
@@ -37,9 +43,14 @@ class CheckoutService
 {
     private const CURRENCY = 'USD';
 
+    public const METHOD_STRIPE = 'stripe';
+
+    public const METHOD_CMI = 'cmi';
+
     public function __construct(
         private readonly CartService $cart,
         private readonly StripeGateway $gateway,
+        private readonly CmiGateway $cmi,
     ) {}
 
     /**
@@ -48,7 +59,7 @@ class CheckoutService
      * @throws EmptyCartException
      * @throws InvalidCouponException
      */
-    public function placeOrder(User $user, array $billing, ?string $couponCode = null): CheckoutResult
+    public function placeOrder(User $user, array $billing, ?string $couponCode = null, string $method = self::METHOD_STRIPE): CheckoutResult
     {
         $lineItems = $this->cart->lineItems();
 
@@ -60,62 +71,32 @@ class CheckoutService
         [$coupon, $discount] = $this->resolveCoupon($couponCode, $user, $subtotal);
         $total = max(0.0, round($subtotal - $discount, 2));
 
-        $order = DB::transaction(function () use ($user, $billing, $lineItems, $subtotal, $discount, $total, $coupon) {
-            $order = Order::create([
-                'user_id' => $user->id,
-                'coupon_id' => $coupon?->id,
-                'subtotal' => $subtotal,
-                'discount' => $discount,
-                'tax' => 0,
-                'total' => $total,
-                'currency' => self::CURRENCY,
-                'status' => Order::STATUS_PENDING,
-                'payment_method' => 'stripe',
-                'billing_name' => $billing['billing_name'],
-                'billing_email' => $billing['billing_email'],
-                'billing_country' => $billing['billing_country'] ?? null,
-                'billing_address' => $billing['billing_address'] ?? null,
-                'notes' => $billing['notes'] ?? null,
-            ]);
+        // CMI: the buyer pays on CMI's hosted page after this request, so all
+        // we need now is a configured gateway to send them to.
+        $cmiGateway = null;
+        if ($method === self::METHOD_CMI) {
+            $cmiGateway = $this->cmi->gateway()
+                ?? throw new PaymentUnavailableException(__('messages.checkout.payments_unavailable'));
+        }
 
-            foreach ($lineItems as $row) {
-                /** @var Product $product */
-                $product = $row['product'];
+        // Order, items, coupon redemption, payment row and the Stripe intent
+        // are one unit: if Stripe refuses (bad keys, outage) nothing is left
+        // behind — no orphan pending order, no burnt coupon use.
+        try {
+            [$order, $payment, $intent] = DB::transaction(
+                fn () => $this->createOrderWithIntent($user, $billing, $lineItems, $subtotal, $discount, $total, $coupon, $cmiGateway),
+            );
+        } catch (ApiErrorException|MissingStripeKeysException $e) {
+            report($e);
 
-                $order->items()->create([
-                    'product_id' => $product->id,
-                    'product_title' => $product->title,
-                    'product_type' => $product->type,
-                    'quantity' => $row['quantity'],
-                    'unit_price' => $row['unit_price'],
-                    'total_price' => $row['line_total'],
-                ]);
-            }
-
-            if ($coupon) {
-                // Atomic increment so concurrent redemptions can't oversell a
-                // limited coupon past max_uses.
-                $coupon->increment('used_count');
-            }
-
-            return $order;
-        });
-
-        // The pending payment the webhook processor will find by
-        // gateway_payment_id. tenant_id is auto-filled by BelongsToTenant.
-        $payment = Payment::create([
-            'order_id' => $order->id,
-            'user_id' => $user->id,
-            'gateway' => 'stripe',
-            'amount' => $total,
-            'currency' => self::CURRENCY,
-            'status' => Payment::STATUS_PENDING,
-            'payment_method' => 'card',
-        ]);
+            throw new PaymentUnavailableException(__('messages.checkout.payments_unavailable'), previous: $e);
+        }
 
         // Fully-discounted ($0) orders have nothing to charge — settle them
         // immediately and let fulfillment fan out, rather than opening a
         // Stripe intent for zero.
+        // (Decided on the amount, not a missing Stripe intent: CMI orders have
+        // no intent either, and must never be settled for free.)
         if ($total <= 0) {
             $this->settleFreeOrder($order, $payment);
             $this->cart->clear();
@@ -123,6 +104,93 @@ class CheckoutService
             return new CheckoutResult($order->refresh(), null);
         }
 
+        $this->cart->clear();
+
+        if ($cmiGateway) {
+            // The browser is sent on to CMI's hosted payment page.
+            return new CheckoutResult($order, null, route('checkout.cmi.redirect', $order->order_number));
+        }
+
+        return new CheckoutResult($order, $intent['client_secret']);
+    }
+
+    /**
+     * @param  Collection<int, array<string, mixed>>  $lineItems
+     * @param  array<string, mixed>  $billing
+     * @return array{0: Order, 1: Payment, 2: array{id: string, client_secret: string|null, customer: string|null}|null}
+     */
+    private function createOrderWithIntent(User $user, array $billing, Collection $lineItems, float $subtotal, float $discount, float $total, ?Coupon $coupon, ?PaymentGateway $cmiGateway = null): array
+    {
+        $order = Order::create([
+            'user_id' => $user->id,
+            'coupon_id' => $coupon?->id,
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'tax' => 0,
+            'total' => $total,
+            'currency' => self::CURRENCY,
+            'status' => Order::STATUS_PENDING,
+            'payment_method' => $cmiGateway ? self::METHOD_CMI : self::METHOD_STRIPE,
+            'billing_name' => $billing['billing_name'],
+            'billing_email' => $billing['billing_email'],
+            'billing_country' => $billing['billing_country'] ?? null,
+            'billing_address' => $billing['billing_address'] ?? null,
+            'notes' => $billing['notes'] ?? null,
+        ]);
+
+        foreach ($lineItems as $row) {
+            /** @var Product $product */
+            $product = $row['product'];
+
+            $order->items()->create([
+                'product_id' => $product->id,
+                'product_title' => $product->title,
+                'product_type' => $product->type,
+                'quantity' => $row['quantity'],
+                'unit_price' => $row['unit_price'],
+                'total_price' => $row['line_total'],
+            ]);
+        }
+
+        if ($coupon) {
+            // Atomic increment so concurrent redemptions can't oversell a
+            // limited coupon past max_uses.
+            $coupon->increment('used_count');
+        }
+
+        // The pending payment the webhook processor will find by
+        // gateway_payment_id. tenant_id is auto-filled by BelongsToTenant.
+        $payment = Payment::create([
+            'order_id' => $order->id,
+            'user_id' => $user->id,
+            'gateway' => $cmiGateway ? self::METHOD_CMI : self::METHOD_STRIPE,
+            'amount' => $total,
+            'currency' => self::CURRENCY,
+            'status' => Payment::STATUS_PENDING,
+            'payment_method' => 'card',
+        ]);
+
+        if ($total <= 0) {
+            return [$order, $payment, null];
+        }
+
+        if ($cmiGateway) {
+            // CMI identifies the payment by our order number (oid). The MAD
+            // amount and the rate used are recorded so the callback can be
+            // checked against exactly what the buyer was asked to pay.
+            $payment->update([
+                'gateway_payment_id' => $order->order_number,
+                'raw_response' => ['cmi' => [
+                    'amount_mad' => $this->cmi->madAmount($total, $cmiGateway),
+                    'rate' => $this->cmi->rate($cmiGateway),
+                ]],
+            ]);
+
+            return [$order, $payment, null];
+        }
+
+        // Inside the transaction on purpose: if Stripe throws, the order,
+        // items, coupon use and payment above are rolled back.
         $intent = $this->gateway->createPaymentIntent(
             Money::toCents((string) $total),
             self::CURRENCY,
@@ -134,9 +202,7 @@ class CheckoutService
             'gateway_customer_id' => $intent['customer'],
         ]);
 
-        $this->cart->clear();
-
-        return new CheckoutResult($order, $intent['client_secret']);
+        return [$order, $payment, $intent];
     }
 
     /**
@@ -156,14 +222,28 @@ class CheckoutService
         // Coupon is BelongsToTenant — this lookup is tenant-scoped.
         $coupon = Coupon::query()->where('code', $code)->first();
 
-        if (! $coupon || ! $coupon->isUsable()) {
-            throw new InvalidCouponException("That coupon code isn't valid.");
+        if (! $coupon) {
+            throw new InvalidCouponException(__('messages.checkout.coupon_errors.invalid'));
+        }
+
+        // Say why, so a buyer isn't left guessing. A disabled coupon still
+        // gets the generic message — no need to confirm the code exists.
+        $date = fn (?\DateTimeInterface $d) => $d ? Carbon::instance($d)->locale(app()->getLocale())->isoFormat('LL') : '';
+        $reason = match ($coupon->unusableReason()) {
+            Coupon::UNUSABLE_INACTIVE => __('messages.checkout.coupon_errors.invalid'),
+            Coupon::UNUSABLE_NOT_STARTED => __('messages.checkout.coupon_errors.not_started', ['date' => $date($coupon->starts_at)]),
+            Coupon::UNUSABLE_EXPIRED => __('messages.checkout.coupon_errors.expired', ['date' => $date($coupon->expires_at)]),
+            Coupon::UNUSABLE_USED_UP => __('messages.checkout.coupon_errors.used_up'),
+            default => null,
+        };
+        if ($reason !== null) {
+            throw new InvalidCouponException($reason);
         }
 
         if ($coupon->min_order_amount !== null && $subtotal < (float) $coupon->min_order_amount) {
-            throw new InvalidCouponException(
-                'Your order does not meet the minimum for this coupon.'
-            );
+            throw new InvalidCouponException(__('messages.checkout.coupon_errors.min_order', [
+                'amount' => '$'.number_format((float) $coupon->min_order_amount, 2),
+            ]));
         }
 
         if ($coupon->max_uses_per_user !== null) {
@@ -173,7 +253,7 @@ class CheckoutService
                 ->count();
 
             if ($usedByUser >= $coupon->max_uses_per_user) {
-                throw new InvalidCouponException("You've already used this coupon.");
+                throw new InvalidCouponException(__('messages.checkout.coupon_errors.already_used'));
             }
         }
 

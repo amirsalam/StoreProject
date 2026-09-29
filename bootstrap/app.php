@@ -37,6 +37,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // signature verification in the controller is what protects it.
         $middleware->validateCsrfTokens(except: [
             'webhooks/stripe',
+            // CMI posts the payment result back from its own site; each of
+            // these is verified with the Store Key hash (CmiPayments).
+            'payments/cmi/callback',
+            'checkout/*/cmi/ok',
+            'checkout/*/cmi/fail',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

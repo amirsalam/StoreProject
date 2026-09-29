@@ -7,6 +7,7 @@ import { type BreadcrumbItem, type Paginated, type PaymentGatewaySummary } from 
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Power, Star, TestTube2, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface Option {
     value: string;
@@ -31,6 +32,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
+    const { __ } = useTranslate();
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
     const [search, setSearch] = useState(filters.search);
     const { delete: destroy, post, processing } = useForm({});
@@ -57,9 +59,9 @@ export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
 
     const handleDelete = (g: PaymentGatewaySummary) => {
         ask({
-            title: 'Delete this payment gateway?',
-            description: `"${g.display_name}" and its saved credentials will be deleted. Checkout stops using it immediately. This cannot be undone.`,
-            confirmLabel: 'Delete',
+            title: __('Delete this payment gateway?'),
+            description: __('":name" and its saved credentials will be deleted. Checkout stops using it immediately. This cannot be undone.', { name: g.display_name }),
+            confirmLabel: __('Delete'),
             destructive: true,
             action: (finish) => destroy(route('admin.payment-gateways.destroy', g.id), { preserveScroll: true, onFinish: finish }),
         });
@@ -76,7 +78,7 @@ export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Admin · Payment Gateways" />
+            <Head title={__('Admin · Payment Gateways')} />
 
             <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 {flash?.success && (
@@ -92,14 +94,14 @@ export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
 
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Payment Gateways</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{__('Payment Gateways')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            {gateways.total} {gateways.total === 1 ? 'gateway' : 'gateways'} configured
+                            {gateways.total === 1 ? __('1 gateway configured') : __(':count gateways configured', { count: gateways.total })}
                         </p>
                     </div>
                     <Button asChild>
                         <Link href={route('admin.payment-gateways.create')}>
-                            <Plus className="mr-1" /> New gateway
+                            <Plus className="mr-1" /> {__('New gateway')}
                         </Link>
                     </Button>
                 </div>
@@ -107,7 +109,7 @@ export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
                 <form onSubmit={submitSearch} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <Input
                         type="search"
-                        placeholder="Search by name or provider…"
+                        placeholder={__('Search by name or provider…')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full sm:w-64"
@@ -117,21 +119,21 @@ export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
                         onChange={(e) => applyFilter({ status: e.target.value })}
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-auto"
                     >
-                        <option value="">All statuses</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
+                        <option value="">{__('All statuses')}</option>
+                        <option value="active">{__('Active')}</option>
+                        <option value="inactive">{__('Inactive')}</option>
                     </select>
                     <select
                         value={filters.environment}
                         onChange={(e) => applyFilter({ environment: e.target.value })}
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-auto"
                     >
-                        <option value="">All environments</option>
-                        <option value="sandbox">Sandbox</option>
-                        <option value="production">Production</option>
+                        <option value="">{__('All environments')}</option>
+                        <option value="sandbox">{__('Sandbox')}</option>
+                        <option value="production">{__('Production')}</option>
                     </select>
                     <Button type="submit" variant="secondary">
-                        Filter
+                        {__('Filter')}
                     </Button>
                 </form>
 
@@ -140,18 +142,18 @@ export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
                     <table className="w-full text-sm">
                         <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
                             <tr>
-                                <th className="px-4 py-3 font-medium">Gateway</th>
-                                <th className="px-4 py-3 font-medium">Environment</th>
-                                <th className="px-4 py-3 font-medium">Status</th>
-                                <th className="px-4 py-3 font-medium">Fees</th>
-                                <th className="px-4 py-3 font-medium text-right">Actions</th>
+                                <th className="px-4 py-3 font-medium">{__('Gateway')}</th>
+                                <th className="px-4 py-3 font-medium">{__('Environment')}</th>
+                                <th className="px-4 py-3 font-medium">{__('Status')}</th>
+                                <th className="px-4 py-3 font-medium">{__('Fees')}</th>
+                                <th className="px-4 py-3 font-medium text-right">{__('Actions')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y">
                             {gateways.data.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
-                                        No gateways yet. Add your first payment provider.
+                                        {__('No gateways yet. Add your first payment provider.')}
                                     </td>
                                 </tr>
                             ) : (
@@ -163,7 +165,7 @@ export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
                                                 {g.display_name}
                                                 {g.is_default && (
                                                     <Badge variant="default" className="gap-1">
-                                                        <Star className="size-3" /> Default
+                                                        <Star className="size-3" /> {__('Default')}
                                                     </Badge>
                                                 )}
                                             </div>
@@ -180,16 +182,16 @@ export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex justify-end gap-1">
-                                                <IconButton title="Test connection" onClick={() => test(g)} disabled={processing}>
+                                                <IconButton title={__('Test connection')} onClick={() => test(g)} disabled={processing}>
                                                     <TestTube2 />
                                                 </IconButton>
                                                 {!g.is_default && (
-                                                    <IconButton title="Set as default" onClick={() => makeDefault(g)} disabled={processing}>
+                                                    <IconButton title={__('Set as default')} onClick={() => makeDefault(g)} disabled={processing}>
                                                         <Star />
                                                     </IconButton>
                                                 )}
                                                 <IconButton
-                                                    title={g.is_active ? 'Disable' : 'Enable'}
+                                                    title={g.is_active ? __('Disable') : __('Enable')}
                                                     onClick={() => toggle(g)}
                                                     disabled={processing}
                                                     className={g.is_active ? 'text-emerald-600' : ''}
@@ -223,7 +225,7 @@ export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
                 <div className="space-y-3 md:hidden">
                     {gateways.data.length === 0 ? (
                         <div className="rounded-lg border border-dashed bg-card p-8 text-center text-sm text-muted-foreground">
-                            No gateways yet. Add your first payment provider.
+                            {__('No gateways yet. Add your first payment provider.')}
                         </div>
                     ) : (
                         gateways.data.map((g) => (
@@ -242,7 +244,7 @@ export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
                                     <EnvBadge env={g.environment} />
                                     {g.is_default && (
                                         <Badge variant="default" className="gap-1">
-                                            <Star className="size-3" /> Default
+                                            <Star className="size-3" /> {__('Default')}
                                         </Badge>
                                     )}
                                     <span className="text-muted-foreground">
@@ -251,19 +253,19 @@ export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
                                 </div>
                                 <div className="mt-3 flex flex-wrap items-center justify-end gap-1 border-t pt-3">
                                     <Button size="sm" variant="ghost" onClick={() => test(g)} disabled={processing} className="h-9">
-                                        <TestTube2 /> <span className="ms-1">Test</span>
+                                        <TestTube2 /> <span className="ms-1">{__('Test')}</span>
                                     </Button>
                                     {!g.is_default && (
                                         <Button size="sm" variant="ghost" onClick={() => makeDefault(g)} disabled={processing} className="h-9">
-                                            <Star /> <span className="ms-1">Default</span>
+                                            <Star /> <span className="ms-1">{__('Default')}</span>
                                         </Button>
                                     )}
                                     <Button size="sm" variant="ghost" onClick={() => toggle(g)} disabled={processing} className="h-9">
-                                        <Power /> <span className="ms-1">{g.is_active ? 'Disable' : 'Enable'}</span>
+                                        <Power /> <span className="ms-1">{g.is_active ? __('Disable') : __('Enable')}</span>
                                     </Button>
                                     <Button asChild size="sm" variant="ghost" className="h-9">
                                         <Link href={route('admin.payment-gateways.edit', g.id)}>
-                                            <Pencil /> <span className="ms-1">Edit</span>
+                                            <Pencil /> <span className="ms-1">{__('Edit')}</span>
                                         </Link>
                                     </Button>
                                     <Button
@@ -273,7 +275,7 @@ export default function PaymentGatewaysIndex({ gateways, filters }: Props) {
                                         disabled={processing}
                                         className="h-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
                                     >
-                                        <Trash2 /> <span className="ms-1">Delete</span>
+                                        <Trash2 /> <span className="ms-1">{__('Delete')}</span>
                                     </Button>
                                 </div>
                             </div>
@@ -316,15 +318,17 @@ function IconButton({
 }
 
 function StatusBadge({ active }: { active: boolean }) {
+    const { __ } = useTranslate();
     return (
-        <Badge variant={active ? 'default' : 'secondary'}>{active ? 'Active' : 'Inactive'}</Badge>
+        <Badge variant={active ? 'default' : 'secondary'}>{active ? __('Active') : __('Inactive')}</Badge>
     );
 }
 
 function EnvBadge({ env }: { env: string }) {
+    const { __ } = useTranslate();
     return (
         <Badge variant={env === 'production' ? 'default' : 'outline'} className="capitalize">
-            {env === 'production' ? 'Live' : 'Sandbox'}
+            {env === 'production' ? __('Live') : __('Sandbox')}
         </Badge>
     );
 }

@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { Link } from '@inertiajs/react';
 import { ArrowRight, ArrowUpRight, TrendingDown, TrendingUp } from 'lucide-react';
 import * as React from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 /**
  * Widget primitives shared by every role's dashboard.
@@ -126,7 +127,8 @@ function StatCard({ widget }: { widget: StatWidget }) {
 }
 
 function ChartCard({ widget }: { widget: ChartWidget }) {
-    const series = widget.data.series[0]?.points ?? [];
+    const { __ } = useTranslate();
+    const series = (widget.data.series[0]?.points ?? []).map(([date, value]) => [date, Number(value)] as [string, number]);
     const max = Math.max(1, ...series.map(([, v]) => v));
     return (
         <Card className="col-span-full lg:col-span-2">
@@ -135,11 +137,12 @@ function ChartCard({ widget }: { widget: ChartWidget }) {
                 {widget.meta?.cta && <CardCta cta={widget.meta.cta} />}
             </div>
             {series.length === 0 ? (
-                <EmptyHint>No data yet — run `php artisan metrics:rollup` to populate.</EmptyHint>
+                <EmptyHint>{__('No data yet.')}</EmptyHint>
             ) : (
                 <div className="flex h-32 items-end gap-1 sm:h-40">
                     {series.map(([date, value], i) => (
-                        <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                        // h-full + justify-end: the bar's percentage height needs a sized parent.
+                        <div key={i} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
                             <div
                                 className="w-full rounded-sm bg-gradient-to-t from-primary/60 to-primary transition-all hover:from-primary hover:to-fuchsia-500"
                                 style={{ height: `${Math.max(2, (value / max) * 100)}%` }}
@@ -154,6 +157,7 @@ function ChartCard({ widget }: { widget: ChartWidget }) {
 }
 
 function TableCard({ widget }: { widget: TableWidget }) {
+    const { __ } = useTranslate();
     const { columns, rows } = widget.data;
     return (
         <Card className="col-span-full">
@@ -162,7 +166,7 @@ function TableCard({ widget }: { widget: TableWidget }) {
                 {widget.meta?.cta && <CardCta cta={widget.meta.cta} />}
             </div>
             {rows.length === 0 ? (
-                <EmptyHint>No rows yet.</EmptyHint>
+                <EmptyHint>{__('Nothing here yet.')}</EmptyHint>
             ) : (
                 <div className="-mx-2 overflow-x-auto sm:mx-0">
                     <table className="w-full text-sm">
@@ -195,7 +199,7 @@ function TableCard({ widget }: { widget: TableWidget }) {
                                                     c.format === 'money' ? 'font-medium tabular-nums' : '',
                                                 )}
                                             >
-                                                {v == null ? '—' : String(v)}
+                                                {v == null ? '—' : c.key === 'status' ? __(String(v)) : String(v)}
                                             </td>
                                         );
                                     })}
@@ -274,14 +278,15 @@ export function DashboardGrid({
     widgets: WidgetPayload[];
     intro?: React.ReactNode;
 }) {
+    const { __ } = useTranslate();
     return (
         <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8 2xl:max-w-[1400px]">
             <div className="space-y-1">
                 <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-                    Welcome back, {user.name.split(' ')[0]}
+                    {__('Welcome back, :name', { name: user.name.split(' ')[0] })}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                    {intro ?? `Your ${user.role.replace('-', ' ')} overview.`}
+                    {intro ?? __('Your overview.')}
                 </p>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">

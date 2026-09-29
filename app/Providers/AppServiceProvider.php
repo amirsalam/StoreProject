@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Domain\Licensing\LicenseActivationService;
+use App\Services\MailSettings;
 use App\Tenancy\TenantContext;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -27,5 +28,9 @@ class AppServiceProvider extends ServiceProvider
         // Public license API (/api/v1/licenses/*): unauthenticated, so
         // throttle per client IP.
         RateLimiter::for('license-api', fn (Request $request) => Limit::perMinute(LicenseActivationService::RATE_LIMIT_PER_MINUTE)->by($request->ip()));
+
+        // SMTP settings saved in Admin → Email override .env — applied the
+        // first time the mailer is used, so ordinary requests pay nothing.
+        $this->app->resolving('mail.manager', fn () => $this->app->make(MailSettings::class)->apply());
     }
 }

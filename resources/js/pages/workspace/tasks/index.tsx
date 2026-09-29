@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type Paginated } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { CheckCircle2, ListTodo } from 'lucide-react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface Task {
     id: number;
@@ -42,6 +43,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function WorkspaceTasksIndex({ tasks, projects, filters, statuses }: TasksIndexProps) {
+    const { __ } = useTranslate();
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
 
     const applyFilter = (next: Partial<Filters>) => {
@@ -70,7 +72,7 @@ export default function WorkspaceTasksIndex({ tasks, projects, filters, statuses
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Workspace · Tasks" />
+            <Head title={__('Workspace · Tasks')} />
 
             <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 {flash?.success && (
@@ -81,9 +83,10 @@ export default function WorkspaceTasksIndex({ tasks, projects, filters, statuses
 
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                        <h1 className="font-display text-2xl font-semibold tracking-tight">Tasks</h1>
+                        <h1 className="font-display text-2xl font-semibold tracking-tight">{__('Tasks')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            {tasks.total} {tasks.total === 1 ? 'task' : 'tasks'} across {projects.length} {projects.length === 1 ? 'project' : 'projects'}
+                            {tasks.total === 1 ? __('1 task') : __(':count tasks', { count: tasks.total })} ·{' '}
+                            {projects.length === 1 ? __('1 project') : __(':count projects', { count: projects.length })}
                         </p>
                     </div>
                 </div>
@@ -94,7 +97,7 @@ export default function WorkspaceTasksIndex({ tasks, projects, filters, statuses
                         onChange={(e) => applyFilter({ project: e.target.value })}
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-auto"
                     >
-                        <option value="">All projects</option>
+                        <option value="">{__('All projects')}</option>
                         {projects.map((p) => (
                             <option key={p.id} value={p.slug}>{p.name}</option>
                         ))}
@@ -104,7 +107,7 @@ export default function WorkspaceTasksIndex({ tasks, projects, filters, statuses
                         onChange={(e) => applyFilter({ status: e.target.value })}
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-auto"
                     >
-                        <option value="">All statuses</option>
+                        <option value="">{__('All statuses')}</option>
                         {statuses.map((s) => (
                             <option key={s.value} value={s.value}>{s.label}</option>
                         ))}
@@ -127,13 +130,13 @@ export default function WorkspaceTasksIndex({ tasks, projects, filters, statuses
                                 </header>
                                 <ul className="divide-y">
                                     {grouped[col].length === 0 ? (
-                                        <li className="px-4 py-6 text-center text-xs text-muted-foreground">No tasks</li>
+                                        <li className="px-4 py-6 text-center text-xs text-muted-foreground">{__('No tasks')}</li>
                                     ) : grouped[col].map((task) => (
                                         <li key={task.id} className="group flex items-start gap-3 px-4 py-3 hover:bg-muted/30">
                                             <button
                                                 type="button"
                                                 onClick={() => toggleDone(task)}
-                                                aria-label={task.status === 'done' ? 'Reopen task' : 'Mark task done'}
+                                                aria-label={task.status === 'done' ? __('Reopen task') : __('Mark task done')}
                                                 className={cn(
                                                     'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border transition-colors',
                                                     task.status === 'done'
@@ -153,9 +156,9 @@ export default function WorkspaceTasksIndex({ tasks, projects, filters, statuses
                                                 <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                                                     {task.project && <span className="truncate">{task.project.name}</span>}
                                                     {task.assignee && <span>· {task.assignee.name}</span>}
-                                                    {task.due_on && <span>· due {new Date(task.due_on).toLocaleDateString()}</span>}
+                                                    {task.due_on && <span>· {__('due :date', { date: new Date(task.due_on).toLocaleDateString() })}</span>}
                                                     {task.priority !== 'normal' && (
-                                                        <Badge variant="outline" className="capitalize">{task.priority}</Badge>
+                                                        <Badge variant="outline" className="capitalize">{__(task.priority)}</Badge>
                                                     )}
                                                 </div>
                                             </div>
@@ -172,17 +175,18 @@ export default function WorkspaceTasksIndex({ tasks, projects, filters, statuses
 }
 
 function EmptyState() {
+    const { __ } = useTranslate();
     return (
         <div className="rounded-xl border border-dashed border-border/80 bg-muted/20 px-6 py-20 text-center">
             <div className="mx-auto mb-5 inline-flex size-12 items-center justify-center rounded-full border border-border/80 bg-background text-muted-foreground">
                 <ListTodo className="size-5" />
             </div>
-            <h2 className="font-display text-lg font-semibold tracking-tight">No tasks yet</h2>
+            <h2 className="font-display text-lg font-semibold tracking-tight">{__('No tasks yet')}</h2>
             <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                Tasks live inside a project. Create a project first, then add tasks from its detail page.
+                {__('Tasks live inside a project. Create a project first, then add tasks from its detail page.')}
             </p>
             <Button asChild className="mt-6">
-                <a href={route('workspace.projects.index')}>Go to projects</a>
+                <a href={route('workspace.projects.index')}>{__('Go to projects')}</a>
             </Button>
         </div>
     );

@@ -30,7 +30,7 @@ class BrandingController extends Controller
 
         return redirect()
             ->route('admin.branding.edit')
-            ->with('success', 'Branding updated.');
+            ->with('success', __('Branding updated.'));
     }
 
     public function destroyLogo(): RedirectResponse
@@ -39,6 +39,6 @@ class BrandingController extends Controller
 
         return redirect()
             ->route('admin.branding.edit')
-            ->with('success', 'Logo removed. Default mark restored.');
+            ->with('success', __('Logo removed. Default mark restored.'));
     }
 }

@@ -10,6 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Stripe\Exception\AuthenticationException;
+use Stripe\Exception\PermissionException;
 use Tests\TestCase;
 
 /**
@@ -191,9 +192,27 @@ class PaymentGatewayTest extends TestCase
 
         $this->actingAs($this->admin())
             ->post(route('admin.payment-gateways.test', $gateway))
-            ->assertSessionHas('error', 'Stripe rejected the secret key.');
+            ->assertSessionHas('error', fn (string $message) => str_starts_with($message, 'Stripe rejected the secret key'));
 
         $this->assertNull($gateway->refresh()->last_connection_at);
+    }
+
+    public function test_test_connection_explains_a_key_without_payment_access(): void
+    {
+        $this->app->instance(StripeGateway::class, new class extends StripeGateway
+        {
+            public function verifySecretKey(string $secret): void
+            {
+                throw PermissionException::factory('The provided key does not have the required permissions');
+            }
+        });
+        $gateway = PaymentGateway::factory()->create([
+            'credentials' => ['publishable_key' => 'pk_test_abc', 'secret_key' => 'rkcs_test_abc'],
+        ]);
+
+        $this->actingAs($this->admin())->post(route('admin.payment-gateways.test', $gateway));
+
+        $this->assertStringContainsString('not allowed to create payments', (string) session('error'));
     }
 
     public function test_test_connection_catches_mixed_or_wrong_mode_keys_without_calling_stripe(): void

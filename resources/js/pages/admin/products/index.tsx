@@ -7,6 +7,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import ConfirmDialog from '@/components/confirm-dialog';
 import { FormEvent, useState } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface Option {
     value: string;
@@ -32,6 +33,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function AdminProductsIndex({ products, filters, statuses, types }: AdminProductsIndexProps) {
+    const { __, __el } = useTranslate();
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
     const [search, setSearch] = useState(filters.search);
     const { delete: destroy, processing } = useForm({});
@@ -69,7 +71,7 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Admin · Products" />
+            <Head title={__('Admin · Products')} />
 
             <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 {flash?.success && (
@@ -80,14 +82,14 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
 
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{__('Products')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            {products.total} {products.total === 1 ? 'product' : 'products'} total
+                            {products.total === 1 ? __('1 product total') : __(':count products total', { count: products.total })}
                         </p>
                     </div>
                     <Button asChild>
                         <Link href={route('admin.products.create')}>
-                            <Plus className="mr-1" /> New product
+                            <Plus className="mr-1" /> {__('New product')}
                         </Link>
                     </Button>
                 </div>
@@ -95,7 +97,7 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
                 <form onSubmit={submitSearch} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <Input
                         type="search"
-                        placeholder="Search by title or slug…"
+                        placeholder={__('Search by title or slug…')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full sm:w-64"
@@ -105,7 +107,7 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
                         onChange={(e) => applyFilter({ status: e.target.value })}
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-auto"
                     >
-                        <option value="">All statuses</option>
+                        <option value="">{__('All statuses')}</option>
                         {statuses.map((s) => (
                             <option key={s.value} value={s.value}>
                                 {s.label}
@@ -117,7 +119,7 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
                         onChange={(e) => applyFilter({ type: e.target.value as ProductType | '' })}
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-auto"
                     >
-                        <option value="">All types</option>
+                        <option value="">{__('All types')}</option>
                         {types.map((t) => (
                             <option key={t.value} value={t.value}>
                                 {t.label}
@@ -125,7 +127,7 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
                         ))}
                     </select>
                     <Button type="submit" variant="secondary">
-                        Filter
+                        {__('Filter')}
                     </Button>
                 </form>
 
@@ -134,19 +136,19 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
                     <table className="w-full text-sm">
                         <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
                             <tr>
-                                <th className="px-4 py-3 font-medium">Title</th>
-                                <th className="px-4 py-3 font-medium">Type</th>
-                                <th className="px-4 py-3 font-medium">Status</th>
-                                <th className="px-4 py-3 font-medium">Price</th>
-                                <th className="px-4 py-3 font-medium">Sales</th>
-                                <th className="px-4 py-3 font-medium text-right">Actions</th>
+                                <th className="px-4 py-3 font-medium">{__('Title')}</th>
+                                <th className="px-4 py-3 font-medium">{__('Type')}</th>
+                                <th className="px-4 py-3 font-medium">{__('Status')}</th>
+                                <th className="px-4 py-3 font-medium">{__('Price')}</th>
+                                <th className="px-4 py-3 font-medium">{__('Sales')}</th>
+                                <th className="px-4 py-3 font-medium text-right">{__('Actions')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y">
                             {products.data.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
-                                        No products match these filters.
+                                        {__('No products match these filters.')}
                                     </td>
                                 </tr>
                             ) : (
@@ -206,7 +208,7 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
                 <div className="space-y-3 md:hidden">
                     {products.data.length === 0 ? (
                         <div className="rounded-lg border border-dashed bg-card p-8 text-center text-sm text-muted-foreground">
-                            No products match these filters.
+                            {__('No products match these filters.')}
                         </div>
                     ) : (
                         products.data.map((product) => (
@@ -226,11 +228,11 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
 
                                 <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
                                     <div>
-                                        <dt className="text-muted-foreground">Type</dt>
+                                        <dt className="text-muted-foreground">{__('Type')}</dt>
                                         <dd className="mt-0.5 truncate">{typeLabel(product.type, types)}</dd>
                                     </div>
                                     <div>
-                                        <dt className="text-muted-foreground">Price</dt>
+                                        <dt className="text-muted-foreground">{__('Price')}</dt>
                                         <dd className="mt-0.5 tabular-nums">
                                             {product.sale_price ? (
                                                 <>
@@ -245,7 +247,7 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
                                         </dd>
                                     </div>
                                     <div>
-                                        <dt className="text-muted-foreground">Sales</dt>
+                                        <dt className="text-muted-foreground">{__('Sales')}</dt>
                                         <dd className="mt-0.5 tabular-nums">{product.sales_count}</dd>
                                     </div>
                                 </dl>
@@ -254,7 +256,7 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
                                     <Button asChild size="sm" variant="ghost" className="h-9">
                                         <Link href={route('admin.products.edit', product.id)}>
                                             <Pencil />
-                                            <span className="ms-1">Edit</span>
+                                            <span className="ms-1">{__('Edit')}</span>
                                         </Link>
                                     </Button>
                                     <Button
@@ -265,7 +267,7 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
                                         className="h-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
                                     >
                                         <Trash2 />
-                                        <span className="ms-1">Delete</span>
+                                        <span className="ms-1">{__('Delete')}</span>
                                     </Button>
                                 </div>
                             </div>
@@ -285,14 +287,15 @@ export default function AdminProductsIndex({ products, filters, statuses, types 
             <ConfirmDialog
                 open={pendingDelete !== null}
                 onOpenChange={(open) => !open && setPendingDelete(null)}
-                title="Delete this product?"
+                title={__('Delete this product?')}
                 description={
                     <>
-                        <strong className="text-foreground">{pendingDelete?.title}</strong> will be permanently deleted. If it has already been
-                        sold, it is archived instead — hidden from the store, and buyers keep their access.
+                        {__el(':title will be permanently deleted. If it has already been sold, it is archived instead — hidden from the store, and buyers keep their access.', {
+                            title: <strong className="text-foreground">{pendingDelete?.title}</strong>,
+                        })}
                     </>
                 }
-                confirmLabel="Delete"
+                confirmLabel={__('Delete')}
                 destructive
                 processing={processing}
                 onConfirm={confirmDelete}
@@ -306,6 +309,7 @@ function typeLabel(value: string, types: Option[]): string {
 }
 
 function StatusBadge({ status }: { status: string }) {
+    const { __ } = useTranslate();
     const variant: Record<string, 'default' | 'secondary' | 'outline'> = {
         published: 'default',
         draft: 'secondary',
@@ -313,7 +317,7 @@ function StatusBadge({ status }: { status: string }) {
     };
     return (
         <Badge variant={variant[status] ?? 'secondary'} className="capitalize">
-            {status}
+            {__(status)}
         </Badge>
     );
 }

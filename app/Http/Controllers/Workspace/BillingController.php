@@ -80,7 +80,7 @@ class BillingController extends Controller
         abort_unless($tenant, 404);
 
         if (! $this->stripeConfigured()) {
-            return back()->with('error', 'Stripe is not configured. Set STRIPE_SECRET + the price ids in your .env.');
+            return back()->with('error', __('Stripe is not configured. Set STRIPE_SECRET + the price ids in your .env.'));
         }
 
         try {
@@ -94,7 +94,7 @@ class BillingController extends Controller
         } catch (\Throwable $e) {
             report($e);
 
-            return back()->with('error', 'Could not start checkout. Try again or contact support.');
+            return back()->with('error', __('Could not start checkout. Try again or contact support.'));
         }
 
         return redirect()->away($url);
@@ -106,7 +106,7 @@ class BillingController extends Controller
         abort_unless($tenant, 404);
 
         if (! $this->stripeConfigured()) {
-            return back()->with('error', 'Stripe is not configured.');
+            return back()->with('error', __('Stripe is not configured.'));
         }
 
         try {
@@ -117,7 +117,7 @@ class BillingController extends Controller
         } catch (\Throwable $e) {
             report($e);
 
-            return back()->with('error', 'Could not open billing portal. Try again or contact support.');
+            return back()->with('error', __('Could not open billing portal. Try again or contact support.'));
         }
 
         return redirect()->away($url);
@@ -129,7 +129,7 @@ class BillingController extends Controller
         abort_unless($tenant, 404);
 
         if (! $this->stripeConfigured()) {
-            return back()->with('error', 'Stripe is not configured.');
+            return back()->with('error', __('Stripe is not configured.'));
         }
 
         try {
@@ -137,10 +137,10 @@ class BillingController extends Controller
         } catch (\Throwable $e) {
             report($e);
 
-            return back()->with('error', 'Could not schedule cancellation.');
+            return back()->with('error', __('Could not schedule cancellation.'));
         }
 
-        return back()->with('success', 'Subscription will cancel at the end of the current period.');
+        return back()->with('success', __('Subscription will cancel at the end of the current period.'));
     }
 
     private function stripeConfigured(): bool

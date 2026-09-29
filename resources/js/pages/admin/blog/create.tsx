@@ -3,6 +3,7 @@ import BlogPostForm, { type BlogPostFormValues } from '@/pages/admin/blog/blog-p
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface Option {
     value: string;
@@ -20,6 +21,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function AdminBlogCreate({ statuses }: AdminBlogCreateProps) {
+    const { __ } = useTranslate();
     const { data, setData, post, processing, errors } = useForm<BlogPostFormValues>({
         title: '',
         slug: '',
@@ -40,12 +42,12 @@ export default function AdminBlogCreate({ statuses }: AdminBlogCreateProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="New post" />
+            <Head title={__('New post')} />
 
             <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">New post</h1>
-                    <p className="text-muted-foreground text-sm">Write a post for the public blog.</p>
+                    <h1 className="text-2xl font-semibold tracking-tight">{__('New post')}</h1>
+                    <p className="text-muted-foreground text-sm">{__('Write a post for the public blog.')}</p>
                 </div>
 
                 <BlogPostForm
@@ -53,7 +55,7 @@ export default function AdminBlogCreate({ statuses }: AdminBlogCreateProps) {
                     setData={setData}
                     errors={errors as Partial<Record<keyof BlogPostFormValues, string>>}
                     processing={processing}
-                    submitLabel="Create post"
+                    submitLabel={__('Create post')}
                     onSubmit={submit}
                     statuses={statuses}
                     cancelHref={route('admin.blog-posts.index')}

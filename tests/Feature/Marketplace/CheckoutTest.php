@@ -13,6 +13,8 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use PHPUnit\Framework\Attributes\DataProvider;
+use Stripe\Exception\AuthenticationException;
 use Tests\TestCase;
 
 /**
@@ -147,6 +149,116 @@ class CheckoutTest extends TestCase
                 'coupon_code' => 'NOPE',
             ])
             ->assertSessionHasErrors('coupon_code');
+
+        $this->assertSame(0, Order::query()->count());
+    }
+
+    /**
+     * @return array<string, array{0: array<string, mixed>, 1: string}>
+     */
+    public static function unusableCoupons(): array
+    {
+        return [
+            'expired' => [['expires_at' => '2026-08-07 21:29:14'], 'This coupon expired on August 7, 2026.'],
+            'not started' => [['starts_at' => '2099-01-15 00:00:00'], "This coupon isn't active until January 15, 2099."],
+            'used up' => [['max_uses' => 5, 'used_count' => 5], 'This coupon has reached its usage limit.'],
+            'disabled' => [['is_active' => false], "That coupon code isn't valid."],
+            'below minimum' => [['min_order_amount' => 50.00], 'This coupon needs an order of at least $50.00.'],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    #[DataProvider('unusableCoupons')]
+    public function test_checkout_explains_why_a_coupon_is_refused(array $attributes, string $message): void
+    {
+        $this->travelTo('2026-09-26 12:00:00');
+        $this->fakeStripe();
+        $user = User::factory()->create();
+        $product = Product::factory()->digitalDownload()->create([
+            'status' => Product::STATUS_PUBLISHED,
+            'price' => 20.00,
+            'sale_price' => null,
+        ]);
+        Coupon::factory()->create([
+            'code' => 'LAUNCH20',
+            'is_active' => true,
+            'starts_at' => null,
+            'expires_at' => null,
+            'max_uses' => null,
+            'used_count' => 0,
+            'min_order_amount' => null,
+            'max_uses_per_user' => null,
+            ...$attributes,
+        ]);
+
+        $this->actingAs($user)->post('/cart', ['product_id' => $product->id]);
+        $this->actingAs($user)
+            ->post('/checkout', [
+                'billing_name' => 'Alan Turing',
+                'billing_email' => 'alan@example.test',
+                'coupon_code' => 'LAUNCH20',
+            ])
+            ->assertSessionHasErrors(['coupon_code' => $message]);
+
+        $this->assertSame(0, Order::query()->count());
+    }
+
+    public function test_a_stripe_failure_leaves_no_order_behind_and_explains_itself(): void
+    {
+        $this->app->instance(StripeGateway::class, new class extends StripeGateway
+        {
+            public function createPaymentIntent(int $amountCents, string $currency, array $metadata = []): array
+            {
+                throw AuthenticationException::factory('Invalid API Key provided: sk_test_***');
+            }
+        });
+        $user = User::factory()->create();
+        $product = Product::factory()->digitalDownload()->create([
+            'status' => Product::STATUS_PUBLISHED,
+            'price' => 30.00,
+            'sale_price' => null,
+        ]);
+        $coupon = Coupon::factory()->create([
+            'code' => 'TENOFF', 'type' => Coupon::TYPE_PERCENTAGE, 'value' => 10, 'is_active' => true,
+            'starts_at' => null, 'expires_at' => null, 'max_uses' => null, 'used_count' => 0,
+            'min_order_amount' => null, 'max_uses_per_user' => null,
+        ]);
+
+        $this->actingAs($user)->post('/cart', ['product_id' => $product->id]);
+
+        $this->actingAs($user)
+            ->postJson('/checkout', [
+                'billing_name' => 'Ada Lovelace',
+                'billing_email' => 'ada@example.test',
+                'coupon_code' => 'TENOFF',
+            ])
+            ->assertStatus(503)
+            ->assertJsonPath('errors.cart.0', 'Payments are not available right now. Please try again later.');
+
+        // Rolled back: no orphan order/payment, coupon use not burnt, cart kept.
+        $this->assertSame(0, Order::query()->count());
+        $this->assertSame(0, Payment::query()->count());
+        $this->assertSame(0, $coupon->refresh()->used_count);
+        $this->actingAs($user)->get('/checkout')->assertOk();
+    }
+
+    public function test_checkout_without_a_configured_gateway_is_refused_cleanly(): void
+    {
+        // Real StripeGateway, but the store has no Stripe gateway configured.
+        $user = User::factory()->create();
+        $product = Product::factory()->digitalDownload()->create([
+            'status' => Product::STATUS_PUBLISHED,
+            'price' => 30.00,
+            'sale_price' => null,
+        ]);
+
+        $this->actingAs($user)->post('/cart', ['product_id' => $product->id]);
+
+        $this->actingAs($user)
+            ->postJson('/checkout', ['billing_name' => 'Ada Lovelace', 'billing_email' => 'ada@example.test'])
+            ->assertStatus(503);
 
         $this->assertSame(0, Order::query()->count());
     }

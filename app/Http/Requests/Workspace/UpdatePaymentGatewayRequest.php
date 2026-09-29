@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Workspace;
 
+use App\Domain\Payments\StripeCredentials;
 use App\Models\PaymentGateway;
 use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
@@ -42,8 +43,8 @@ class UpdatePaymentGatewayRequest extends FormRequest
 
         return [
             'environment' => ['required', Rule::in([PaymentGateway::ENV_SANDBOX, PaymentGateway::ENV_PRODUCTION])],
-            'publishable_key' => [Rule::requiredIf($isNew), 'nullable', 'string', 'max:255', 'starts_with:pk_test_,pk_live_'],
-            'secret_key' => [Rule::requiredIf($isNew), 'nullable', 'string', 'max:255', 'starts_with:sk_test_,sk_live_,rk_test_,rk_live_'],
+            'publishable_key' => [Rule::requiredIf($isNew), 'nullable', 'string', 'max:255', 'regex:'.StripeCredentials::PUBLISHABLE_KEY_PATTERN],
+            'secret_key' => [Rule::requiredIf($isNew), 'nullable', 'string', 'max:255', 'regex:'.StripeCredentials::SECRET_KEY_PATTERN],
             'webhook_secret' => ['nullable', 'string', 'max:255', 'starts_with:whsec_'],
             'is_active' => ['boolean'],
         ];
@@ -55,8 +56,8 @@ class UpdatePaymentGatewayRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'publishable_key.starts_with' => 'The publishable key starts with pk_test_ or pk_live_.',
-            'secret_key.starts_with' => 'The secret key starts with sk_test_ or sk_live_ (or rk_ for a restricted key).',
+            'publishable_key.regex' => 'That doesn’t look like a Stripe publishable key (pk_test_… or pk_live_…).',
+            'secret_key.regex' => 'That doesn’t look like a Stripe secret or restricted key (sk_test_…, rk_test_…, rkcs_test_… or the live equivalent). Paste it exactly as Stripe shows it.',
             'webhook_secret.starts_with' => 'The webhook signing secret starts with whsec_.',
         ];
     }

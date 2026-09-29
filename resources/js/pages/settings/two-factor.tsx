@@ -10,6 +10,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Loader2, ShieldCheck, ShieldOff, ShieldQuestion, Sparkles } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface TwoFactorPageProps {
     enabled: boolean;
@@ -24,18 +25,19 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function TwoFactor({ enabled, pending, qr_svg, secret, recovery_codes }: TwoFactorPageProps) {
+    const { __ } = useTranslate();
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
     const [showCodes, setShowCodes] = useState(false);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Two-factor · Settings" />
+            <Head title={__('Two-factor · Settings')} />
 
             <SettingsLayout>
                 <div className="space-y-6">
                     <HeadingSmall
-                        title="Two-factor authentication"
-                        description="Add a second sign-in step using a time-based one-time code from your authenticator app."
+                        title={__('Two-factor authentication')}
+                        description={__('Add a second sign-in step using a time-based one-time code from your authenticator app.')}
                     />
 
                     {flash?.success && (
@@ -66,14 +68,14 @@ export default function TwoFactor({ enabled, pending, qr_svg, secret, recovery_c
                         </span>
                         <div className="flex-1">
                             <div className="text-sm font-medium">
-                                {enabled ? '2FA is active' : pending ? '2FA setup pending — confirm a code' : '2FA is off'}
+                                {enabled ? __('2FA is active') : pending ? __('2FA setup pending — confirm a code') : __('2FA is off')}
                             </div>
                             <div className="text-xs text-muted-foreground">
                                 {enabled
-                                    ? 'You will need a 6-digit code on every sign-in.'
+                                    ? __('You will need a 6-digit code on every sign-in.')
                                     : pending
-                                      ? 'Scan the QR with your authenticator app, then enter a code below.'
-                                      : 'Sign-ins use just your password right now.'}
+                                      ? __('Scan the QR with your authenticator app, then enter a code below.')
+                                      : __('Sign-ins use just your password right now.')}
                             </div>
                         </div>
                     </div>
@@ -93,12 +95,12 @@ export default function TwoFactor({ enabled, pending, qr_svg, secret, recovery_c
 }
 
 function EnableSection() {
+    const { __ } = useTranslate();
     const { post, processing } = useForm({});
     return (
         <div className="rounded-lg border bg-card p-5 shadow-sm">
             <p className="text-sm">
-                Click below to generate a new secret. You'll then scan a QR with an authenticator app (Authy, 1Password,
-                Google Authenticator) and confirm a code to finish setup.
+                {__("Click below to generate a new secret. You'll then scan a QR with an authenticator app (Authy, 1Password, Google Authenticator) and confirm a code to finish setup.")}
             </p>
             <Button
                 className="mt-4"
@@ -106,7 +108,7 @@ function EnableSection() {
                 onClick={() => post(route('two-factor.enable'), { preserveScroll: true })}
             >
                 {processing ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                Set up two-factor
+                {__('Set up two-factor')}
             </Button>
         </div>
     );
@@ -121,6 +123,7 @@ function PendingSection({
     secret: string | null;
     recoveryCodes: string[];
 }) {
+    const { __ } = useTranslate();
     const { data, setData, post, processing, errors } = useForm({ code: '' });
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -133,24 +136,24 @@ function PendingSection({
                 {qrSvg && (
                     <div className="space-y-2">
                         <div className="rounded-lg border bg-white p-2" dangerouslySetInnerHTML={{ __html: qrSvg }} />
-                        <p className="text-center font-mono text-[10px] text-muted-foreground">Scan with authenticator</p>
+                        <p className="text-center font-mono text-[10px] text-muted-foreground">{__('Scan with authenticator')}</p>
                     </div>
                 )}
                 <div className="space-y-3">
                     <div>
-                        <Label className="text-xs">Manual entry key</Label>
+                        <Label className="text-xs">{__('Manual entry key')}</Label>
                         <div className="mt-1 rounded-md border bg-muted/40 px-3 py-2 font-mono text-xs break-all">{secret}</div>
                     </div>
                     {recoveryCodes.length > 0 && (
                         <div>
-                            <Label className="text-xs">Recovery codes (save these!)</Label>
+                            <Label className="text-xs">{__('Recovery codes (save these!)')}</Label>
                             <ul className="mt-1 grid grid-cols-2 gap-1.5 rounded-md border bg-muted/40 p-3 font-mono text-[11px]">
                                 {recoveryCodes.map((c) => (
                                     <li key={c}>{c}</li>
                                 ))}
                             </ul>
                             <p className="mt-1 text-[11px] text-muted-foreground">
-                                These won't be shown in full again. Store them in a password manager.
+                                {__("These won't be shown in full again. Store them in a password manager.")}
                             </p>
                         </div>
                     )}
@@ -159,7 +162,7 @@ function PendingSection({
 
             <form onSubmit={submit} className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-end">
                 <div className="flex-1 space-y-1.5">
-                    <Label htmlFor="code" className="text-xs">Confirmation code</Label>
+                    <Label htmlFor="code" className="text-xs">{__('Confirmation code')}</Label>
                     <Input
                         id="code"
                         inputMode="numeric"
@@ -174,7 +177,7 @@ function PendingSection({
                 </div>
                 <Button type="submit" disabled={processing || data.code.length !== 6}>
                     {processing ? <Loader2 className="animate-spin" /> : null}
-                    Confirm & activate
+                    {__('Confirm & activate')}
                 </Button>
             </form>
         </div>
@@ -190,6 +193,7 @@ function RecoveryCodesSection({
     show: boolean;
     onToggle: () => void;
 }) {
+    const { __ } = useTranslate();
     const { data, setData, post, processing, errors, reset } = useForm({ password: '' });
 
     const regenerate: FormEventHandler = (e) => {
@@ -204,20 +208,20 @@ function RecoveryCodesSection({
         <div className="space-y-4 rounded-lg border bg-card p-5 shadow-sm">
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-sm font-semibold">Recovery codes</h3>
+                    <h3 className="text-sm font-semibold">{__('Recovery codes')}</h3>
                     <p className="text-xs text-muted-foreground">
-                        Single-use backups in case you lose access to your authenticator.
+                        {__('Single-use backups in case you lose access to your authenticator.')}
                     </p>
                 </div>
                 <Button size="sm" variant="ghost" onClick={onToggle}>
-                    {show ? 'Hide' : 'Show'} codes
+                    {show ? __('Hide codes') : __('Show codes')}
                 </Button>
             </div>
 
             {show && (
                 <ul className="grid grid-cols-2 gap-1.5 rounded-md border bg-muted/40 p-3 font-mono text-[11px]">
                     {codes.length === 0 ? (
-                        <li className="col-span-2 text-muted-foreground">All codes used. Regenerate below.</li>
+                        <li className="col-span-2 text-muted-foreground">{__('All codes used. Regenerate below.')}</li>
                     ) : (
                         codes.map((c) => <li key={c}>{c}</li>)
                     )}
@@ -226,7 +230,7 @@ function RecoveryCodesSection({
 
             <form onSubmit={regenerate} className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-end">
                 <div className="flex-1 space-y-1.5">
-                    <Label htmlFor="password" className="text-xs">Confirm with password</Label>
+                    <Label htmlFor="password" className="text-xs">{__('Confirm with password')}</Label>
                     <Input
                         id="password"
                         type="password"
@@ -238,7 +242,7 @@ function RecoveryCodesSection({
                 </div>
                 <Button type="submit" variant="outline" disabled={processing}>
                     {processing ? <Loader2 className="animate-spin" /> : null}
-                    Regenerate codes
+                    {__('Regenerate codes')}
                 </Button>
             </form>
         </div>
@@ -246,15 +250,16 @@ function RecoveryCodesSection({
 }
 
 function DisableSection() {
+    const { __ } = useTranslate();
     const { data, setData, delete: destroy, processing, errors, reset } = useForm({ password: '' });
     const { ask, confirmDialog } = useConfirmDialog();
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         ask({
-            title: 'Disable two-factor authentication?',
-            description: 'Signing in will only need your password again, so your account will be less secure.',
-            confirmLabel: 'Disable 2FA',
+            title: __('Disable two-factor authentication?'),
+            description: __('Signing in will only need your password again, so your account will be less secure.'),
+            confirmLabel: __('Disable 2FA'),
             destructive: true,
             action: (finish) =>
                 destroy(route('two-factor.disable'), {
@@ -268,14 +273,14 @@ function DisableSection() {
     return (
         <div className="space-y-4 rounded-lg border border-destructive/30 bg-destructive/[0.04] p-5 shadow-sm">
             <div>
-                <h3 className="text-sm font-semibold text-destructive">Disable two-factor</h3>
+                <h3 className="text-sm font-semibold text-destructive">{__('Disable two-factor')}</h3>
                 <p className="text-xs text-muted-foreground">
-                    You'll go back to password-only sign-in. We recommend leaving 2FA on.
+                    {__("You'll go back to password-only sign-in. We recommend leaving 2FA on.")}
                 </p>
             </div>
             <form onSubmit={submit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
                 <div className="flex-1 space-y-1.5">
-                    <Label htmlFor="password-disable" className="text-xs">Current password</Label>
+                    <Label htmlFor="password-disable" className="text-xs">{__('Current password')}</Label>
                     <Input
                         id="password-disable"
                         type="password"
@@ -287,7 +292,7 @@ function DisableSection() {
                 </div>
                 <Button type="submit" variant="destructive" disabled={processing}>
                     {processing ? <Loader2 className="animate-spin" /> : null}
-                    Disable 2FA
+                    {__('Disable 2FA')}
                 </Button>
             </form>
             {confirmDialog}

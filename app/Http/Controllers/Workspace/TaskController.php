@@ -60,7 +60,7 @@ class TaskController extends Controller
 
         return redirect()
             ->route('workspace.tasks.index')
-            ->with('success', 'Task created.');
+            ->with('success', __('Task created.'));
     }
 
     public function update(Request $request, Task $task): RedirectResponse
@@ -87,7 +87,7 @@ class TaskController extends Controller
 
         return redirect()
             ->route('workspace.tasks.index')
-            ->with('success', 'Task updated.');
+            ->with('success', __('Task updated.'));
     }
 
     public function destroy(Task $task): RedirectResponse
@@ -96,7 +96,7 @@ class TaskController extends Controller
 
         return redirect()
             ->route('workspace.tasks.index')
-            ->with('success', 'Task removed.');
+            ->with('success', __('Task removed.'));
     }
 
     /**
@@ -105,10 +105,10 @@ class TaskController extends Controller
     private function statuses(): array
     {
         return [
-            ['value' => Task::STATUS_TODO, 'label' => 'To do'],
-            ['value' => Task::STATUS_IN_PROGRESS, 'label' => 'In progress'],
-            ['value' => Task::STATUS_REVIEW, 'label' => 'Review'],
-            ['value' => Task::STATUS_DONE, 'label' => 'Done'],
+            ['value' => Task::STATUS_TODO, 'label' => __('To do')],
+            ['value' => Task::STATUS_IN_PROGRESS, 'label' => __('In progress')],
+            ['value' => Task::STATUS_REVIEW, 'label' => __('Review')],
+            ['value' => Task::STATUS_DONE, 'label' => __('Done')],
         ];
     }
 }

@@ -58,14 +58,14 @@ class ContactMessageController extends Controller
                 : ($contactMessage->read_at ?? now()),
         ]);
 
-        return back()->with('success', 'Message updated.');
+        return back()->with('success', __('Message updated.'));
     }
 
     public function destroy(ContactMessage $contactMessage): RedirectResponse
     {
         $contactMessage->delete();
 
-        return back()->with('success', 'Message deleted.');
+        return back()->with('success', __('Message deleted.'));
     }
 
     /**
@@ -74,9 +74,9 @@ class ContactMessageController extends Controller
     private function statuses(): array
     {
         return [
-            ['value' => ContactMessage::STATUS_NEW, 'label' => 'New'],
-            ['value' => ContactMessage::STATUS_READ, 'label' => 'Read'],
-            ['value' => ContactMessage::STATUS_ARCHIVED, 'label' => 'Archived'],
+            ['value' => ContactMessage::STATUS_NEW, 'label' => __('New')],
+            ['value' => ContactMessage::STATUS_READ, 'label' => __('Read')],
+            ['value' => ContactMessage::STATUS_ARCHIVED, 'label' => __('Archived')],
         ];
     }
 }

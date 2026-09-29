@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { type PaymentProvider } from '@/types';
 import { Link, useForm } from '@inertiajs/react';
 import { FormEvent, useMemo } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 export interface GatewayFormValues {
     id?: number;
@@ -34,6 +35,7 @@ interface Props {
 }
 
 export default function GatewayForm({ providers, gateway, stripeWebhook }: Props) {
+    const { __ } = useTranslate();
     const isEdit = Boolean(gateway?.id);
 
     const form = useForm({
@@ -89,9 +91,9 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
         <form onSubmit={submit} className="space-y-6">
             {/* Provider + identity */}
             <section className="rounded-lg border bg-card p-6">
-                <h2 className="mb-4 text-base font-semibold">Provider</h2>
+                <h2 className="mb-4 text-base font-semibold">{__('Provider')}</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Provider" error={form.errors.provider}>
+                    <Field label={__('Provider')} error={form.errors.provider}>
                         {isEdit ? (
                             <Input value={activeProvider?.label ?? form.data.provider} readOnly className="bg-muted/40" />
                         ) : (
@@ -109,30 +111,30 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                             </select>
                         )}
                     </Field>
-                    <Field label="Environment" error={form.errors.environment}>
+                    <Field label={__('Environment')} error={form.errors.environment}>
                         <select
                             value={form.data.environment}
                             onChange={(e) => form.setData('environment', e.target.value as 'sandbox' | 'production')}
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         >
-                            <option value="sandbox">Sandbox (test)</option>
-                            <option value="production">Production (live)</option>
+                            <option value="sandbox">{__('Sandbox (test)')}</option>
+                            <option value="production">{__('Production (live)')}</option>
                         </select>
                     </Field>
-                    <Field label="Gateway name (internal)" error={form.errors.name}>
+                    <Field label={__('Gateway name (internal)')} error={form.errors.name}>
                         <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} required />
                     </Field>
-                    <Field label="Display name (customer-facing)" error={form.errors.display_name}>
+                    <Field label={__('Display name (customer-facing)')} error={form.errors.display_name}>
                         <Input
                             value={form.data.display_name}
                             onChange={(e) => form.setData('display_name', e.target.value)}
                             required
                         />
                     </Field>
-                    <Field label="Logo / icon (emoji or URL)" error={form.errors.logo} className="sm:col-span-2">
+                    <Field label={__('Logo / icon (emoji or URL)')} error={form.errors.logo} className="sm:col-span-2">
                         <Input value={form.data.logo} onChange={(e) => form.setData('logo', e.target.value)} placeholder="💳" />
                     </Field>
-                    <Field label="Description" error={form.errors.description} className="sm:col-span-2">
+                    <Field label={__('Description')} error={form.errors.description} className="sm:col-span-2">
                         <textarea
                             value={form.data.description}
                             onChange={(e) => form.setData('description', e.target.value)}
@@ -146,9 +148,9 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
             {/* Credentials (dynamic per provider) */}
             {(activeProvider?.fields.length ?? 0) > 0 && (
                 <section className="rounded-lg border bg-card p-6">
-                    <h2 className="text-base font-semibold">API credentials</h2>
+                    <h2 className="text-base font-semibold">{__('API credentials')}</h2>
                     <p className="mb-4 text-xs text-muted-foreground">
-                        Stored encrypted. {isEdit && 'Leave a field blank to keep its current value.'}
+                        {__('Stored encrypted.')} {isEdit && __('Leave a field blank to keep its current value.')}
                     </p>
                     <div className="grid gap-4 sm:grid-cols-2">
                         {activeProvider?.fields.map((f) => {
@@ -164,7 +166,7 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                                         autoComplete="off"
                                         value={form.data.credentials[f.key] ?? ''}
                                         onChange={(e) => setCredential(f.key, e.target.value)}
-                                        placeholder={configured ? '•••••••• configured' : ''}
+                                        placeholder={configured ? __('•••••••• configured') : ''}
                                         required={f.required && !isEdit}
                                     />
                                 </Field>
@@ -177,15 +179,15 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
             {/* Webhook */}
             {activeProvider?.supports_webhook && (
                 <section className="rounded-lg border bg-card p-6">
-                    <h2 className="mb-4 text-base font-semibold">Webhook</h2>
+                    <h2 className="mb-4 text-base font-semibold">{__('Webhook')}</h2>
                     {form.data.provider === 'stripe' && stripeWebhook && <StripeWebhookSteps info={stripeWebhook} />}
-                    <Field label="Webhook secret" error={form.errors.webhook_secret}>
+                    <Field label={__('Webhook secret')} error={form.errors.webhook_secret}>
                         <Input
                             type="password"
                             autoComplete="off"
                             value={form.data.webhook_secret}
                             onChange={(e) => form.setData('webhook_secret', e.target.value)}
-                            placeholder={gateway?.has_webhook_secret ? '•••••••• configured' : ''}
+                            placeholder={gateway?.has_webhook_secret ? __('•••••••• configured') : ''}
                         />
                     </Field>
                 </section>
@@ -193,9 +195,9 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
 
             {/* Commercial settings */}
             <section className="rounded-lg border bg-card p-6">
-                <h2 className="mb-4 text-base font-semibold">Fees, limits & coverage</h2>
+                <h2 className="mb-4 text-base font-semibold">{__('Fees, limits & coverage')}</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Transaction fee — percentage (%)" error={form.errors.fee_percent}>
+                    <Field label={__('Transaction fee — percentage (%)')} error={form.errors.fee_percent}>
                         <Input
                             type="number"
                             step="0.01"
@@ -204,7 +206,7 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                             onChange={(e) => form.setData('fee_percent', e.target.value)}
                         />
                     </Field>
-                    <Field label="Transaction fee — fixed" error={form.errors.fee_fixed}>
+                    <Field label={__('Transaction fee — fixed')} error={form.errors.fee_fixed}>
                         <Input
                             type="number"
                             step="0.01"
@@ -213,7 +215,7 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                             onChange={(e) => form.setData('fee_fixed', e.target.value)}
                         />
                     </Field>
-                    <Field label="Minimum amount" error={form.errors.min_amount}>
+                    <Field label={__('Minimum amount')} error={form.errors.min_amount}>
                         <Input
                             type="number"
                             step="0.01"
@@ -222,7 +224,7 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                             onChange={(e) => form.setData('min_amount', e.target.value)}
                         />
                     </Field>
-                    <Field label="Maximum amount" error={form.errors.max_amount}>
+                    <Field label={__('Maximum amount')} error={form.errors.max_amount}>
                         <Input
                             type="number"
                             step="0.01"
@@ -231,21 +233,21 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                             onChange={(e) => form.setData('max_amount', e.target.value)}
                         />
                     </Field>
-                    <Field label="Supported currencies (comma-separated)" error={form.errors.supported_currencies}>
+                    <Field label={__('Supported currencies (comma-separated)')} error={form.errors.supported_currencies}>
                         <Input
                             value={form.data.supported_currencies}
                             onChange={(e) => form.setData('supported_currencies', e.target.value)}
                             placeholder="USD, EUR, SAR"
                         />
                     </Field>
-                    <Field label="Supported countries (comma-separated)" error={form.errors.supported_countries}>
+                    <Field label={__('Supported countries (comma-separated)')} error={form.errors.supported_countries}>
                         <Input
                             value={form.data.supported_countries}
                             onChange={(e) => form.setData('supported_countries', e.target.value)}
                             placeholder="US, GB, SA"
                         />
                     </Field>
-                    <Field label="Sort order" error={form.errors.sort_order}>
+                    <Field label={__('Sort order')} error={form.errors.sort_order}>
                         <Input
                             type="number"
                             min="0"
@@ -263,7 +265,7 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                             onChange={(e) => form.setData('is_active', e.target.checked)}
                             className="size-4 rounded border-input"
                         />
-                        Active (available at checkout)
+                        {__('Active (available at checkout)')}
                     </label>
                     <label className="flex items-center gap-2 text-sm">
                         <input
@@ -272,17 +274,17 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                             onChange={(e) => form.setData('is_default', e.target.checked)}
                             className="size-4 rounded border-input"
                         />
-                        Set as the default gateway
+                        {__('Set as the default gateway')}
                     </label>
                 </div>
             </section>
 
             <div className="flex items-center justify-end gap-2">
                 <Button asChild variant="ghost">
-                    <Link href={route('admin.payment-gateways.index')}>Cancel</Link>
+                    <Link href={route('admin.payment-gateways.index')}>{__('Cancel')}</Link>
                 </Button>
                 <Button type="submit" disabled={form.processing}>
-                    {form.processing ? 'Saving…' : isEdit ? 'Save changes' : 'Create gateway'}
+                    {form.processing ? __('Saving…') : isEdit ? __('Save changes') : __('Create gateway')}
                 </Button>
             </div>
         </form>
