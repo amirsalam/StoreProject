@@ -1,13 +1,13 @@
 import ProductCard from '@/components/product-card';
+import ProductMedia from '@/components/product-media';
+import ProductPurchaseBox from '@/components/product-purchase-box';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
 import { useTranslate } from '@/hooks/use-translate';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import { type Product, type ProductType, type Review } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
-import { Check, Loader2, ShieldCheck, ShoppingBag, Star } from 'lucide-react';
-import { useState } from 'react';
+import { Head, Link } from '@inertiajs/react';
+import { Star } from 'lucide-react';
 
 interface ProductShowProps {
     product: Product;
@@ -17,42 +17,9 @@ interface ProductShowProps {
     reviewsCount: number;
 }
 
-function formatPrice(amount: string | null | undefined, currency = 'USD') {
-    if (amount == null) return null;
-    const value = parseFloat(amount);
-    try {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value);
-    } catch {
-        return `$${value.toFixed(2)}`;
-    }
-}
-
 export default function ProductShow({ product, reviews, relatedProducts, averageRating, reviewsCount }: ProductShowProps) {
     const { t } = useTranslate();
-    const onSale = product.sale_price !== null && parseFloat(product.sale_price ?? '0') < parseFloat(product.price);
-    const price = formatPrice(product.sale_price ?? product.price, product.currency);
-    const oldPrice = onSale ? formatPrice(product.price, product.currency) : null;
-
-    const [adding, setAdding] = useState(false);
-    const [justAdded, setJustAdded] = useState(false);
-
     const typeLabel = (type: ProductType) => t(`product.types.${type}`);
-
-    const handleAddToCart = () => {
-        router.post(
-            route('cart.add'),
-            { product_id: product.id, quantity: 1 },
-            {
-                preserveScroll: true,
-                onStart: () => setAdding(true),
-                onFinish: () => setAdding(false),
-                onSuccess: () => {
-                    setJustAdded(true);
-                    setTimeout(() => setJustAdded(false), 2000);
-                },
-            },
-        );
-    };
 
     return (
         <StorefrontLayout>
@@ -76,13 +43,7 @@ export default function ProductShow({ product, reviews, relatedProducts, average
 
             <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:gap-8 xl:grid-cols-[1fr_380px]">
                 <div className="space-y-6">
-                    <div className="aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-muted to-muted/40 flex items-center justify-center text-2xl text-muted-foreground">
-                        {product.thumbnail ? (
-                            <img src={product.thumbnail} alt={product.title} className="size-full object-cover" />
-                        ) : (
-                            <span className="opacity-60">{product.title.slice(0, 2).toUpperCase()}</span>
-                        )}
-                    </div>
+                    <ProductMedia product={product} />
 
                     <div className="space-y-3">
                         <div className="flex items-center gap-2">
@@ -139,43 +100,10 @@ export default function ProductShow({ product, reviews, relatedProducts, average
                 </div>
 
                 <aside>
-                    <div className="sticky top-24 rounded-xl border bg-card p-6 shadow-sm">
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-bold">{price}</span>
-                            {oldPrice && <span className="text-muted-foreground line-through">{oldPrice}</span>}
-                        </div>
-                        {product.license_type && (
-                            <p className="mt-1 text-xs text-muted-foreground">{t('product.license_label', { type: product.license_type })}</p>
-                        )}
-                        <Button
-                            className="mt-4 w-full"
-                            size="lg"
-                            onClick={handleAddToCart}
-                            disabled={adding}
-                        >
-                            {adding ? (
-                                <>
-                                    <Loader2 className="animate-spin" />
-                                    {t('product.adding')}
-                                </>
-                            ) : justAdded ? (
-                                <>
-                                    <Check />
-                                    {t('product.added')}
-                                </>
-                            ) : (
-                                <>
-                                    <ShoppingBag />
-                                    {t('product.add_to_cart')}
-                                </>
-                            )}
-                        </Button>
-                        <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
-                            <ShieldCheck className="size-3.5" />
-                            {t('product.secure_checkout')}
-                        </p>
+                    <div className="sticky top-24 space-y-4">
+                        <ProductPurchaseBox product={product} />
 
-                        <dl className="mt-6 space-y-2 text-sm border-t pt-4">
+                        <dl className="space-y-2 rounded-xl border bg-card p-5 text-sm shadow-sm">
                             <div className="flex justify-between">
                                 <dt className="text-muted-foreground">{t('product.type')}</dt>
                                 <dd>{typeLabel(product.type)}</dd>

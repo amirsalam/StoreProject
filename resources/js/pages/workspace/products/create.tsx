@@ -1,16 +1,16 @@
+import { useTranslate } from '@/hooks/use-translate';
 import AppLayout from '@/layouts/app-layout';
 import ProductForm, { type ProductFormValues, type UploadOptions } from '@/pages/admin/products/product-form';
 import { type BreadcrumbItem, type Category, type ProductType } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
-import { useTranslate } from '@/hooks/use-translate';
 
 interface Option {
     value: string;
     label: string;
 }
 
-interface AdminProductsCreateProps {
+interface Props {
     upload: UploadOptions;
     categories: Category[];
     statuses: Option[];
@@ -18,12 +18,11 @@ interface AdminProductsCreateProps {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Admin', href: '/admin/products' },
-    { title: 'Products', href: '/admin/products' },
-    { title: 'New', href: '/admin/products/create' },
+    { title: 'My products', href: '/workspace/products' },
+    { title: 'New', href: '/workspace/products/create' },
 ];
 
-export default function AdminProductsCreate({ categories, statuses, types, upload }: AdminProductsCreateProps) {
+export default function SellerProductsCreate({ categories, statuses, types, upload }: Props) {
     const { __ } = useTranslate();
     const { data, setData, post, processing, errors } = useForm<ProductFormValues>({
         category_id: '',
@@ -56,7 +55,7 @@ export default function AdminProductsCreate({ categories, statuses, types, uploa
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        post(route('admin.products.store'), { forceFormData: true });
+        post(route('workspace.products.store'), { forceFormData: true });
     };
 
     return (
@@ -80,7 +79,8 @@ export default function AdminProductsCreate({ categories, statuses, types, uploa
                     statuses={statuses}
                     types={types}
                     upload={upload}
-                    cancelHref={route('admin.products.index')}
+                    cancelHref={route('workspace.products.index')}
+                    showFeatured={false}
                 />
             </div>
         </AppLayout>

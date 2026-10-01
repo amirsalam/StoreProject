@@ -58,7 +58,7 @@ export default function AdminBlogEdit({ post, statuses }: AdminBlogEditProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Edit · ${post.title}`} />
+            <Head title={__('Edit :name', { name: post.title })} />
 
             <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 <div>

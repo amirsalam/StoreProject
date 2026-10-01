@@ -13,14 +13,21 @@ class License extends Model
     use BelongsToTenant, HasFactory;
 
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_EXPIRED = 'expired';
+
     public const STATUS_REVOKED = 'revoked';
+
+    public const TIER_REGULAR = 'regular';
+
+    public const TIER_EXTENDED = 'extended';
 
     protected $fillable = [
         'user_id',
         'product_id',
         'order_item_id',
         'license_key',
+        'tier',
         'activation_limit',
         'activations_count',
         'activated_domains',

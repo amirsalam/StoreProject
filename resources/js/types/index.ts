@@ -146,6 +146,15 @@ export interface Product {
     license_type: string | null;
     is_featured: boolean;
     sales_count: number;
+    /** Extended License price; null = Regular License only. */
+    extended_price?: string | null;
+    /** Months of seller support included (0 = none). */
+    support_months?: number;
+    /** Price to extend support to 12 months; null = not offered. */
+    support_extension_price?: string | null;
+    live_preview_url?: string | null;
+    /** Screenshot URLs. */
+    gallery?: string[] | null;
     category?: Pick<Category, 'id' | 'name' | 'slug'> | null;
     vendor?: Pick<Vendor, 'id' | 'name' | 'slug' | 'status'> | null;
     created_at: string;

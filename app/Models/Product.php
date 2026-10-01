@@ -36,14 +36,21 @@ class Product extends Model
         'type',
         'price',
         'sale_price',
+        'extended_price',
         'currency',
         'thumbnail',
+        'live_preview_url',
         'gallery',
         'download_file_path',
+        'download_file_disk',
+        'download_file_name',
+        'download_file_size',
         'version',
         'license_type',
         'default_activation_limit',
         'download_limit',
+        'support_months',
+        'support_extension_price',
         'status',
         'is_featured',
         'seo_title',
@@ -51,11 +58,26 @@ class Product extends Model
         'sales_count',
     ];
 
+    /**
+     * Where the deliverable sits on the private disk — never sent to a
+     * browser. Pages get download_file_name / download_file_size instead.
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'download_file_path',
+        'download_file_disk',
+    ];
+
     protected function casts(): array
     {
         return [
+            'download_file_size' => 'integer',
             'price' => 'decimal:2',
             'sale_price' => 'decimal:2',
+            'extended_price' => 'decimal:2',
+            'support_extension_price' => 'decimal:2',
+            'support_months' => 'integer',
             'gallery' => 'array',
             'is_featured' => 'boolean',
             'default_activation_limit' => 'integer',
@@ -113,6 +135,26 @@ class Product extends Model
         }
 
         return false;
+    }
+
+    /**
+     * Whether a file has been uploaded for buyers to download.
+     */
+    public function hasDownloadFile(): bool
+    {
+        return filled($this->download_file_path);
+    }
+
+    /** Whether buyers can choose an Extended License. */
+    public function offersExtendedLicense(): bool
+    {
+        return $this->extended_price !== null;
+    }
+
+    /** Whether buyers can extend the included support to 12 months. */
+    public function offersSupportExtension(): bool
+    {
+        return $this->support_extension_price !== null && $this->support_months > 0 && $this->support_months < 12;
     }
 
     public function getCurrentPriceAttribute(): string

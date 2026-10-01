@@ -9,6 +9,7 @@ use App\Domain\Payments\OrderPaymentProcessor;
 use App\Events\PaymentCompleted;
 use App\Listeners\FulfillOrder;
 use App\Models\Coupon;
+use App\Models\License;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentGateway;
@@ -149,6 +150,13 @@ class CheckoutService
                 'quantity' => $row['quantity'],
                 'unit_price' => $row['unit_price'],
                 'total_price' => $row['line_total'],
+                // Purchase options, read at fulfilment (license tier) and on
+                // My purchases (support period).
+                'metadata' => [
+                    'license' => ($row['extended'] ?? false) ? License::TIER_EXTENDED : License::TIER_REGULAR,
+                    'extended_support' => (bool) ($row['extended_support'] ?? false),
+                    'support_months' => (int) ($row['support_months'] ?? $product->support_months),
+                ],
             ]);
         }
 

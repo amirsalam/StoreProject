@@ -49,6 +49,14 @@ class OrderItem extends Model
         return $this->hasOne(License::class);
     }
 
+    /**
+     * One license key per unit bought (quantity 3 → 3 keys).
+     */
+    public function licenses(): HasMany
+    {
+        return $this->hasMany(License::class);
+    }
+
     public function download(): HasOne
     {
         return $this->hasOne(Download::class);

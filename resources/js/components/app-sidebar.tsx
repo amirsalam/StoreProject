@@ -11,15 +11,19 @@ import {
     FileText,
     Folder,
     FolderKanban,
+    HardDrive,
     LayoutGrid,
     ListTodo,
     Mail,
     Newspaper,
     Package,
+    PackageOpen,
     Palette,
     Receipt,
     Send,
+    ShoppingBag,
     Store,
+    TrendingUp,
     UserCog,
     Users,
     Wallet,
@@ -31,6 +35,11 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         url: '/dashboard',
         icon: LayoutGrid,
+    },
+    {
+        title: 'My purchases',
+        url: '/purchases',
+        icon: ShoppingBag,
     },
 ];
 
@@ -54,6 +63,16 @@ const workspaceNavItems: NavItem[] = [
         title: 'My store',
         url: '/workspace/vendor',
         icon: Store,
+    },
+    {
+        title: 'My products',
+        url: '/workspace/products',
+        icon: PackageOpen,
+    },
+    {
+        title: 'Sales',
+        url: '/workspace/sales',
+        icon: TrendingUp,
     },
     {
         title: 'Team',
@@ -107,6 +126,11 @@ const adminNavItems: NavItem[] = [
         title: 'Email',
         url: '/admin/mail',
         icon: Send,
+    },
+    {
+        title: 'File storage',
+        url: '/admin/storage',
+        icon: HardDrive,
     },
 ];
 

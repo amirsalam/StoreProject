@@ -29,7 +29,7 @@ class OrderConfirmation extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $order = $this->order->loadMissing(['items.license', 'items.download']);
+        $order = $this->order->loadMissing(['items.licenses', 'items.download']);
         $brand = app(BrandingService::class)->summary()['title'];
         $money = fn ($amount) => '$'.number_format((float) $amount, 2);
         $date = fn ($value) => Carbon::parse($value)->locale(app()->getLocale())->isoFormat('LL');
@@ -56,21 +56,24 @@ class OrderConfirmation extends Notification
         }
         $mail->line('**'.$t('total', ['amount' => $money($order->total)]).'**');
 
-        $licensed = $order->items->filter(fn ($item) => $item->license !== null);
+        $licensed = $order->items->filter(fn ($item) => $item->licenses->isNotEmpty());
         if ($licensed->isNotEmpty()) {
             $mail->line('**'.$t('licenses_heading').'**');
             foreach ($licensed as $item) {
-                $line = $t('license_line', [
-                    'title' => $item->product_title,
-                    'key' => $item->license->license_key,
-                    'limit' => $item->license->activation_limit,
-                ]);
-                if ($item->license->expires_at) {
-                    $line .= ' '.$t('license_expires', ['date' => $date($item->license->expires_at)]);
+                foreach ($item->licenses as $license) {
+                    $line = $t('license_line', [
+                        'title' => $item->product_title,
+                        'key' => $license->license_key,
+                        'limit' => $license->activation_limit,
+                    ]);
+                    if ($license->expires_at) {
+                        $line .= ' '.$t('license_expires', ['date' => $date($license->expires_at)]);
+                    }
+                    $mail->line($line);
                 }
-                $mail->line($line);
             }
             $mail->line($t('licenses_help', ['url' => route('api-reference')]));
+            $mail->line($t('licenses_saved', ['url' => route('purchases.index')]));
         }
 
         $downloads = $order->items->filter(fn ($item) => $item->download !== null);
@@ -83,11 +86,18 @@ class OrderConfirmation extends Notification
                     'limit' => $limit ? $t('download_limit', ['count' => $limit]) : $t('download_unlimited'),
                 ]));
             }
-            $mail->line($t('downloads_help', ['email' => $order->billing_email]));
+            $mail->line($t('downloads_help', ['email' => $order->billing_email, 'url' => route('purchases.index')]));
         }
 
+        // Something to download or activate → the button leads to My
+        // purchases (files + keys); otherwise to the order receipt.
+        $delivers = $licensed->isNotEmpty() || $downloads->isNotEmpty();
+
         return $mail
-            ->action($t('action'), route('checkout.confirmation', $order->order_number))
+            ->action(
+                $delivers ? $t('action_purchases') : $t('action'),
+                $delivers ? route('purchases.index') : route('checkout.confirmation', $order->order_number),
+            )
             ->line($t('support', ['url' => route('contact')]))
             ->salutation($t('salutation', ['brand' => $brand]));
     }

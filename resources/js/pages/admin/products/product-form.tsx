@@ -6,7 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type Category, type ProductType } from '@/types';
 import { Link } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { DirectUploadError, directUpload } from '@/lib/direct-upload';
+import { CheckCircle2, CloudUpload, FileArchive, Upload, X } from 'lucide-react';
+import { FormEvent, useRef, useState } from 'react';
 import { useTranslate } from '@/hooks/use-translate';
 
 export interface ProductFormValues {
@@ -28,7 +30,33 @@ export interface ProductFormValues {
     is_featured: boolean;
     seo_title: string;
     seo_description: string;
-    [key: string]: string | number | boolean;
+    /** Price of the Extended License; blank = Regular License only. */
+    extended_price: string;
+    /** Months of support included (0 = none). */
+    support_months: string;
+    /** Price to extend support to 12 months; blank = not offered. */
+    support_extension_price: string;
+    live_preview_url: string;
+    /** Screenshot URLs, one per line. */
+    screenshots: string;
+    /** The file buyers download (sent as multipart). */
+    download_file: File | null;
+    /** Set instead of download_file after a direct-to-cloud upload. */
+    download_file_token: string;
+    remove_download_file: boolean;
+    [key: string]: string | number | boolean | File | null;
+}
+
+/** How files are uploaded: straight to cloud storage, or to this server in chunks. */
+export interface UploadOptions {
+    mode: 'direct' | 'chunked';
+    max_bytes: number;
+}
+
+/** The file already stored for this product (its path never reaches the browser). */
+export interface CurrentProductFile {
+    name: string | null;
+    size: number | null;
 }
 
 interface Option {
@@ -47,6 +75,10 @@ interface ProductFormProps {
     statuses: Option[];
     types: Option[];
     cancelHref: string;
+    currentFile?: CurrentProductFile | null;
+    /** Admins can feature products on the storefront; sellers can't. */
+    showFeatured?: boolean;
+    upload: UploadOptions;
 }
 
 export default function ProductForm({
@@ -60,8 +92,13 @@ export default function ProductForm({
     statuses,
     types,
     cancelHref,
+    currentFile = null,
+    showFeatured = true,
+    upload,
 }: ProductFormProps) {
     const { __ } = useTranslate();
+    // A direct upload is still running: saving now would lose the file.
+    const [uploading, setUploading] = useState(false);
     return (
         <form onSubmit={onSubmit} className="space-y-8">
             <section className="space-y-4 rounded-lg border bg-card p-6">
@@ -175,7 +212,93 @@ export default function ProductForm({
             </section>
 
             <section className="space-y-4 rounded-lg border bg-card p-6">
+                <h2 className="text-base font-semibold">{__('License & support')}</h2>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                    <Field
+                        label={__('Extended License price')}
+                        htmlFor="extended_price"
+                        error={errors.extended_price}
+                        hint={__('Leave blank to sell the Regular License only.')}
+                    >
+                        <Input
+                            id="extended_price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={data.extended_price}
+                            onChange={(e) => setData('extended_price', e.target.value)}
+                        />
+                    </Field>
+                    <Field label={__('Support included (months)')} htmlFor="support_months" error={errors.support_months} hint={__('0 = no support.')}>
+                        <Input
+                            id="support_months"
+                            type="number"
+                            min={0}
+                            max={60}
+                            value={data.support_months}
+                            onChange={(e) => setData('support_months', e.target.value)}
+                        />
+                    </Field>
+                    <Field
+                        label={__('Extend support to 12 months — price')}
+                        htmlFor="support_extension_price"
+                        error={errors.support_extension_price}
+                        hint={__('Leave blank to not offer it.')}
+                    >
+                        <Input
+                            id="support_extension_price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={data.support_extension_price}
+                            onChange={(e) => setData('support_extension_price', e.target.value)}
+                        />
+                    </Field>
+                </div>
+            </section>
+
+            <section className="space-y-4 rounded-lg border bg-card p-6">
+                <h2 className="text-base font-semibold">{__('Preview')}</h2>
+
+                <Field label={__('Live preview URL')} htmlFor="live_preview_url" error={errors.live_preview_url} hint={__('A demo buyers can try before buying.')}>
+                    <Input
+                        id="live_preview_url"
+                        dir="ltr"
+                        type="url"
+                        placeholder="https://demo.example.com"
+                        value={data.live_preview_url}
+                        onChange={(e) => setData('live_preview_url', e.target.value)}
+                    />
+                </Field>
+                <Field label={__('Screenshots')} htmlFor="screenshots" error={errors.screenshots ?? errors.gallery} hint={__('One image URL per line (up to 20).')}>
+                    <textarea
+                        id="screenshots"
+                        dir="ltr"
+                        value={data.screenshots}
+                        onChange={(e) => setData('screenshots', e.target.value)}
+                        rows={4}
+                        placeholder="https://…/screenshot-1.png"
+                        className="flex w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs shadow-sm placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-hidden"
+                    />
+                </Field>
+            </section>
+
+            <section className="space-y-4 rounded-lg border bg-card p-6">
                 <h2 className="text-base font-semibold">{__('Delivery')}</h2>
+
+                <DownloadFileField
+                    upload={upload}
+                    current={currentFile}
+                    remove={data.remove_download_file}
+                    onUploaded={(token) => {
+                        setData('download_file_token', token ?? '');
+                        if (token) setData('remove_download_file', false);
+                    }}
+                    onBusy={setUploading}
+                    onRemove={(r) => setData('remove_download_file', r)}
+                    error={errors.download_file ?? errors.download_file_token}
+                />
 
                 <div className="grid gap-4 md:grid-cols-2">
                     <Field label={__('Version')} htmlFor="version" error={errors.version}>
@@ -240,6 +363,7 @@ export default function ProductForm({
                             </SelectContent>
                         </Select>
                     </Field>
+                    {showFeatured && (
                     <div className="flex items-center gap-2 pt-7">
                         <Checkbox
                             id="is_featured"
@@ -250,6 +374,7 @@ export default function ProductForm({
                             {__('Featured product')}
                         </Label>
                     </div>
+                    )}
                 </div>
             </section>
 
@@ -274,7 +399,7 @@ export default function ProductForm({
                 <Button asChild variant="ghost">
                     <Link href={cancelHref}>{__('Cancel')}</Link>
                 </Button>
-                <Button type="submit" disabled={processing}>
+                <Button type="submit" disabled={processing || uploading}>
                     {submitLabel}
                 </Button>
             </div>
@@ -306,6 +431,166 @@ function Field({
             {children}
             {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
             <InputError message={error} />
+        </div>
+    );
+}
+
+export function formatBytes(bytes: number | null | undefined): string {
+    if (!bytes) return '';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let value = bytes;
+    let unit = 0;
+    while (value >= 1024 && unit < units.length - 1) {
+        value /= 1024;
+        unit++;
+    }
+    return `${value.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`;
+}
+
+type UploadState = { status: 'idle' } | { status: 'uploading'; percent: number } | { status: 'done' } | { status: 'error'; message: string };
+
+function DownloadFileField({
+    upload,
+    current,
+    remove,
+    onUploaded,
+    onBusy,
+    onRemove,
+    error,
+}: {
+    upload: UploadOptions;
+    current: CurrentProductFile | null;
+    remove: boolean;
+    onUploaded: (token: string | null) => void;
+    onBusy: (busy: boolean) => void;
+    onRemove: (remove: boolean) => void;
+    error?: string;
+}) {
+    const { __ } = useTranslate();
+    const [chosen, setChosen] = useState<File | null>(null);
+    const [state, setState] = useState<UploadState>({ status: 'idle' });
+    const abort = useRef<AbortController | null>(null);
+    const direct = upload.mode === 'direct';
+    const maxLabel = formatBytes(upload.max_bytes);
+
+    const reset = () => {
+        abort.current?.abort();
+        abort.current = null;
+        setChosen(null);
+        setState({ status: 'idle' });
+        onBusy(false);
+        onUploaded(null);
+    };
+
+    const choose = async (file: File | null) => {
+        reset();
+        if (!file) return;
+
+        if (file.size > upload.max_bytes) {
+            setState({ status: 'error', message: __('The file is too large. The maximum is :size.', { size: maxLabel }) });
+            return;
+        }
+
+        setChosen(file);
+
+        // Uploaded now (to the bucket, or to this server in chunks), with
+        // progress; the form then submits the token.
+        const controller = new AbortController();
+        abort.current = controller;
+        onBusy(true);
+        setState({ status: 'uploading', percent: 0 });
+        try {
+            const token = await directUpload(file, (percent) => setState({ status: 'uploading', percent }), controller.signal);
+            onUploaded(token);
+            setState({ status: 'done' });
+        } catch (e) {
+            if (controller.signal.aborted) return;
+            const blocked = e instanceof DirectUploadError && e.blockedByBucket;
+            setState({
+                status: 'error',
+                message: blocked ? __('The storage bucket refused the upload. Check its CORS rules in Admin → File storage.') : (e as Error).message,
+            });
+            setChosen(null);
+        } finally {
+            if (abort.current === controller) {
+                abort.current = null;
+                onBusy(false);
+            }
+        }
+    };
+
+    const hasCurrent = Boolean(current?.name) && !remove;
+
+    return (
+        <div className="space-y-2">
+            <Label htmlFor="download_file">{__('Product file')}</Label>
+            <p className="text-xs text-muted-foreground">
+                {__('The file buyers download after paying (zip, pdf…). It is stored privately — only buyers can download it.')}
+            </p>
+
+            {chosen ? (
+                <div className="space-y-2 rounded-md border border-primary/40 bg-primary/5 px-3 py-2 text-sm">
+                    <div className="flex items-center justify-between gap-3">
+                        <span className="flex min-w-0 items-center gap-2">
+                            {state.status === 'done' ? (
+                                <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
+                            ) : direct ? (
+                                <CloudUpload className="size-4 shrink-0 text-primary" />
+                            ) : (
+                                <Upload className="size-4 shrink-0 text-primary" />
+                            )}
+                            <span className="truncate" dir="ltr">
+                                {chosen.name}
+                            </span>
+                            <span className="shrink-0 text-xs text-muted-foreground">{formatBytes(chosen.size)}</span>
+                        </span>
+                        <Button type="button" size="sm" variant="ghost" onClick={reset} title={__('Cancel')}>
+                            <X />
+                        </Button>
+                    </div>
+                    {state.status === 'uploading' && (
+                        <div className="space-y-1">
+                            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${state.percent}%` }} />
+                            </div>
+                            <p className="text-xs text-muted-foreground">{__('Uploading… :percent%', { percent: state.percent })}</p>
+                        </div>
+                    )}
+                    {state.status === 'done' && (
+                        <p className="text-xs text-emerald-700 dark:text-emerald-400">{__('Uploaded — save to attach it to the product.')}</p>
+                    )}
+                </div>
+            ) : hasCurrent ? (
+                <div className="flex items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                    <span className="flex min-w-0 items-center gap-2">
+                        <FileArchive className="size-4 shrink-0 text-muted-foreground" />
+                        <span className="truncate" dir="ltr">
+                            {current?.name}
+                        </span>
+                        <span className="shrink-0 text-xs text-muted-foreground">{formatBytes(current?.size)}</span>
+                    </span>
+                    <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => onRemove(true)}>
+                        {__('Remove')}
+                    </Button>
+                </div>
+            ) : remove ? (
+                <div className="flex items-center justify-between gap-3 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
+                    <span>{__('The current file will be removed when you save.')}</span>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => onRemove(false)}>
+                        {__('Undo')}
+                    </Button>
+                </div>
+            ) : null}
+
+            {/* Re-mounted when the choice is cleared, so the native input empties too. */}
+            <Input key={chosen ? 'chosen' : 'empty'} id="download_file" type="file" onChange={(e) => choose(e.target.files?.[0] ?? null)} />
+            <p className="text-xs text-muted-foreground">
+                {direct
+                    ? __('Uploaded straight to cloud storage — up to :size.', { size: maxLabel })
+                    : __('Maximum file size: :size', { size: maxLabel })}
+            </p>
+            {hasCurrent && !chosen && <p className="text-xs text-muted-foreground">{__('Choose a new file to replace the current one.')}</p>}
+            <InputError message={state.status === 'error' ? state.message : error} />
         </div>
     );
 }

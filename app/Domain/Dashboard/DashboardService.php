@@ -194,7 +194,9 @@ class DashboardService
             $this->revenueTrendChart($thirtyDays, $today->toDateString(), $tenant->id),
             $this->recentOrdersTable($tenant->id),
             $this->quickActions([
-                ['label' => __('Add product'), 'href' => $this->link('admin.products.create'), 'icon' => 'plus', 'primary' => true],
+                ['label' => __('Add product'), 'href' => $this->link('workspace.products.create'), 'icon' => 'plus', 'primary' => true],
+                ['label' => __('My products'), 'href' => $this->link('workspace.products.index'), 'icon' => 'package'],
+                ['label' => __('Sales'), 'href' => $this->link('workspace.sales.index'), 'icon' => 'shopping-bag'],
                 ['label' => __('My store'), 'href' => $this->link('workspace.vendor.edit'), 'icon' => 'store'],
                 ['label' => __('Payment gateway'), 'href' => $this->link('workspace.billing.index'), 'icon' => 'wallet'],
             ]),
@@ -230,7 +232,7 @@ class DashboardService
             $this->recentOrdersTable(null, $user->id, title: __('Your recent orders')),
             $this->quickActions([
                 ['label' => __('Browse products'), 'href' => $this->link('products.index'), 'icon' => 'shopping-bag', 'primary' => true],
-                ['label' => __('Downloads'), 'href' => $this->link('downloads.index'), 'icon' => 'download'],
+                ['label' => __('My purchases'), 'href' => $this->link('purchases.index'), 'icon' => 'download'],
                 ['label' => __('Contact support'), 'href' => $this->link('contact'), 'icon' => 'help'],
             ]),
         ];

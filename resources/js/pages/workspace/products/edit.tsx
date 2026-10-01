@@ -1,10 +1,9 @@
-import ConfirmDialog from '@/components/confirm-dialog';
+import { useTranslate } from '@/hooks/use-translate';
 import AppLayout from '@/layouts/app-layout';
 import ProductForm, { type ProductFormValues, type UploadOptions } from '@/pages/admin/products/product-form';
 import { type BreadcrumbItem, type Category, type Product, type ProductType } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
-import { FormEvent, useState } from 'react';
-import { useTranslate } from '@/hooks/use-translate';
+import { FormEvent } from 'react';
 
 interface Option {
     value: string;
@@ -27,7 +26,7 @@ interface FullProduct extends Product {
     gallery: string[] | null;
 }
 
-interface AdminProductsEditProps {
+interface Props {
     upload: UploadOptions;
     product: FullProduct;
     categories: Category[];
@@ -35,8 +34,8 @@ interface AdminProductsEditProps {
     types: Option[];
 }
 
-export default function AdminProductsEdit({ product, categories, statuses, types, upload }: AdminProductsEditProps) {
-    const { __, __el } = useTranslate();
+export default function SellerProductsEdit({ product, categories, statuses, types, upload }: Props) {
+    const { __ } = useTranslate();
     const { data, setData, post, transform, processing, errors } = useForm<ProductFormValues>({
         category_id: product.category_id ? String(product.category_id) : '',
         title: product.title,
@@ -53,7 +52,7 @@ export default function AdminProductsEdit({ product, categories, statuses, types
         default_activation_limit: product.default_activation_limit ?? 1,
         download_limit: product.download_limit ? String(product.download_limit) : '',
         status: product.status,
-        is_featured: product.is_featured,
+        is_featured: false,
         seo_title: product.seo_title ?? '',
         seo_description: product.seo_description ?? '',
         extended_price: product.extended_price ?? '',
@@ -70,24 +69,13 @@ export default function AdminProductsEdit({ product, categories, statuses, types
     transform((values) => ({ ...values, _method: 'put' }));
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Admin', href: '/admin/products' },
-        { title: 'Products', href: '/admin/products' },
-        { title: product.title, href: `/admin/products/${product.id}/edit` },
+        { title: 'My products', href: '/workspace/products' },
+        { title: product.title, href: `/workspace/products/${product.id}/edit` },
     ];
-
-    // Saving asks for confirmation in a popup first.
-    const [confirming, setConfirming] = useState(false);
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        setConfirming(true);
-    };
-
-    const confirmUpdate = () => {
-        post(route('admin.products.update', product.id), {
-            forceFormData: true,
-            onFinish: () => setConfirming(false),
-        });
+        post(route('workspace.products.update', product.id), { forceFormData: true });
     };
 
     return (
@@ -95,10 +83,7 @@ export default function AdminProductsEdit({ product, categories, statuses, types
             <Head title={__('Edit :name', { name: product.title })} />
 
             <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-                <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">{__('Edit product')}</h1>
-                    <p className="text-muted-foreground text-sm">{product.title}</p>
-                </div>
+                <h1 className="text-2xl font-semibold tracking-tight">{__('Edit product')}</h1>
 
                 <ProductForm
                     data={data}
@@ -111,26 +96,11 @@ export default function AdminProductsEdit({ product, categories, statuses, types
                     statuses={statuses}
                     types={types}
                     upload={upload}
-                    cancelHref={route('admin.products.index')}
+                    cancelHref={route('workspace.products.index')}
                     currentFile={{ name: product.download_file_name, size: product.download_file_size }}
+                    showFeatured={false}
                 />
             </div>
-
-            <ConfirmDialog
-                open={confirming}
-                onOpenChange={setConfirming}
-                title={__('Save changes to this product?')}
-                description={
-                    <>
-                        {__el('The changes to :title go live immediately — price, status and details included.', {
-                            title: <strong className="text-foreground">{product.title}</strong>,
-                        })}
-                    </>
-                }
-                confirmLabel={__('Save changes')}
-                processing={processing}
-                onConfirm={confirmUpdate}
-            />
         </AppLayout>
     );
 }

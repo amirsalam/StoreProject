@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Marketplace\ProductFileService;
 use App\Domain\Plans\PlanGate;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
@@ -11,6 +12,7 @@ use App\Models\Product;
 use App\Tenancy\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -50,13 +52,17 @@ class ProductController extends Controller
     public function create(): Response
     {
         return Inertia::render('admin/products/create', [
+            'upload' => app(ProductFileService::class)->uploadOptions(),
             'categories' => $this->categories(),
             'statuses' => $this->statuses(),
             'types' => $this->types(),
         ]);
     }
 
-    public function store(StoreProductRequest $request, PlanGate $gate): RedirectResponse
+    /** Form fields handled by ProductFileService rather than mass-assigned. */
+    private const FILE_FIELDS = ['download_file', 'remove_download_file', 'download_file_token'];
+
+    public function store(StoreProductRequest $request, PlanGate $gate, ProductFileService $files): RedirectResponse
     {
         $tenant = app(TenantContext::class)->current();
 
@@ -66,7 +72,13 @@ class ProductController extends Controller
             abort(402, 'You\'ve reached your plan\'s product limit. Upgrade to add more.');
         }
 
-        $product = Product::create($request->validated());
+        // One transaction: a rejected upload must not leave a file-less product behind.
+        $product = DB::transaction(function () use ($request, $files) {
+            $product = Product::create($request->safe()->except(self::FILE_FIELDS));
+            $files->sync($product, $request->file('download_file'), false, $request->input('download_file_token'), $request->user()->id);
+
+            return $product;
+        });
 
         return redirect()
             ->route('admin.products.index')
@@ -76,6 +88,7 @@ class ProductController extends Controller
     public function edit(Product $product): Response
     {
         return Inertia::render('admin/products/edit', [
+            'upload' => app(ProductFileService::class)->uploadOptions(),
             'product' => $product,
             'categories' => $this->categories(),
             'statuses' => $this->statuses(),
@@ -83,9 +96,12 @@ class ProductController extends Controller
         ]);
     }
 
-    public function update(UpdateProductRequest $request, Product $product): RedirectResponse
+    public function update(UpdateProductRequest $request, Product $product, ProductFileService $files): RedirectResponse
     {
-        $product->update($request->validated());
+        DB::transaction(function () use ($request, $product, $files) {
+            $product->update($request->safe()->except(self::FILE_FIELDS));
+            $files->sync($product, $request->file('download_file'), $request->boolean('remove_download_file'), $request->input('download_file_token'), $request->user()->id);
+        });
 
         return redirect()
             ->route('admin.products.index')

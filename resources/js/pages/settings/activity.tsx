@@ -43,6 +43,7 @@ const EVENT_META: Record<string, { label: string; icon: typeof Activity; tone: '
     'license.activated': { label: 'License activated', icon: ShieldCheck, tone: 'ok' },
     'license.deactivated': { label: 'License deactivated', icon: ShieldAlert, tone: 'info' },
     'mail_settings.updated': { label: 'Email settings updated', icon: Activity, tone: 'info' },
+    'file_storage.updated': { label: 'File storage settings updated', icon: Activity, tone: 'info' },
     'payment_gateway.created': { label: 'Payment gateway created', icon: CreditCard, tone: 'info' },
     'payment_gateway.updated': { label: 'Payment gateway updated', icon: CreditCard, tone: 'info' },
     'payment_gateway.enabled': { label: 'Payment gateway enabled', icon: CreditCard, tone: 'ok' },
