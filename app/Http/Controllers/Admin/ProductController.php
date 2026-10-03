@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\LicensingSettings;
 use App\Tenancy\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,6 +53,8 @@ class ProductController extends Controller
     public function create(): Response
     {
         return Inertia::render('admin/products/create', [
+            'currencies' => array_keys(config('currencies')),
+            'licensing' => app(LicensingSettings::class)->forForm(),
             'upload' => app(ProductFileService::class)->uploadOptions(),
             'categories' => $this->categories(),
             'statuses' => $this->statuses(),
@@ -88,6 +91,8 @@ class ProductController extends Controller
     public function edit(Product $product): Response
     {
         return Inertia::render('admin/products/edit', [
+            'currencies' => array_keys(config('currencies')),
+            'licensing' => app(LicensingSettings::class)->forForm(),
             'upload' => app(ProductFileService::class)->uploadOptions(),
             'product' => $product,
             'categories' => $this->categories(),

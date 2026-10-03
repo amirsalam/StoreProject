@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Services\BrandingService;
+use App\Support\Money;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
@@ -31,7 +32,7 @@ class OrderConfirmation extends Notification
     {
         $order = $this->order->loadMissing(['items.licenses', 'items.download']);
         $brand = app(BrandingService::class)->summary()['title'];
-        $money = fn ($amount) => '$'.number_format((float) $amount, 2);
+        $money = fn ($amount) => Money::format($amount, $order->currency);
         $date = fn ($value) => Carbon::parse($value)->locale(app()->getLocale())->isoFormat('LL');
         $t = fn (string $key, array $replace = []) => __("messages.order_email.{$key}", $replace);
 

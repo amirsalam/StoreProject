@@ -1,6 +1,6 @@
 import { useTranslate } from '@/hooks/use-translate';
 import AppLayout from '@/layouts/app-layout';
-import ProductForm, { type ProductFormValues, type UploadOptions } from '@/pages/admin/products/product-form';
+import ProductForm, { type LicensingRule, type ProductFormValues, type UploadOptions } from '@/pages/admin/products/product-form';
 import { type BreadcrumbItem, type Category, type ProductType } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
@@ -12,6 +12,8 @@ interface Option {
 
 interface Props {
     upload: UploadOptions;
+    licensing: LicensingRule;
+    currencies: string[];
     categories: Category[];
     statuses: Option[];
     types: Option[];
@@ -22,7 +24,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'New', href: '/workspace/products/create' },
 ];
 
-export default function SellerProductsCreate({ categories, statuses, types, upload }: Props) {
+export default function SellerProductsCreate({ categories, statuses, types, upload, licensing, currencies }: Props) {
     const { __ } = useTranslate();
     const { data, setData, post, processing, errors } = useForm<ProductFormValues>({
         category_id: '',
@@ -79,6 +81,8 @@ export default function SellerProductsCreate({ categories, statuses, types, uplo
                     statuses={statuses}
                     types={types}
                     upload={upload}
+                    licensing={licensing}
+                    currencies={currencies}
                     cancelHref={route('workspace.products.index')}
                     showFeatured={false}
                 />

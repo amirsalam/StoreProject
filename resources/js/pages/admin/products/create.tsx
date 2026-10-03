@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import ProductForm, { type ProductFormValues, type UploadOptions } from '@/pages/admin/products/product-form';
+import ProductForm, { type LicensingRule, type ProductFormValues, type UploadOptions } from '@/pages/admin/products/product-form';
 import { type BreadcrumbItem, type Category, type ProductType } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
@@ -12,6 +12,8 @@ interface Option {
 
 interface AdminProductsCreateProps {
     upload: UploadOptions;
+    licensing: LicensingRule;
+    currencies: string[];
     categories: Category[];
     statuses: Option[];
     types: Option[];
@@ -23,7 +25,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'New', href: '/admin/products/create' },
 ];
 
-export default function AdminProductsCreate({ categories, statuses, types, upload }: AdminProductsCreateProps) {
+export default function AdminProductsCreate({ categories, statuses, types, upload, licensing, currencies }: AdminProductsCreateProps) {
     const { __ } = useTranslate();
     const { data, setData, post, processing, errors } = useForm<ProductFormValues>({
         category_id: '',
@@ -80,6 +82,8 @@ export default function AdminProductsCreate({ categories, statuses, types, uploa
                     statuses={statuses}
                     types={types}
                     upload={upload}
+                    licensing={licensing}
+                    currencies={currencies}
                     cancelHref={route('admin.products.index')}
                 />
             </div>

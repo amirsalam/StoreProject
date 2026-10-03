@@ -6,6 +6,8 @@ use App\Domain\Billing\MissingStripeKeysException;
 use App\Domain\Billing\StripeGateway;
 use App\Domain\Payments\Cmi\CmiGateway;
 use App\Domain\Payments\OrderPaymentProcessor;
+use App\Domain\Payments\PayPal\PayPalGateway;
+use App\Domain\Payments\PayPal\PayPalPayments;
 use App\Events\PaymentCompleted;
 use App\Listeners\FulfillOrder;
 use App\Models\Coupon;
@@ -17,6 +19,8 @@ use App\Models\Product;
 use App\Models\User;
 use App\Services\CartService;
 use App\Support\Money;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -42,16 +46,22 @@ use Stripe\Exception\ApiErrorException;
  */
 class CheckoutService
 {
-    private const CURRENCY = 'USD';
+    /** The order's currency: the cart's (all its products share one). */
+    private string $currency = 'USD';
 
     public const METHOD_STRIPE = 'stripe';
 
     public const METHOD_CMI = 'cmi';
 
+    /** PayPal: approval on paypal.com, captured when the buyer returns. */
+    public const METHOD_PAYPAL = 'paypal';
+
     public function __construct(
         private readonly CartService $cart,
         private readonly StripeGateway $gateway,
         private readonly CmiGateway $cmi,
+        private readonly PayPalGateway $paypal,
+        private readonly PayPalPayments $paypalPayments,
     ) {}
 
     /**
@@ -68,6 +78,7 @@ class CheckoutService
             throw new EmptyCartException;
         }
 
+        $this->currency = $this->cart->currency() ?? 'USD';
         $subtotal = round((float) $lineItems->sum('line_total'), 2);
         [$coupon, $discount] = $this->resolveCoupon($couponCode, $user, $subtotal);
         $total = max(0.0, round($subtotal - $discount, 2));
@@ -76,7 +87,15 @@ class CheckoutService
         // we need now is a configured gateway to send them to.
         $cmiGateway = null;
         if ($method === self::METHOD_CMI) {
-            $cmiGateway = $this->cmi->gateway()
+            // CMI's rate is set as 1 USD = X MAD, so it takes USD carts only.
+            $cmiGateway = ($this->currency === 'USD' ? $this->cmi->gateway() : null)
+                ?? throw new PaymentUnavailableException(__('messages.checkout.payments_unavailable'));
+        }
+
+        // PayPal: same idea — a configured gateway, then a PayPal order.
+        $paypalGateway = null;
+        if ($method === self::METHOD_PAYPAL) {
+            $paypalGateway = (PayPalGateway::supportsCurrency($this->currency) ? $this->paypal->gateway() : null)
                 ?? throw new PaymentUnavailableException(__('messages.checkout.payments_unavailable'));
         }
 
@@ -85,9 +104,9 @@ class CheckoutService
         // behind — no orphan pending order, no burnt coupon use.
         try {
             [$order, $payment, $intent] = DB::transaction(
-                fn () => $this->createOrderWithIntent($user, $billing, $lineItems, $subtotal, $discount, $total, $coupon, $cmiGateway),
+                fn () => $this->createOrderWithIntent($user, $billing, $lineItems, $subtotal, $discount, $total, $coupon, $cmiGateway, $paypalGateway),
             );
-        } catch (ApiErrorException|MissingStripeKeysException $e) {
+        } catch (ApiErrorException|MissingStripeKeysException|RequestException|ConnectionException $e) {
             report($e);
 
             throw new PaymentUnavailableException(__('messages.checkout.payments_unavailable'), previous: $e);
@@ -112,6 +131,11 @@ class CheckoutService
             return new CheckoutResult($order, null, route('checkout.cmi.redirect', $order->order_number));
         }
 
+        if ($paypalGateway) {
+            // The browser is sent on to PayPal to approve the payment.
+            return new CheckoutResult($order, null, $intent['paypal_url']);
+        }
+
         return new CheckoutResult($order, $intent['client_secret']);
     }
 
@@ -120,7 +144,7 @@ class CheckoutService
      * @param  array<string, mixed>  $billing
      * @return array{0: Order, 1: Payment, 2: array{id: string, client_secret: string|null, customer: string|null}|null}
      */
-    private function createOrderWithIntent(User $user, array $billing, Collection $lineItems, float $subtotal, float $discount, float $total, ?Coupon $coupon, ?PaymentGateway $cmiGateway = null): array
+    private function createOrderWithIntent(User $user, array $billing, Collection $lineItems, float $subtotal, float $discount, float $total, ?Coupon $coupon, ?PaymentGateway $cmiGateway = null, ?PaymentGateway $paypalGateway = null): array
     {
         $order = Order::create([
             'user_id' => $user->id,
@@ -129,9 +153,9 @@ class CheckoutService
             'discount' => $discount,
             'tax' => 0,
             'total' => $total,
-            'currency' => self::CURRENCY,
+            'currency' => $this->currency,
             'status' => Order::STATUS_PENDING,
-            'payment_method' => $cmiGateway ? self::METHOD_CMI : self::METHOD_STRIPE,
+            'payment_method' => $paypalGateway ? self::METHOD_PAYPAL : ($cmiGateway ? self::METHOD_CMI : self::METHOD_STRIPE),
             'billing_name' => $billing['billing_name'],
             'billing_email' => $billing['billing_email'],
             'billing_country' => $billing['billing_country'] ?? null,
@@ -171,9 +195,9 @@ class CheckoutService
         $payment = Payment::create([
             'order_id' => $order->id,
             'user_id' => $user->id,
-            'gateway' => $cmiGateway ? self::METHOD_CMI : self::METHOD_STRIPE,
+            'gateway' => $paypalGateway ? self::METHOD_PAYPAL : ($cmiGateway ? self::METHOD_CMI : self::METHOD_STRIPE),
             'amount' => $total,
-            'currency' => self::CURRENCY,
+            'currency' => $this->currency,
             'status' => Payment::STATUS_PENDING,
             'payment_method' => 'card',
         ]);
@@ -197,11 +221,16 @@ class CheckoutService
             return [$order, $payment, null];
         }
 
+        if ($paypalGateway) {
+            // Inside the transaction: if PayPal refuses, nothing is kept.
+            return [$order, $payment, ['paypal_url' => $this->paypalPayments->start($order, $payment, $paypalGateway)]];
+        }
+
         // Inside the transaction on purpose: if Stripe throws, the order,
         // items, coupon use and payment above are rolled back.
         $intent = $this->gateway->createPaymentIntent(
-            Money::toCents((string) $total),
-            self::CURRENCY,
+            self::stripeAmount($total, $this->currency),
+            $this->currency,
             $this->intentMetadata($order, $payment),
         );
 
@@ -211,6 +240,17 @@ class CheckoutService
         ]);
 
         return [$order, $payment, $intent];
+    }
+
+    /**
+     * The amount Stripe expects: the currency's smallest unit (cents, yen …).
+     * Stripe takes 3-decimal currencies (KWD, BHD …) only in multiples of 10.
+     */
+    public static function stripeAmount(float|string $total, string $currency): int
+    {
+        $minor = Money::toMinor($total, $currency);
+
+        return Money::minorUnits($currency) === 3 ? (int) (round($minor / 10) * 10) : $minor;
     }
 
     /**
@@ -250,7 +290,7 @@ class CheckoutService
 
         if ($coupon->min_order_amount !== null && $subtotal < (float) $coupon->min_order_amount) {
             throw new InvalidCouponException(__('messages.checkout.coupon_errors.min_order', [
-                'amount' => '$'.number_format((float) $coupon->min_order_amount, 2),
+                'amount' => Money::format($coupon->min_order_amount, $this->currency),
             ]));
         }
 

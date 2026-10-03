@@ -7,7 +7,7 @@ import { useTranslate } from '@/hooks/use-translate';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import { type Product, type ProductType, type Review } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { Star } from 'lucide-react';
+import { Pencil, Star } from 'lucide-react';
 
 interface ProductShowProps {
     product: Product;
@@ -15,9 +15,11 @@ interface ProductShowProps {
     relatedProducts: Product[];
     averageRating: number;
     reviewsCount: number;
+    /** Set for admins and the product's seller: their edit page. */
+    editUrl: string | null;
 }
 
-export default function ProductShow({ product, reviews, relatedProducts, averageRating, reviewsCount }: ProductShowProps) {
+export default function ProductShow({ product, reviews, relatedProducts, averageRating, reviewsCount, editUrl }: ProductShowProps) {
     const { t } = useTranslate();
     const typeLabel = (type: ProductType) => t(`product.types.${type}`);
 
@@ -102,6 +104,15 @@ export default function ProductShow({ product, reviews, relatedProducts, average
                 <aside>
                     <div className="sticky top-24 space-y-4">
                         <ProductPurchaseBox product={product} />
+
+                        {editUrl && (
+                            <a
+                                href={editUrl}
+                                className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed p-3 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                            >
+                                <Pencil className="size-4" /> {t('product.edit_prices')}
+                            </a>
+                        )}
 
                         <dl className="space-y-2 rounded-xl border bg-card p-5 text-sm shadow-sm">
                             <div className="flex justify-between">

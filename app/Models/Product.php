@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\LicensingSettings;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -148,7 +149,35 @@ class Product extends Model
     /** Whether buyers can choose an Extended License. */
     public function offersExtendedLicense(): bool
     {
-        return $this->extended_price !== null;
+        return $this->effectiveExtendedPrice() !== null;
+    }
+
+    /**
+     * What an Extended License costs: the product's own Extended price, or
+     * the store-wide default (Admin → Licensing: regular price × N).
+     * Subscriptions never have one.
+     */
+    public function effectiveExtendedPrice(): ?string
+    {
+        if ($this->type === self::TYPE_SUBSCRIPTION) {
+            return null;
+        }
+
+        if ($this->extended_price !== null) {
+            return (string) $this->extended_price;
+        }
+
+        $default = app(LicensingSettings::class)->defaultExtendedPrice($this->price);
+
+        return $default !== null ? number_format($default, 2, '.', '') : null;
+    }
+
+    /**
+     * Serialized for the product page (`$product->append(...)`).
+     */
+    public function getEffectiveExtendedPriceAttribute(): ?string
+    {
+        return $this->effectiveExtendedPrice();
     }
 
     /** Whether buyers can extend the included support to 12 months. */

@@ -12,6 +12,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Vendor;
+use App\Services\LicensingSettings;
 use App\Tenancy\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -85,6 +86,8 @@ class VendorProductController extends Controller
         }
 
         return Inertia::render('workspace/products/create', [
+            'currencies' => array_keys(config('currencies')),
+            'licensing' => app(LicensingSettings::class)->forForm(),
             'upload' => app(ProductFileService::class)->uploadOptions(),
             'categories' => $this->categories(),
             'statuses' => $this->statuses(),
@@ -123,6 +126,8 @@ class VendorProductController extends Controller
         $this->authorizeOwnership($request, $product);
 
         return Inertia::render('workspace/products/edit', [
+            'currencies' => array_keys(config('currencies')),
+            'licensing' => app(LicensingSettings::class)->forForm(),
             'upload' => app(ProductFileService::class)->uploadOptions(),
             'product' => $product,
             'categories' => $this->categories(),

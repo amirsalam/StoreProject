@@ -8,6 +8,7 @@ use App\Domain\Marketplace\InvalidCouponException;
 use App\Domain\Marketplace\PaymentUnavailableException;
 use App\Domain\Payments\Cmi\CmiGateway;
 use App\Domain\Payments\PaymentStatusSync;
+use App\Domain\Payments\PayPal\PayPalGateway;
 use App\Domain\Payments\StripeCredentials;
 use App\Http\Requests\Marketplace\PlaceOrderRequest;
 use App\Models\Order;
@@ -32,6 +33,7 @@ class CheckoutController extends Controller
         private readonly CheckoutService $checkout,
         private readonly StripeCredentials $stripe,
         private readonly CmiGateway $cmi,
+        private readonly PayPalGateway $paypal,
     ) {}
 
     public function show(Request $request): Response|RedirectResponse
@@ -55,7 +57,7 @@ class CheckoutController extends Controller
                 'line_total' => $row['line_total'],
             ])->values(),
             'subtotal' => $this->cart->subtotal(),
-            'currency' => 'USD',
+            'currency' => $currency = $this->cart->currency(),
             'buyer' => [
                 'name' => $user->name,
                 'email' => $user->email,
@@ -67,10 +69,12 @@ class CheckoutController extends Controller
             'stripeKey' => $this->stripe->keys()['publishable_key'],
             // CMI (Morocco) as a second way to pay, when configured: the page
             // shows the dirham amount the buyer will be charged.
-            'cmi' => ($cmi = $this->cmi->gateway()) ? [
+            'cmi' => $currency === 'USD' && ($cmi = $this->cmi->gateway()) ? [
                 'amount_mad' => $this->cmi->madAmount($this->cart->subtotal(), $cmi),
                 'rate' => $this->cmi->rate($cmi),
             ] : null,
+            // PayPal, when an active gateway with REST credentials exists.
+            'paypal' => PayPalGateway::supportsCurrency($currency) && $this->paypal->gateway() !== null,
         ]);
     }
 
@@ -162,9 +166,11 @@ class CheckoutController extends Controller
             // Back from a declined/cancelled CMI payment: say so and offer to
             // try again (the order stays pending until paid).
             'paymentFailed' => $request->query('payment') === 'failed' && $order->status === Order::STATUS_PENDING,
-            'retryUrl' => $order->status === Order::STATUS_PENDING && $order->payment_method === CheckoutService::METHOD_CMI
-                ? route('checkout.cmi.redirect', $order->order_number)
-                : null,
+            'retryUrl' => $order->status !== Order::STATUS_PENDING ? null : match ($order->payment_method) {
+                CheckoutService::METHOD_CMI => route('checkout.cmi.redirect', $order->order_number),
+                CheckoutService::METHOD_PAYPAL => route('checkout.paypal.pay', $order->order_number),
+                default => null,
+            },
         ]);
     }
 }

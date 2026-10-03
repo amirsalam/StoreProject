@@ -24,6 +24,7 @@ class UpdateProductRequest extends FormRequest
         $this->merge([
             'slug' => $slug !== '' ? Str::slug($slug) : ($title !== '' ? Str::slug($title) : null),
             'is_featured' => $this->boolean('is_featured'),
+            'currency' => strtoupper(trim((string) $this->input('currency', ''))),
             'remove_download_file' => $this->boolean('remove_download_file'),
             // Blank = no support included.
             'support_months' => $this->filled('support_months') ? $this->input('support_months') : 0,
@@ -56,7 +57,8 @@ class UpdateProductRequest extends FormRequest
             ])],
             'price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'sale_price' => ['nullable', 'numeric', 'min:0', 'lt:price'],
-            'currency' => ['required', 'string', 'size:3'],
+            // Any ISO 4217 currency (config/currencies.php).
+            'currency' => ['required', 'string', Rule::in(array_keys(config('currencies')))],
             'thumbnail' => ['nullable', 'string', 'max:2048'],
             'version' => ['nullable', 'string', 'max:50'],
             'license_type' => ['nullable', 'string', 'max:50'],

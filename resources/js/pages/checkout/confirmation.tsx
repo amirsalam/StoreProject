@@ -122,7 +122,7 @@ export default function CheckoutConfirmation({ order, paymentFailed = false, ret
 
                     <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
                         {retryUrl && (
-                            // A plain link: the retry page posts a form to CMI's own site.
+                            // A plain link: retrying leaves this app (CMI's or PayPal's own site).
                             <Button asChild>
                                 <a href={retryUrl}>{t('checkout.retry_payment')}</a>
                             </Button>

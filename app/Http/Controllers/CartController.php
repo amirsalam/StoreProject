@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Marketplace\CurrencyMismatchException;
 use App\Models\Product;
 use App\Services\CartService;
 use Illuminate\Http\RedirectResponse;
@@ -37,7 +38,7 @@ class CartController extends Controller
         return Inertia::render('cart/index', [
             'items' => $items,
             'subtotal' => $this->cart->subtotal(),
-            'currency' => 'USD',
+            'currency' => $this->cart->currency(),
         ]);
     }
 
@@ -56,12 +57,16 @@ class CartController extends Controller
             ->where('status', Product::STATUS_PUBLISHED)
             ->firstOrFail();
 
-        $this->cart->add(
-            $product,
-            $data['quantity'] ?? 1,
-            (bool) ($data['extended'] ?? false),
-            (bool) ($data['extended_support'] ?? false),
-        );
+        try {
+            $this->cart->add(
+                $product,
+                $data['quantity'] ?? 1,
+                (bool) ($data['extended'] ?? false),
+                (bool) ($data['extended_support'] ?? false),
+            );
+        } catch (CurrencyMismatchException $e) {
+            return back()->withErrors(['cart' => $e->getMessage()]);
+        }
 
         return back()->with('success', __('Added ":title" to your cart.', ['title' => $product->title]));
     }

@@ -1,3 +1,4 @@
+import CurrencySelect from '@/components/currency-select';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -79,6 +80,31 @@ interface ProductFormProps {
     /** Admins can feature products on the storefront; sellers can't. */
     showFeatured?: boolean;
     upload: UploadOptions;
+    /** Store-wide Extended License rule (Admin → Licensing). */
+    licensing?: LicensingRule;
+    /** ISO 4217 codes products can be priced in (config/currencies.php). */
+    currencies?: string[];
+}
+
+export interface LicensingRule {
+    extended_enabled: boolean;
+    extended_multiplier: number;
+}
+
+/** "$316.15", "316,15 €" — falls back to "CODE 316.15" for an unknown code. */
+function formatMoney(amount: number, currency: string): string {
+    try {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(amount);
+    } catch {
+        return `${currency} ${amount.toFixed(2)}`;
+    }
+}
+
+/** The Extended price buyers see when the field is left blank. */
+function defaultExtended(price: string, licensing?: LicensingRule): number | null {
+    const regular = parseFloat(price);
+    if (!licensing?.extended_enabled || !Number.isFinite(regular)) return null;
+    return Math.round(regular * licensing.extended_multiplier * 100) / 100;
 }
 
 export default function ProductForm({
@@ -95,6 +121,8 @@ export default function ProductForm({
     currentFile = null,
     showFeatured = true,
     upload,
+    licensing,
+    currencies = ['USD'],
 }: ProductFormProps) {
     const { __ } = useTranslate();
     // A direct upload is still running: saving now would lose the file.
@@ -178,7 +206,13 @@ export default function ProductForm({
                 <h2 className="text-base font-semibold">{__('Pricing')}</h2>
 
                 <div className="grid gap-4 md:grid-cols-3">
-                    <Field label={__('Price')} htmlFor="price" error={errors.price} required>
+                    <Field
+                        label={__('Price')}
+                        htmlFor="price"
+                        error={errors.price}
+                        hint={__('The regular price. Shown crossed out while a sale price is set.')}
+                        required
+                    >
                         <Input
                             id="price"
                             type="number"
@@ -189,7 +223,7 @@ export default function ProductForm({
                             required
                         />
                     </Field>
-                    <Field label={__('Sale price')} htmlFor="sale_price" error={errors.sale_price} hint={__('Optional. Must be lower than price.')}>
+                    <Field label={__('Sale price')} htmlFor="sale_price" error={errors.sale_price} hint={__('Optional — what buyers pay during a sale. Must be lower than the price; clear it to end the sale.')}>
                         <Input
                             id="sale_price"
                             type="number"
@@ -200,15 +234,11 @@ export default function ProductForm({
                         />
                     </Field>
                     <Field label={__('Currency')} htmlFor="currency" error={errors.currency} required>
-                        <Input
-                            id="currency"
-                            value={data.currency}
-                            onChange={(e) => setData('currency', e.target.value.toUpperCase())}
-                            maxLength={3}
-                            required
-                        />
+                        <CurrencySelect id="currency" value={data.currency} onChange={(code) => setData('currency', code)} currencies={currencies} />
                     </Field>
                 </div>
+
+                <PricePreview data={data} licensing={licensing} />
             </section>
 
             <section className="space-y-4 rounded-lg border bg-card p-6">
@@ -219,7 +249,14 @@ export default function ProductForm({
                         label={__('Extended License price')}
                         htmlFor="extended_price"
                         error={errors.extended_price}
-                        hint={__('Leave blank to sell the Regular License only.')}
+                        hint={
+                            defaultExtended(data.price, licensing) !== null
+                                ? __('Leave blank to use the store default: :price (Regular × :n).', {
+                                      price: formatMoney(defaultExtended(data.price, licensing)!, data.currency),
+                                      n: licensing!.extended_multiplier,
+                                  })
+                                : __('Leave blank to sell the Regular License only.')
+                        }
                     >
                         <Input
                             id="extended_price"
@@ -591,6 +628,48 @@ function DownloadFileField({
             </p>
             {hasCurrent && !chosen && <p className="text-xs text-muted-foreground">{__('Choose a new file to replace the current one.')}</p>}
             <InputError message={state.status === 'error' ? state.message : error} />
+        </div>
+    );
+}
+
+/** How the prices will look on the product page, updated as the seller types. */
+function PricePreview({ data, licensing }: { data: ProductFormValues; licensing?: LicensingRule }) {
+    const { __ } = useTranslate();
+    const money = (value: string) => {
+        const amount = parseFloat(value);
+        if (!Number.isFinite(amount)) return null;
+        try {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: data.currency || 'USD' }).format(amount);
+        } catch {
+            return `$${amount.toFixed(2)}`;
+        }
+    };
+
+    const price = money(data.price);
+    const sale = money(data.sale_price);
+    const onSale = sale !== null && price !== null && parseFloat(data.sale_price) < parseFloat(data.price);
+    const fallback = data.type === 'subscription' ? null : defaultExtended(data.price, licensing);
+    const extended = money(data.extended_price) ?? (fallback !== null ? money(String(fallback)) : null);
+    const support = money(data.support_extension_price);
+
+    if (price === null) return null;
+
+    return (
+        <div className="rounded-md border border-dashed bg-muted/30 p-4">
+            <p className="mb-2 text-xs font-medium text-muted-foreground">{__('On the product page')}</p>
+            <div className="flex flex-wrap items-end justify-between gap-3">
+                <span className="text-sm font-semibold">{__('Regular License')}</span>
+                <span className="text-end">
+                    <span className="block text-2xl font-bold tabular-nums">{onSale ? sale : price}</span>
+                    {onSale && <span className="text-sm text-muted-foreground tabular-nums line-through">{price}</span>}
+                </span>
+            </div>
+            {(extended || support) && (
+                <ul className="mt-2 space-y-0.5 border-t pt-2 text-xs text-muted-foreground">
+                    {extended && <li>{__('Extended License: :price', { price: extended })}</li>}
+                    {support && <li>{__('Extend support to 12 months: +:price', { price: support })}</li>}
+                </ul>
+            )}
         </div>
     );
 }

@@ -1,6 +1,6 @@
 import ConfirmDialog from '@/components/confirm-dialog';
 import AppLayout from '@/layouts/app-layout';
-import ProductForm, { type ProductFormValues, type UploadOptions } from '@/pages/admin/products/product-form';
+import ProductForm, { type LicensingRule, type ProductFormValues, type UploadOptions } from '@/pages/admin/products/product-form';
 import { type BreadcrumbItem, type Category, type Product, type ProductType } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
@@ -29,13 +29,15 @@ interface FullProduct extends Product {
 
 interface AdminProductsEditProps {
     upload: UploadOptions;
+    licensing: LicensingRule;
+    currencies: string[];
     product: FullProduct;
     categories: Category[];
     statuses: Option[];
     types: Option[];
 }
 
-export default function AdminProductsEdit({ product, categories, statuses, types, upload }: AdminProductsEditProps) {
+export default function AdminProductsEdit({ product, categories, statuses, types, upload, licensing, currencies }: AdminProductsEditProps) {
     const { __, __el } = useTranslate();
     const { data, setData, post, transform, processing, errors } = useForm<ProductFormValues>({
         category_id: product.category_id ? String(product.category_id) : '',
@@ -111,6 +113,8 @@ export default function AdminProductsEdit({ product, categories, statuses, types
                     statuses={statuses}
                     types={types}
                     upload={upload}
+                    licensing={licensing}
+                    currencies={currencies}
                     cancelHref={route('admin.products.index')}
                     currentFile={{ name: product.download_file_name, size: product.download_file_size }}
                 />

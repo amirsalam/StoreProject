@@ -29,7 +29,7 @@ class PlaceOrderRequest extends FormRequest
             'billing_address.postal_code' => ['nullable', 'string', 'max:32'],
             'coupon_code' => ['nullable', 'string', 'max:64'],
             'notes' => ['nullable', 'string', 'max:1000'],
-            'payment_method' => ['nullable', 'in:'.CheckoutService::METHOD_STRIPE.','.CheckoutService::METHOD_CMI],
+            'payment_method' => ['nullable', 'in:'.CheckoutService::METHOD_STRIPE.','.CheckoutService::METHOD_CMI.','.CheckoutService::METHOD_PAYPAL],
         ];
     }
 }

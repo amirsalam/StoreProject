@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\BlogPostController as AdminBlogPostController;
 use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\FileStorageController as AdminFileStorageController;
+use App\Http\Controllers\Admin\LicensingController as AdminLicensingController;
 use App\Http\Controllers\Admin\MailSettingsController as AdminMailSettingsController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PaymentGatewayController as AdminPaymentGatewayController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Payments\CmiController;
+use App\Http\Controllers\Payments\PayPalController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductUploadController;
 use App\Http\Controllers\PurchaseController;
@@ -105,6 +107,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('checkout/{order:order_number}/confirmation', [CheckoutController::class, 'confirmation'])
         ->name('checkout.confirmation');
+
+    // PayPal: the buyer's return (approved / cancelled) and "try again".
+    Route::get('checkout/{order:order_number}/paypal/return', [PayPalController::class, 'return'])->name('checkout.paypal.return');
+    Route::get('checkout/{order:order_number}/paypal/cancel', [PayPalController::class, 'cancel'])->name('checkout.paypal.cancel');
+    Route::get('checkout/{order:order_number}/paypal', [PayPalController::class, 'pay'])->name('checkout.paypal.pay');
 });
 
 // CMI hosted payment (Morocco). The redirect needs the buyer's session; the
@@ -179,6 +186,10 @@ Route::middleware(['auth', 'admin'])
         Route::get('mail', [AdminMailSettingsController::class, 'edit'])->name('mail.edit');
         Route::put('mail', [AdminMailSettingsController::class, 'update'])->name('mail.update');
         Route::post('mail/test', [AdminMailSettingsController::class, 'test'])->name('mail.test');
+
+        // Store-wide Extended License rule.
+        Route::get('licensing', [AdminLicensingController::class, 'edit'])->name('licensing.edit');
+        Route::put('licensing', [AdminLicensingController::class, 'update'])->name('licensing.update');
 
         // Where product files live (server disk or S3 / Google Cloud Storage / R2 …).
         Route::get('storage', [AdminFileStorageController::class, 'edit'])->name('storage.edit');

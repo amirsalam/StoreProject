@@ -29,9 +29,11 @@ interface CheckoutIndexProps {
     stripeKey: string | null;
     /** CMI (Morocco), when configured: the amount the buyer is charged in dirhams. */
     cmi: { amount_mad: string; rate: number } | null;
+    /** PayPal, when an active gateway is configured. */
+    paypal: boolean;
 }
 
-type PaymentMethod = 'stripe' | 'cmi';
+type PaymentMethod = 'stripe' | 'cmi' | 'paypal';
 
 interface BillingData {
     billing_name: string;
@@ -55,7 +57,7 @@ function csrfToken(): string {
     return match ? decodeURIComponent(match[1]) : '';
 }
 
-export default function CheckoutIndex({ items, subtotal, currency, buyer, stripeKey, cmi }: CheckoutIndexProps) {
+export default function CheckoutIndex({ items, subtotal, currency, buyer, stripeKey, cmi, paypal }: CheckoutIndexProps) {
     const { t } = useTranslate();
 
     // Load Stripe.js once, only when a publishable key is configured.
@@ -73,8 +75,9 @@ export default function CheckoutIndex({ items, subtotal, currency, buyer, stripe
     // Once the order + Stripe PaymentIntent exist, we move to the card phase.
     const [clientSecret, setClientSecret] = useState<string | null>(null);
     const [confirmationUrl, setConfirmationUrl] = useState<string>('');
-    const [method, setMethod] = useState<PaymentMethod>(stripeKey ? 'stripe' : 'cmi');
-    const canPay = Boolean(stripeKey || cmi);
+    const [orderNumber, setOrderNumber] = useState<string | null>(null);
+    const [method, setMethod] = useState<PaymentMethod>(stripeKey ? 'stripe' : cmi ? 'cmi' : 'paypal');
+    const canPay = Boolean(stripeKey || cmi || paypal);
 
     const set = (key: keyof BillingData, value: string) => setBilling((prev) => ({ ...prev, [key]: value }));
 
@@ -122,13 +125,14 @@ export default function CheckoutIndex({ items, subtotal, currency, buyer, stripe
                 return;
             }
 
-            // CMI: continue on CMI's secure hosted payment page.
+            // CMI / PayPal: continue on the provider's secure page.
             if (payload.redirect_url) {
                 window.location.assign(payload.redirect_url);
                 return;
             }
 
             setConfirmationUrl(payload.confirmation_url);
+            setOrderNumber(payload.order_number ?? null);
 
             // Fully-discounted ($0) order — already settled server-side, no card.
             if (!payload.client_secret) {
@@ -208,6 +212,41 @@ export default function CheckoutIndex({ items, subtotal, currency, buyer, stripe
                                 </div>
                             </div>
 
+                            {/* Payment method — when CMI or PayPal is offered alongside (or instead of) Stripe. */}
+                            {!inPaymentPhase && (cmi || paypal) && (
+                                <fieldset className="bg-card space-y-3 rounded-xl border p-6 shadow-sm">
+                                    <legend className="font-display text-base font-semibold tracking-tight">{t('checkout.payment_method')}</legend>
+                                    {stripeKey && (
+                                        <label className="flex cursor-pointer items-center gap-3 rounded-md border p-3 text-sm has-[:checked]:border-primary">
+                                            <input type="radio" name="payment_method" checked={method === 'stripe'} onChange={() => setMethod('stripe')} />
+                                            {t('checkout.method_card')}
+                                        </label>
+                                    )}
+                                    {cmi && (
+                                        <label className="flex cursor-pointer items-start gap-3 rounded-md border p-3 text-sm has-[:checked]:border-primary">
+                                            <input type="radio" name="payment_method" className="mt-1" checked={method === 'cmi'} onChange={() => setMethod('cmi')} />
+                                            <span>
+                                                <span className="block">{t('checkout.method_cmi')}</span>
+                                                <span className="text-muted-foreground block text-xs">
+                                                    {t('checkout.cmi_amount', { amount: cmi.amount_mad, rate: cmi.rate })}
+                                                </span>
+                                            </span>
+                                        </label>
+                                    )}
+                                    {paypal && (
+                                        <label className="flex cursor-pointer items-start gap-3 rounded-md border p-3 text-sm has-[:checked]:border-primary">
+                                            <input type="radio" name="payment_method" className="mt-1" checked={method === 'paypal'} onChange={() => setMethod('paypal')} />
+                                            <span>
+                                                <span className="block font-medium">
+                                                    <span className="text-[#003087] dark:text-[#5ea2ff]">Pay</span>
+                                                    <span className="text-[#009cde]">Pal</span>
+                                                </span>
+                                                <span className="text-muted-foreground block text-xs">{t('checkout.paypal_note')}</span>
+                                            </span>
+                                        </label>
+                                    )}
+                                </fieldset>
+                            )}
                             {!inPaymentPhase && (
                                 <div className="bg-card rounded-xl border p-6 shadow-sm">
                                     <Label htmlFor="coupon_code">{t('checkout.coupon')}</Label>
@@ -221,27 +260,6 @@ export default function CheckoutIndex({ items, subtotal, currency, buyer, stripe
                                 </div>
                             )}
 
-                            {/* Payment method — only when CMI is offered alongside (or instead of) Stripe. */}
-                            {!inPaymentPhase && cmi && (
-                                <fieldset className="bg-card space-y-3 rounded-xl border p-6 shadow-sm">
-                                    <legend className="font-display text-base font-semibold tracking-tight">{t('checkout.payment_method')}</legend>
-                                    {stripeKey && (
-                                        <label className="flex cursor-pointer items-center gap-3 rounded-md border p-3 text-sm has-[:checked]:border-primary">
-                                            <input type="radio" name="payment_method" checked={method === 'stripe'} onChange={() => setMethod('stripe')} />
-                                            {t('checkout.method_card')}
-                                        </label>
-                                    )}
-                                    <label className="flex cursor-pointer items-start gap-3 rounded-md border p-3 text-sm has-[:checked]:border-primary">
-                                        <input type="radio" name="payment_method" className="mt-1" checked={method === 'cmi'} onChange={() => setMethod('cmi')} />
-                                        <span>
-                                            <span className="block">{t('checkout.method_cmi')}</span>
-                                            <span className="text-muted-foreground block text-xs">
-                                                {t('checkout.cmi_amount', { amount: cmi.amount_mad, rate: cmi.rate })}
-                                            </span>
-                                        </span>
-                                    </label>
-                                </fieldset>
-                            )}
                         </form>
 
                         {/* Phase 2 — card payment (Stripe Elements) */}
@@ -260,6 +278,27 @@ export default function CheckoutIndex({ items, subtotal, currency, buyer, stripe
                                 >
                                     <PaymentStep confirmationUrl={confirmationUrl} amountLabel={money(subtotal, currency)} />
                                 </Elements>
+
+                                {/* Changed your mind? The same order can be paid with PayPal. */}
+                                {paypal && orderNumber && (
+                                    <div className="mt-5 space-y-3">
+                                        <div className="text-muted-foreground flex items-center gap-3 text-xs uppercase">
+                                            <span className="bg-border h-px flex-1" />
+                                            {t('checkout.or')}
+                                            <span className="bg-border h-px flex-1" />
+                                        </div>
+                                        <Button asChild variant="outline" size="lg" className="w-full">
+                                            {/* A plain link: PayPal's page is outside this app. */}
+                                            <a href={route('checkout.paypal.pay', orderNumber)}>
+                                                {t('checkout.pay_with_paypal_instead')}{' '}
+                                                <span className="font-semibold">
+                                                    <span className="text-[#003087] dark:text-[#5ea2ff]">Pay</span>
+                                                    <span className="text-[#009cde]">Pal</span>
+                                                </span>
+                                            </a>
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -297,7 +336,13 @@ export default function CheckoutIndex({ items, subtotal, currency, buyer, stripe
                             {!inPaymentPhase &&
                                 (canPay ? (
                                     <Button type="button" size="lg" className="w-full" disabled={placing} onClick={placeOrder}>
-                                        {placing ? t('checkout.placing') : method === 'cmi' ? t('checkout.pay_with_cmi') : t('checkout.continue_to_payment')}
+                                        {placing
+                                            ? t('checkout.placing')
+                                            : method === 'cmi'
+                                              ? t('checkout.pay_with_cmi')
+                                              : method === 'paypal'
+                                                ? t('checkout.pay_with_paypal')
+                                                : t('checkout.continue_to_payment')}
                                     </Button>
                                 ) : (
                                     <p className="bg-muted text-muted-foreground rounded-md px-3 py-2 text-center text-xs">
@@ -307,7 +352,7 @@ export default function CheckoutIndex({ items, subtotal, currency, buyer, stripe
 
                             <p className="text-muted-foreground flex items-center justify-center gap-1.5 text-center text-[11px]">
                                 <ShieldCheck className="size-3" />
-                                {t('checkout.secure_note')}
+                                {method === 'paypal' ? t('checkout.secure_note_paypal') : t('checkout.secure_note')}
                             </p>
                         </div>
                     </aside>

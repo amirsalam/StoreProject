@@ -3,8 +3,10 @@
 namespace App\Domain\Payments;
 
 use App\Domain\Billing\StripeGateway;
+use App\Domain\Payments\PayPal\PayPalGateway;
 use App\Models\ActivityLog;
 use App\Models\PaymentGateway;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\DB;
 use Stripe\Exception\ApiConnectionException;
 use Stripe\Exception\ApiErrorException;
@@ -169,6 +171,20 @@ class PaymentGatewayService
                 return ['ok' => false, 'message' => $problem];
             }
             $message = __('Connected to Stripe — the keys work.');
+        }
+
+        if ($gateway->provider === 'paypal') {
+            // A real check: ask PayPal for an access token with these keys.
+            try {
+                app(PayPalGateway::class)->accessToken($gateway);
+            } catch (RequestException $e) {
+                return ['ok' => false, 'message' => __('PayPal refused these credentials (:error). Check the Client ID, the Secret and the environment (sandbox keys only work in Sandbox).', [
+                    'error' => $e->response->json('error_description') ?? $e->response->status(),
+                ])];
+            } catch (\Throwable $e) {
+                return ['ok' => false, 'message' => __('Could not reach PayPal: :error', ['error' => $e->getMessage()])];
+            }
+            $message = __('Connected to PayPal — the credentials work.');
         }
 
         if ($gateway->provider === 'cmi') {

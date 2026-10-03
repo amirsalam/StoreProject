@@ -68,7 +68,9 @@ class ProductController extends Controller
     {
         abort_unless($product->status === Product::STATUS_PUBLISHED, 404);
 
-        $product->load(['category:id,name,slug', 'vendor:id,name,slug,status']);
+        $product->load(['category:id,name,slug', 'vendor:id,name,slug,status'])
+            // Own Extended price, or the store-wide default (Admin → Licensing).
+            ->append('effective_extended_price');
 
         $reviews = $product->reviews()
             ->with('user:id,name')
@@ -92,6 +94,30 @@ class ProductController extends Controller
             'relatedProducts' => $relatedProducts,
             'averageRating' => round($product->reviews()->where('is_approved', true)->avg('rating') ?? 0, 1),
             'reviewsCount' => $product->reviews()->where('is_approved', true)->count(),
+            'editUrl' => $this->editUrl($product),
         ]);
+    }
+
+    /**
+     * Where the viewer can edit this product (prices, options …): admins
+     * in Admin → Products, the selling store's owner in My products;
+     * nobody else gets a link.
+     */
+    private function editUrl(Product $product): ?string
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return null;
+        }
+
+        if ($user->is_admin) {
+            return route('admin.products.edit', $product);
+        }
+
+        $vendorId = $user->vendor()->value('id');
+
+        return $vendorId !== null && $vendorId === $product->vendor_id
+            ? route('workspace.products.edit', $product)
+            : null;
     }
 }

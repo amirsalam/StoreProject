@@ -148,6 +148,8 @@ export interface Product {
     sales_count: number;
     /** Extended License price; null = Regular License only. */
     extended_price?: string | null;
+    /** Own Extended price, or the store-wide default (Admin → Licensing); null when not offered. */
+    effective_extended_price?: string | null;
     /** Months of seller support included (0 = none). */
     support_months?: number;
     /** Price to extend support to 12 months; null = not offered. */

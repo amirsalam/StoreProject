@@ -12,6 +12,7 @@ import {
     Folder,
     FolderKanban,
     HardDrive,
+    KeyRound,
     LayoutGrid,
     ListTodo,
     Mail,
@@ -121,6 +122,11 @@ const adminNavItems: NavItem[] = [
         title: 'Payment Gateways',
         url: '/admin/payment-gateways',
         icon: Wallet,
+    },
+    {
+        title: 'Licensing',
+        url: '/admin/licensing',
+        icon: KeyRound,
     },
     {
         title: 'Email',

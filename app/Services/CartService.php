@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Domain\Marketplace\CurrencyMismatchException;
 use App\Models\Product;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Collection;
@@ -46,7 +47,7 @@ class CartService
     public static function unitPrice(Product $product, bool $extended = false, bool $extendedSupport = false): float
     {
         $base = $extended && $product->offersExtendedLicense()
-            ? (float) $product->extended_price
+            ? (float) $product->effectiveExtendedPrice()
             : (float) ($product->sale_price ?? $product->price);
 
         $support = $extendedSupport && $product->offersSupportExtension()
@@ -62,6 +63,12 @@ class CartService
      */
     public function add(Product $product, int $quantity = 1, bool $extended = false, bool $extendedSupport = false): void
     {
+        // An order is charged in one currency.
+        $cartCurrency = $this->currency(null);
+        if ($cartCurrency !== null && strtoupper($product->currency) !== $cartCurrency) {
+            throw new CurrencyMismatchException($cartCurrency, strtoupper($product->currency));
+        }
+
         $extended = $extended && $product->offersExtendedLicense();
         $extendedSupport = $extendedSupport && $product->offersSupportExtension();
 
@@ -153,6 +160,17 @@ class CartService
             ->values();
     }
 
+    /**
+     * The currency the cart is charged in: its products' currency (they all
+     * share one), or $default for an empty cart.
+     */
+    public function currency(?string $default = 'USD'): ?string
+    {
+        $first = $this->lineItems()->first();
+
+        return $first ? strtoupper($first['product']->currency) : $default;
+    }
+
     public function count(): int
     {
         return (int) collect($this->raw())->sum('quantity');
@@ -173,7 +191,7 @@ class CartService
         return [
             'count' => $this->count(),
             'subtotal' => $this->subtotal(),
-            'currency' => 'USD',
+            'currency' => $this->currency(),
         ];
     }
 

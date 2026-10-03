@@ -26,7 +26,8 @@ export default function ProductPurchaseBox({ product }: { product: Product }) {
     const currency = product.currency || 'USD';
     const regular = parseFloat(product.sale_price ?? product.price);
     const listPrice = parseFloat(product.price);
-    const extendedPrice = product.extended_price != null ? parseFloat(product.extended_price) : null;
+    const offered = product.effective_extended_price ?? product.extended_price ?? null;
+    const extendedPrice = offered != null ? parseFloat(offered) : null;
     const supportMonths = product.support_months ?? 0;
     const extensionPrice =
         product.support_extension_price != null && supportMonths > 0 && supportMonths < 12 ? parseFloat(product.support_extension_price) : null;
@@ -37,6 +38,7 @@ export default function ProductPurchaseBox({ product }: { product: Product }) {
     const [quantity, setQuantity] = useState(1);
     const [adding, setAdding] = useState(false);
     const [justAdded, setJustAdded] = useState(false);
+    const [cartError, setCartError] = useState<string | null>(null);
 
     const unit = (tier === 'extended' && extendedPrice !== null ? extendedPrice : regular) + (extendSupport && extensionPrice !== null ? extensionPrice : 0);
     const licensePrice = tier === 'extended' && extendedPrice !== null ? extendedPrice : regular;
@@ -56,7 +58,11 @@ export default function ProductPurchaseBox({ product }: { product: Product }) {
             },
             {
                 preserveScroll: true,
-                onStart: () => setAdding(true),
+                onStart: () => {
+                    setAdding(true);
+                    setCartError(null);
+                },
+                onError: (errors) => setCartError(errors.cart ?? Object.values(errors)[0] ?? null),
                 onFinish: () => setAdding(false),
                 onSuccess: () => {
                     setJustAdded(true);
@@ -70,12 +76,17 @@ export default function ProductPurchaseBox({ product }: { product: Product }) {
         <div className="rounded-xl border bg-card p-6 shadow-sm">
             {/* License tier + price */}
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                <LicensePicker
-                    value={tier}
-                    onChange={setTier}
-                    regularPrice={money(regular, currency)}
-                    extendedPrice={extendedPrice !== null ? money(extendedPrice, currency) : null}
-                />
+                {quantityLocked ? (
+                    // Subscriptions are billed by plan — no license tiers.
+                    <p className="text-base font-semibold">{t('product.types.subscription')}</p>
+                ) : (
+                    <LicensePicker
+                        value={tier}
+                        onChange={setTier}
+                        regularPrice={money(regular, currency)}
+                        extendedPrice={extendedPrice !== null ? money(extendedPrice, currency) : null}
+                    />
+                )}
                 <div className="shrink-0 text-end">
                     <p className="text-3xl font-bold tabular-nums">{money(licensePrice, currency)}</p>
                     {onSale && <p className="text-sm text-muted-foreground line-through">{money(listPrice, currency)}</p>}
@@ -151,6 +162,8 @@ export default function ProductPurchaseBox({ product }: { product: Product }) {
                     </>
                 )}
             </Button>
+
+            {cartError && <p className="mt-2 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">{cartError}</p>}
 
             {(quantity > 1 || extendSupport) && (
                 <p className="mt-2 text-center text-sm font-medium tabular-nums">{t('product.total', { amount: money(unit * (quantityLocked ? 1 : quantity), currency) })}</p>
