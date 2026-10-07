@@ -1,28 +1,13 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useTranslate } from '@/hooks/use-translate';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type Paginated } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { CheckCircle2, ListTodo } from 'lucide-react';
-import { useTranslate } from '@/hooks/use-translate';
-
-interface Task {
-    id: number;
-    title: string;
-    description: string | null;
-    status: 'todo' | 'in_progress' | 'review' | 'done';
-    priority: 'low' | 'normal' | 'high' | 'urgent';
-    due_on: string | null;
-    position: number;
-    project?: { id: number; name: string; slug: string } | null;
-    assignee?: { id: number; name: string } | null;
-}
-
-interface Option {
-    value: string;
-    label: string;
-}
+import { CheckCircle2, ListTodo, Plus } from 'lucide-react';
+import { useState } from 'react';
+import TaskDialog, { type Option, type Task } from './task-dialog';
 
 interface Filters {
     project: string;
@@ -35,6 +20,8 @@ interface TasksIndexProps {
     projects: { id: number; name: string; slug: string }[];
     filters: Filters;
     statuses: Option[];
+    priorities: Option[];
+    members: { id: number; name: string }[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -42,8 +29,12 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Tasks', href: '/workspace/tasks' },
 ];
 
-export default function WorkspaceTasksIndex({ tasks, projects, filters, statuses }: TasksIndexProps) {
+export default function WorkspaceTasksIndex({ tasks, projects, filters, statuses, priorities, members }: TasksIndexProps) {
     const { __ } = useTranslate();
+    // null = closed, 'new' = create, a Task = edit.
+    const [editing, setEditing] = useState<Task | 'new' | null>(null);
+    const filteredProjectId = projects.find((p) => p.slug === filters.project)?.id ?? null;
+    const hasFilters = Boolean(filters.project || filters.status || filters.assignee);
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
 
     const applyFilter = (next: Partial<Filters>) => {
@@ -84,44 +75,58 @@ export default function WorkspaceTasksIndex({ tasks, projects, filters, statuses
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>
                         <h1 className="font-display text-2xl font-semibold tracking-tight">{__('Tasks')}</h1>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                             {tasks.total === 1 ? __('1 task') : __(':count tasks', { count: tasks.total })} ·{' '}
                             {projects.length === 1 ? __('1 project') : __(':count projects', { count: projects.length })}
                         </p>
                     </div>
+                    {projects.length > 0 && (
+                        <Button onClick={() => setEditing('new')}>
+                            <Plus /> {__('New task')}
+                        </Button>
+                    )}
                 </div>
 
                 <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <select
                         value={filters.project}
                         onChange={(e) => applyFilter({ project: e.target.value })}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-auto"
+                        className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm sm:w-auto"
                     >
                         <option value="">{__('All projects')}</option>
                         {projects.map((p) => (
-                            <option key={p.id} value={p.slug}>{p.name}</option>
+                            <option key={p.id} value={p.slug}>
+                                {p.name}
+                            </option>
                         ))}
                     </select>
                     <select
                         value={filters.status}
                         onChange={(e) => applyFilter({ status: e.target.value })}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-auto"
+                        className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm sm:w-auto"
                     >
                         <option value="">{__('All statuses')}</option>
                         {statuses.map((s) => (
-                            <option key={s.value} value={s.value}>{s.label}</option>
+                            <option key={s.value} value={s.value}>
+                                {s.label}
+                            </option>
                         ))}
                     </select>
                 </div>
 
                 {tasks.data.length === 0 ? (
-                    <EmptyState />
+                    <EmptyState
+                        hasProjects={projects.length > 0}
+                        hasFilters={hasFilters}
+                        onCreate={() => setEditing('new')}
+                        onClearFilters={() => applyFilter({ project: '', status: '', assignee: '' })}
+                    />
                 ) : (
                     <div className="grid gap-4 lg:grid-cols-4">
                         {(['todo', 'in_progress', 'review', 'done'] as const).map((col) => (
-                            <section key={col} className="rounded-lg border bg-card">
+                            <section key={col} className="bg-card rounded-lg border">
                                 <header className="flex items-center justify-between border-b px-4 py-2.5">
-                                    <h3 className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                                    <h3 className="text-muted-foreground font-mono text-[11px] tracking-wider uppercase">
                                         {statuses.find((s) => s.value === col)?.label}
                                     </h3>
                                     <Badge variant="secondary" className="font-mono text-[10px] tabular-nums">
@@ -130,64 +135,118 @@ export default function WorkspaceTasksIndex({ tasks, projects, filters, statuses
                                 </header>
                                 <ul className="divide-y">
                                     {grouped[col].length === 0 ? (
-                                        <li className="px-4 py-6 text-center text-xs text-muted-foreground">{__('No tasks')}</li>
-                                    ) : grouped[col].map((task) => (
-                                        <li key={task.id} className="group flex items-start gap-3 px-4 py-3 hover:bg-muted/30">
-                                            <button
-                                                type="button"
-                                                onClick={() => toggleDone(task)}
-                                                aria-label={task.status === 'done' ? __('Reopen task') : __('Mark task done')}
-                                                className={cn(
-                                                    'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border transition-colors',
-                                                    task.status === 'done'
-                                                        ? 'border-emerald-500 bg-emerald-500 text-white'
-                                                        : 'border-muted-foreground/30 hover:border-foreground',
-                                                )}
-                                            >
-                                                {task.status === 'done' && <CheckCircle2 className="size-3" />}
-                                            </button>
-                                            <div className="min-w-0 flex-1 space-y-1">
-                                                <p className={cn(
-                                                    'text-sm',
-                                                    task.status === 'done' && 'text-muted-foreground line-through',
-                                                )}>
-                                                    {task.title}
-                                                </p>
-                                                <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-                                                    {task.project && <span className="truncate">{task.project.name}</span>}
-                                                    {task.assignee && <span>· {task.assignee.name}</span>}
-                                                    {task.due_on && <span>· {__('due :date', { date: new Date(task.due_on).toLocaleDateString() })}</span>}
-                                                    {task.priority !== 'normal' && (
-                                                        <Badge variant="outline" className="capitalize">{__(task.priority)}</Badge>
+                                        <li className="text-muted-foreground px-4 py-6 text-center text-xs">{__('No tasks')}</li>
+                                    ) : (
+                                        grouped[col].map((task) => (
+                                            <li key={task.id} className="group hover:bg-muted/30 flex items-start gap-3 px-4 py-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleDone(task)}
+                                                    aria-label={task.status === 'done' ? __('Reopen task') : __('Mark task done')}
+                                                    className={cn(
+                                                        'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border transition-colors',
+                                                        task.status === 'done'
+                                                            ? 'border-emerald-500 bg-emerald-500 text-white'
+                                                            : 'border-muted-foreground/30 hover:border-foreground',
                                                     )}
+                                                >
+                                                    {task.status === 'done' && <CheckCircle2 className="size-3" />}
+                                                </button>
+                                                <div className="min-w-0 flex-1 space-y-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setEditing(task)}
+                                                        className={cn(
+                                                            'block text-start text-sm hover:underline',
+                                                            task.status === 'done' && 'text-muted-foreground line-through',
+                                                        )}
+                                                    >
+                                                        {task.title}
+                                                    </button>
+                                                    <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-[11px]">
+                                                        {task.project && <span className="truncate">{task.project.name}</span>}
+                                                        {task.assignee && <span>· {task.assignee.name}</span>}
+                                                        {task.due_on && (
+                                                            <span>· {__('due :date', { date: new Date(task.due_on).toLocaleDateString() })}</span>
+                                                        )}
+                                                        {task.priority !== 'normal' && (
+                                                            <Badge variant="outline" className="capitalize">
+                                                                {__(task.priority)}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </li>
-                                    ))}
+                                            </li>
+                                        ))
+                                    )}
                                 </ul>
                             </section>
                         ))}
                     </div>
                 )}
             </div>
+
+            <TaskDialog
+                open={editing !== null}
+                onClose={() => setEditing(null)}
+                task={editing === 'new' ? null : editing}
+                projects={projects}
+                members={members}
+                statuses={statuses}
+                priorities={priorities}
+                defaultProjectId={filteredProjectId}
+            />
         </AppLayout>
     );
 }
 
-function EmptyState() {
+function EmptyState({
+    hasProjects,
+    hasFilters,
+    onCreate,
+    onClearFilters,
+}: {
+    hasProjects: boolean;
+    hasFilters: boolean;
+    onCreate: () => void;
+    onClearFilters: () => void;
+}) {
     const { __ } = useTranslate();
     return (
-        <div className="rounded-xl border border-dashed border-border/80 bg-muted/20 px-6 py-20 text-center">
-            <div className="mx-auto mb-5 inline-flex size-12 items-center justify-center rounded-full border border-border/80 bg-background text-muted-foreground">
+        <div className="border-border/80 bg-muted/20 rounded-xl border border-dashed px-6 py-20 text-center">
+            <div className="border-border/80 bg-background text-muted-foreground mx-auto mb-5 inline-flex size-12 items-center justify-center rounded-full border">
                 <ListTodo className="size-5" />
             </div>
-            <h2 className="font-display text-lg font-semibold tracking-tight">{__('No tasks yet')}</h2>
-            <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                {__('Tasks live inside a project. Create a project first, then add tasks from its detail page.')}
-            </p>
-            <Button asChild className="mt-6">
-                <a href={route('workspace.projects.index')}>{__('Go to projects')}</a>
-            </Button>
+            {!hasProjects ? (
+                <>
+                    <h2 className="font-display text-lg font-semibold tracking-tight">{__('No tasks yet')}</h2>
+                    <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-sm">
+                        {__('Tasks live inside a project. Create a project first, then come back here to add tasks.')}
+                    </p>
+                    <Button asChild className="mt-6">
+                        <a href={route('workspace.projects.index')}>{__('Go to projects')}</a>
+                    </Button>
+                </>
+            ) : (
+                <>
+                    <h2 className="font-display text-lg font-semibold tracking-tight">
+                        {hasFilters ? __('No tasks match these filters') : __('No tasks yet')}
+                    </h2>
+                    <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-sm">
+                        {hasFilters ? __('Add one here, or clear the filters to see every task.') : __('Add the first task to one of your projects.')}
+                    </p>
+                    <div className="mt-6 flex flex-wrap justify-center gap-2">
+                        <Button onClick={onCreate}>
+                            <Plus /> {__('New task')}
+                        </Button>
+                        {hasFilters && (
+                            <Button variant="outline" onClick={onClearFilters}>
+                                {__('Clear filters')}
+                            </Button>
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     );
 }

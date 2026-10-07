@@ -46,6 +46,10 @@ class Product extends Model
         'download_file_disk',
         'download_file_name',
         'download_file_size',
+        'extended_file_path',
+        'extended_file_disk',
+        'extended_file_name',
+        'extended_file_size',
         'version',
         'license_type',
         'default_activation_limit',
@@ -68,12 +72,15 @@ class Product extends Model
     protected $hidden = [
         'download_file_path',
         'download_file_disk',
+        'extended_file_path',
+        'extended_file_disk',
     ];
 
     protected function casts(): array
     {
         return [
             'download_file_size' => 'integer',
+            'extended_file_size' => 'integer',
             'price' => 'decimal:2',
             'sale_price' => 'decimal:2',
             'extended_price' => 'decimal:2',
@@ -144,6 +151,15 @@ class Product extends Model
     public function hasDownloadFile(): bool
     {
         return filled($this->download_file_path);
+    }
+
+    /**
+     * Whether the Extended License has its own file (otherwise Extended
+     * buyers get the product file).
+     */
+    public function hasExtendedFile(): bool
+    {
+        return filled($this->extended_file_path);
     }
 
     /** Whether buyers can choose an Extended License. */

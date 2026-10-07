@@ -3,12 +3,15 @@
     $direction = \App\Http\Middleware\SetLocale::direction($locale);
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', $locale) }}" dir="{{ $direction }}">
+{{-- translate="no" + the google meta: the site has its own language switcher, and a browser
+     machine-translating it again garbles the real translations (and brand names). --}}
+<html lang="{{ str_replace('_', '-', $locale) }}" dir="{{ $direction }}" translate="no">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="google" content="notranslate">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ app(\App\Services\BrandingService::class)->summary()['title'] }}</title>
 
         <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
         <link rel="alternate icon" href="{{ asset('favicon.ico') }}">

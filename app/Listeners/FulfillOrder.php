@@ -57,7 +57,7 @@ class FulfillOrder
 
             // Downloads: every digital_download, plus licensed products that
             // ship a file (e.g. software + its activation key).
-            if ($product->type === Product::TYPE_DIGITAL_DOWNLOAD || $product->hasDownloadFile()) {
+            if ($product->type === Product::TYPE_DIGITAL_DOWNLOAD || $product->hasDownloadFile() || $product->hasExtendedFile()) {
                 $this->grantDownload($order, $item, $product, countSale: ! $licensed);
             }
         }

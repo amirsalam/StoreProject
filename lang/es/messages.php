@@ -174,13 +174,25 @@ return [
         'eyebrow_release' => 'v1.0 sale hoy',
         'title_lead' => 'El marketplace hecho para',
         'title_highlight' => 'creadores que entregan.',
-        'subtitle' => 'Vende scripts de Laravel, productos SaaS, APIs, plantillas y licencias desde una tienda pulida. Entrega segura, claves de licencia, suscripciones y pagos — todo integrado.',
+        'subtitle' => 'Vende scripts, productos SaaS, APIs, plantillas y licencias desde una tienda pulida. Entrega segura, claves de licencia, suscripciones y pagos — todo integrado.',
         'cta_primary' => 'Empieza gratis',
         'cta_secondary' => 'Explorar el marketplace',
         'trust_no_card' => 'Sin tarjeta de crédito',
         'trust_payments' => 'Compatible con Stripe y Paddle',
         'trust_uptime' => '99,99 % de disponibilidad',
         'preview_revenue' => 'Ingresos este mes',
+        'preview_nav' => [
+            'overview' => 'Resumen',
+            'products' => 'Productos',
+            'licenses' => 'Licencias',
+            'orders' => 'Pedidos',
+            'subscriptions' => 'Suscripciones',
+            'settings' => 'Ajustes',
+        ],
+        'preview_status' => [
+            'paid' => 'Pagado',
+            'trial' => 'Prueba',
+        ],
     ],
 
     'logo_cloud' => [
@@ -210,7 +222,7 @@ return [
             ],
             'security' => [
                 'title' => 'Seguridad incorporada',
-                'body' => 'Rate limiting, URLs firmadas, 2FA para admins y CSRF — buenas prácticas de Laravel activadas por defecto.',
+                'body' => 'Rate limiting, URLs firmadas, 2FA para admins y CSRF — buenas prácticas de seguridad activadas por defecto.',
             ],
             'seo' => [
                 'title' => 'SEO listo para usar',
@@ -372,7 +384,7 @@ return [
         'meta_title' => 'Sobre nosotros',
         'eyebrow' => 'Sobre nosotros',
         'title' => 'Un marketplace creado por makers, para makers.',
-        'lead' => 'StoreProject es el marketplace todo en uno para scripts de Laravel, APIs, plantillas y SaaS — donde los desarrolladores independientes venden su trabajo y los compradores lo reciben al instante.',
+        'lead' => 'StoreProject es el marketplace todo en uno para scripts, APIs, plantillas y SaaS — donde los desarrolladores independientes venden su trabajo y los compradores lo reciben al instante.',
         'mission' => [
             'title' => 'Por qué existimos',
             'body_1' => 'Vender software debería tratarse del software. Sin embargo, cada creador termina reconstruyendo la misma infraestructura: pagos, claves de licencia, descargas seguras, suscripciones y facturas.',
@@ -998,7 +1010,7 @@ return [
     ],
 
     'footer' => [
-        'tagline' => 'El marketplace mono-vendedor para scripts de Laravel, APIs, plantillas y SaaS — hecho para creadores que entregan.',
+        'tagline' => 'El marketplace mono-vendedor para scripts, APIs, plantillas y SaaS — hecho para creadores que entregan.',
         'status_ok' => 'Todos los sistemas operativos',
         'status_degraded' => 'Algunos sistemas degradados — ver estado',
         'copy' => '© :year StoreProject. Todos los derechos reservados.',

@@ -3,6 +3,7 @@
 namespace App\Domain\Marketplace;
 
 use App\Models\Download;
+use App\Models\License;
 use App\Models\Product;
 use App\Services\FileStorageSettings;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -33,6 +34,11 @@ class ProductFileService
 {
     /** The server disk (private). */
     public const DISK = 'local';
+
+    /** File slots: the product file, and the Extended License's own file. */
+    public const REGULAR = 'regular';
+
+    public const EXTENDED = 'extended';
 
     /** Max server upload in kilobytes (200 MB) — PHP's own limits apply on top. */
     public const MAX_KB = 204800;
@@ -181,30 +187,31 @@ class ProductFileService
     }
 
     /**
-     * Apply the product form's file fields: a direct-to-cloud upload
-     * (token) or a server upload replaces the current file; `remove`
+     * Apply the product form's file fields for one slot ('regular' — the
+     * product file — or 'extended', the Extended License's own file): an
+     * upload token or a server upload replaces the slot's file; `remove`
      * (without either) deletes it.
      */
-    public function sync(Product $product, ?UploadedFile $file, bool $remove = false, ?string $token = null, ?int $userId = null): void
+    public function sync(Product $product, ?UploadedFile $file, bool $remove = false, ?string $token = null, ?int $userId = null, string $slot = self::REGULAR): void
     {
         if (filled($token)) {
-            $this->attachUploaded($product, (string) $token, (int) $userId);
+            $this->attachUploaded($product, (string) $token, (int) $userId, $slot);
         } elseif ($file) {
-            $this->replace($product, $file);
+            $this->replace($product, $file, $slot);
         } elseif ($remove) {
-            $this->remove($product);
+            $this->remove($product, $slot);
         }
     }
 
     /**
      * Server upload onto the private local disk.
      */
-    public function replace(Product $product, UploadedFile $file): void
+    public function replace(Product $product, UploadedFile $file, string $slot = self::REGULAR): void
     {
         $extension = $this->extension($file->getClientOriginalName(), $file->extension());
         $path = $file->storeAs("product-files/{$product->id}", Str::random(40).'.'.$extension, self::DISK);
 
-        $this->point($product, self::DISK, $path, $this->cleanName($file->getClientOriginalName(), $extension), $file->getSize());
+        $this->point($product, self::DISK, $path, $this->cleanName($file->getClientOriginalName(), $extension), $file->getSize(), $slot);
     }
 
     /**
@@ -243,16 +250,17 @@ class ProductFileService
     }
 
     /**
-     * Point the product at an object the same user just uploaded to the
-     * cloud, after checking it really arrived.
+     * Point a product slot at a file the same user just uploaded (chunked to
+     * this server, or straight to the cloud), after checking it arrived whole.
      */
-    public function attachUploaded(Product $product, string $token, int $userId): void
+    public function attachUploaded(Product $product, string $token, int $userId, string $slot = self::REGULAR): void
     {
+        $field = $this->formField($slot);
         $upload = Cache::get($this->tokenKey($token));
 
         if (! is_array($upload) || $upload['user_id'] !== $userId) {
             throw ValidationException::withMessages([
-                'download_file' => __('The upload expired or was not found. Please choose the file again.'),
+                $field => __('The upload expired or was not found. Please choose the file again.'),
             ]);
         }
 
@@ -260,14 +268,14 @@ class ProductFileService
         if (($upload['disk'] ?? null) === self::DISK) {
             if ($upload['received'] !== $upload['size']) {
                 throw ValidationException::withMessages([
-                    'download_file' => __('The file did not finish uploading. Please upload it again.'),
+                    $field => __('The file did not finish uploading. Please upload it again.'),
                 ]);
             }
 
             $path = "product-files/{$product->id}/".Str::random(40).'.'.pathinfo($upload['name'], PATHINFO_EXTENSION);
             Storage::disk(self::DISK)->move($upload['key'], $path);
 
-            $this->point($product, self::DISK, $path, $upload['name'], $upload['size']);
+            $this->point($product, self::DISK, $path, $upload['name'], $upload['size'], $slot);
             Cache::forget($this->tokenKey($token));
 
             return;
@@ -276,47 +284,77 @@ class ProductFileService
         $disk = $this->cloud();
         if (! $disk->exists($upload['key'])) {
             throw ValidationException::withMessages([
-                'download_file' => __('The file did not reach the storage bucket. Please upload it again.'),
+                $field => __('The file did not reach the storage bucket. Please upload it again.'),
             ]);
         }
 
-        $this->point($product, FileStorageSettings::DISK, $upload['key'], $upload['name'], $disk->size($upload['key']));
+        $this->point($product, FileStorageSettings::DISK, $upload['key'], $upload['name'], $disk->size($upload['key']), $slot);
         Cache::forget($this->tokenKey($token));
     }
 
-    public function remove(Product $product): void
+    public function remove(Product $product, string $slot = self::REGULAR): void
     {
-        $this->deleteStored($product);
+        $this->deleteStored($this->slotPath($product, $slot), $this->slotDisk($product, $slot));
 
         $product->forceFill([
-            'download_file_path' => null,
-            'download_file_disk' => null,
-            'download_file_name' => null,
-            'download_file_size' => null,
+            $this->column($slot, 'path') => null,
+            $this->column($slot, 'disk') => null,
+            $this->column($slot, 'name') => null,
+            $this->column($slot, 'size') => null,
         ])->save();
     }
 
-    public function exists(Product $product): bool
+    public function exists(Product $product, string $slot = self::REGULAR): bool
     {
-        if (! $product->hasDownloadFile()) {
+        $path = $this->slotPath($product, $slot);
+        if (blank($path)) {
             return false;
         }
 
         try {
-            return $this->diskFor($product)?->exists($product->download_file_path) ?? false;
+            return $this->diskNamed($this->slotDisk($product, $slot))?->exists($path) ?? false;
         } catch (\Throwable) {
             return false; // cloud unreachable / misconfigured
         }
     }
 
     /**
-     * Send the product file to the buyer and count the download. The
-     * caller has already checked ownership and the download limit.
+     * Which file a buyer gets: the Extended License's own file when they
+     * bought Extended and the product has one; the product file otherwise.
+     */
+    public function slotFor(Download $download): string
+    {
+        $tier = $download->orderItem?->metadata['license'] ?? null;
+        $product = $download->product;
+
+        return $tier === License::TIER_EXTENDED && $product && filled($product->extended_file_path)
+            ? self::EXTENDED
+            : self::REGULAR;
+    }
+
+    /**
+     * The file name and size the buyer will get.
+     *
+     * @return array{name: ?string, size: ?int}
+     */
+    public function fileInfo(Product $product, string $slot): array
+    {
+        return [
+            'name' => $product->{$this->column($slot, 'name')},
+            'size' => $product->{$this->column($slot, 'size')},
+        ];
+    }
+
+    /**
+     * Send the buyer their file and count the download. The caller has
+     * already checked ownership and the download limit.
      */
     public function deliver(Download $download, ?string $ip = null): StreamedResponse|RedirectResponse
     {
         $product = $download->product;
-        $name = $product->download_file_name ?: Str::slug($product->title).'.'.pathinfo($product->download_file_path, PATHINFO_EXTENSION);
+        $slot = $this->slotFor($download);
+        $path = $this->slotPath($product, $slot);
+        $name = $product->{$this->column($slot, 'name')} ?: Str::slug($product->title).'.'.pathinfo($path, PATHINFO_EXTENSION);
 
         $download->forceFill([
             'downloads_count' => $download->downloads_count + 1,
@@ -324,16 +362,16 @@ class ProductFileService
             'last_ip' => $ip,
         ])->save();
 
-        if ($this->isCloud($product)) {
+        if ($this->slotDisk($product, $slot) === FileStorageSettings::DISK) {
             // Straight from the bucket, through a link that expires in minutes.
             return redirect()->away($this->cloud()->temporaryUrl(
-                $product->download_file_path,
+                $path,
                 now()->addMinutes(self::DOWNLOAD_TTL_MINUTES),
                 ['ResponseContentDisposition' => 'attachment; filename="'.addslashes($name).'"'],
             ));
         }
 
-        return Storage::disk(self::DISK)->download($product->download_file_path, $name);
+        return Storage::disk(self::DISK)->download($path, $name);
     }
 
     /**
@@ -350,48 +388,62 @@ class ProductFileService
         return Storage::disk(FileStorageSettings::DISK);
     }
 
-    private function isCloud(Product $product): bool
+    /** products column for a slot: download_file_* (regular) or extended_file_*. */
+    private function column(string $slot, string $field): string
     {
-        return $product->download_file_disk === FileStorageSettings::DISK;
+        return ($slot === self::EXTENDED ? 'extended_file_' : 'download_file_').$field;
     }
 
-    private function diskFor(Product $product): ?Filesystem
+    /** The form field a slot's validation errors belong to. */
+    private function formField(string $slot): string
     {
-        if ($this->isCloud($product)) {
+        return $slot === self::EXTENDED ? 'extended_file' : 'download_file';
+    }
+
+    private function slotPath(Product $product, string $slot): ?string
+    {
+        return $product->{$this->column($slot, 'path')};
+    }
+
+    private function slotDisk(Product $product, string $slot): ?string
+    {
+        return $product->{$this->column($slot, 'disk')};
+    }
+
+    private function diskNamed(?string $disk): ?Filesystem
+    {
+        if ($disk === FileStorageSettings::DISK) {
             return $this->storage->apply() ? Storage::disk(FileStorageSettings::DISK) : null;
         }
 
         return Storage::disk(self::DISK);
     }
 
-    private function point(Product $product, string $disk, string $path, string $name, ?int $size): void
+    private function point(Product $product, string $disk, string $path, string $name, ?int $size, string $slot): void
     {
-        // Just enough of the old state to delete the file it pointed at.
-        $previous = (new Product)->forceFill([
-            'download_file_path' => $product->download_file_path,
-            'download_file_disk' => $product->download_file_disk,
-        ]);
+        $previousPath = $this->slotPath($product, $slot);
+        $previousDisk = $this->slotDisk($product, $slot);
 
         $product->forceFill([
-            'download_file_path' => $path,
-            'download_file_disk' => $disk,
-            'download_file_name' => $name,
-            'download_file_size' => $size,
+            $this->column($slot, 'path') => $path,
+            $this->column($slot, 'disk') => $disk,
+            $this->column($slot, 'name') => $name,
+            $this->column($slot, 'size') => $size,
         ])->save();
 
-        if ($previous->download_file_path && ($previous->download_file_path !== $path || $previous->download_file_disk !== $disk)) {
-            $this->deleteStored($previous);
+        if ($previousPath && ($previousPath !== $path || $previousDisk !== $disk)) {
+            $this->deleteStored($previousPath, $previousDisk);
         }
     }
 
-    private function deleteStored(Product $product): void
+    private function deleteStored(?string $path, ?string $disk): void
     {
-        if (! $product->download_file_path) {
+        if (! $path) {
             return;
         }
 
         try {
-            $this->diskFor($product)?->delete($product->download_file_path);
+            $this->diskNamed($disk)?->delete($path);
         } catch (\Throwable) {
             // An orphaned object is better than a failed save.
         }

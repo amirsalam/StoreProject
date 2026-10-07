@@ -2,6 +2,7 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslate } from '@/hooks/use-translate';
 import AuthLayout from '@/layouts/auth-layout';
 import { Head, useForm } from '@inertiajs/react';
 import { Loader2, ShieldCheck } from 'lucide-react';
@@ -14,6 +15,7 @@ interface ChallengeForm {
 }
 
 export default function TwoFactorChallenge() {
+    const { __ } = useTranslate();
     const [useRecovery, setUseRecovery] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm<ChallengeForm>({
@@ -30,19 +32,17 @@ export default function TwoFactorChallenge() {
 
     return (
         <AuthLayout
-            title="Two-factor authentication"
+            title={__('Two-factor authentication')}
             description={
-                useRecovery
-                    ? 'Enter one of your recovery codes to sign in.'
-                    : 'Open your authenticator app and enter the 6-digit code.'
+                useRecovery ? __('Enter one of your recovery codes to sign in.') : __('Open your authenticator app and enter the 6-digit code.')
             }
         >
-            <Head title="Two-factor challenge" />
+            <Head title={__('Two-factor challenge')} />
 
             <form onSubmit={submit} className="space-y-6">
                 {useRecovery ? (
                     <div className="space-y-1.5">
-                        <Label htmlFor="recovery_code">Recovery code</Label>
+                        <Label htmlFor="recovery_code">{__('Recovery code')}</Label>
                         <Input
                             id="recovery_code"
                             autoFocus
@@ -55,7 +55,7 @@ export default function TwoFactorChallenge() {
                     </div>
                 ) : (
                     <div className="space-y-1.5">
-                        <Label htmlFor="code">Authentication code</Label>
+                        <Label htmlFor="code">{__('Authentication code')}</Label>
                         <Input
                             id="code"
                             autoFocus
@@ -73,16 +73,12 @@ export default function TwoFactorChallenge() {
 
                 <Button type="submit" className="w-full" disabled={processing}>
                     {processing ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
-                    Verify and continue
+                    {__('Verify and continue')}
                 </Button>
 
-                <p className="text-center text-xs text-muted-foreground">
-                    <button
-                        type="button"
-                        onClick={() => setUseRecovery((r) => !r)}
-                        className="underline-offset-4 hover:underline"
-                    >
-                        {useRecovery ? 'Use authenticator code instead' : "Lost your phone? Use a recovery code"}
+                <p className="text-muted-foreground text-center text-xs">
+                    <button type="button" onClick={() => setUseRecovery((r) => !r)} className="underline-offset-4 hover:underline">
+                        {useRecovery ? __('Use authenticator code instead') : __('Lost your phone? Use a recovery code')}
                     </button>
                 </p>
             </form>

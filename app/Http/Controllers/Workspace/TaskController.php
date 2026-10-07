@@ -5,8 +5,13 @@ namespace App\Http\Controllers\Workspace;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\User;
+use App\Tenancy\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\In;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -37,6 +42,9 @@ class TaskController extends Controller
             'projects' => Project::query()->orderBy('name')->get(['id', 'name', 'slug']),
             'filters' => $filters,
             'statuses' => $this->statuses(),
+            'priorities' => $this->priorities(),
+            // People a task can be assigned to: this workspace's team.
+            'members' => $this->members()->map(fn (User $u) => ['id' => $u->id, 'name' => $u->name])->values(),
         ]);
     }
 
@@ -46,8 +54,9 @@ class TaskController extends Controller
             'project_id' => ['required', 'integer', 'exists:projects,id'],
             'title' => ['required', 'string', 'max:200'],
             'description' => ['nullable', 'string', 'max:5000'],
+            'status' => ['sometimes', 'in:todo,in_progress,review,done'],
             'priority' => ['required', 'in:low,normal,high,urgent'],
-            'assignee_id' => ['nullable', 'integer', 'exists:users,id'],
+            'assignee_id' => ['nullable', 'integer', $this->memberRule()],
             'due_on' => ['nullable', 'date'],
         ]);
 
@@ -56,21 +65,26 @@ class TaskController extends Controller
         // an attacker could pass another tenant's project id.
         Project::query()->findOrFail($data['project_id']);
 
-        Task::create($data + ['status' => Task::STATUS_TODO]);
+        $data['status'] ??= Task::STATUS_TODO;
+        if ($data['status'] === Task::STATUS_DONE) {
+            $data['completed_at'] = now();
+        }
 
-        return redirect()
-            ->route('workspace.tasks.index')
-            ->with('success', __('Task created.'));
+        Task::create($data);
+
+        // Back to the same filtered board the task was added from.
+        return back()->with('success', __('Task created.'));
     }
 
     public function update(Request $request, Task $task): RedirectResponse
     {
         $data = $request->validate([
+            'project_id' => ['sometimes', 'integer', 'exists:projects,id'],
             'title' => ['sometimes', 'string', 'max:200'],
             'description' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'status' => ['sometimes', 'in:todo,in_progress,review,done'],
             'priority' => ['sometimes', 'in:low,normal,high,urgent'],
-            'assignee_id' => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
+            'assignee_id' => ['sometimes', 'nullable', 'integer', $this->memberRule()],
             'due_on' => ['sometimes', 'nullable', 'date'],
             'position' => ['sometimes', 'integer', 'min:0'],
         ]);
@@ -83,20 +97,54 @@ class TaskController extends Controller
             $data['completed_at'] = null;
         }
 
+        if (isset($data['project_id'])) {
+            // Same tenant check as store(): another workspace's project 404s.
+            Project::query()->findOrFail($data['project_id']);
+        }
+
         $task->update($data);
 
-        return redirect()
-            ->route('workspace.tasks.index')
-            ->with('success', __('Task updated.'));
+        return back()->with('success', __('Task updated.'));
     }
 
     public function destroy(Task $task): RedirectResponse
     {
         $task->delete();
 
-        return redirect()
-            ->route('workspace.tasks.index')
-            ->with('success', __('Task removed.'));
+        return back()->with('success', __('Task removed.'));
+    }
+
+    /**
+     * This workspace's members, by name.
+     *
+     * @return Collection<int, User>
+     */
+    private function members(): Collection
+    {
+        $tenant = app(TenantContext::class)->current();
+
+        return $tenant ? $tenant->users()->orderBy('name')->get(['users.id', 'users.name']) : collect();
+    }
+
+    /**
+     * Assignees must be on this workspace's team — not any user id.
+     */
+    private function memberRule(): In
+    {
+        return Rule::in($this->members()->pluck('id')->all());
+    }
+
+    /**
+     * @return array<int, array{value: string, label: string}>
+     */
+    private function priorities(): array
+    {
+        return [
+            ['value' => Task::PRIORITY_LOW, 'label' => __('Low')],
+            ['value' => Task::PRIORITY_NORMAL, 'label' => __('Normal')],
+            ['value' => Task::PRIORITY_HIGH, 'label' => __('High')],
+            ['value' => Task::PRIORITY_URGENT, 'label' => __('Urgent')],
+        ];
     }
 
     /**

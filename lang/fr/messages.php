@@ -174,13 +174,25 @@ return [
         'eyebrow_release' => 'v1.0 sort aujourd’hui',
         'title_lead' => 'La marketplace pensée pour',
         'title_highlight' => 'les créateurs qui livrent.',
-        'subtitle' => 'Vendez vos scripts Laravel, produits SaaS, APIs, modèles et licences depuis une boutique unique et soignée. Livraison sécurisée, clés de licence, abonnements et paiements — tout est intégré.',
+        'subtitle' => 'Vendez vos scripts, produits SaaS, APIs, modèles et licences depuis une boutique unique et soignée. Livraison sécurisée, clés de licence, abonnements et paiements — tout est intégré.',
         'cta_primary' => 'Commencer gratuitement',
         'cta_secondary' => 'Explorer le marché',
         'trust_no_card' => 'Aucune carte requise',
         'trust_payments' => 'Compatible Stripe & Paddle',
         'trust_uptime' => 'Disponibilité 99,99 %',
         'preview_revenue' => 'Revenus ce mois-ci',
+        'preview_nav' => [
+            'overview' => 'Vue d’ensemble',
+            'products' => 'Produits',
+            'licenses' => 'Licences',
+            'orders' => 'Commandes',
+            'subscriptions' => 'Abonnements',
+            'settings' => 'Paramètres',
+        ],
+        'preview_status' => [
+            'paid' => 'Payée',
+            'trial' => 'Essai',
+        ],
     ],
 
     'logo_cloud' => [
@@ -210,7 +222,7 @@ return [
             ],
             'security' => [
                 'title' => 'Sécurité intégrée',
-                'body' => 'Rate limiting, URLs signées, 2FA admins, CSRF — bonnes pratiques Laravel activées par défaut.',
+                'body' => 'Rate limiting, URLs signées, 2FA admins, CSRF — bonnes pratiques de sécurité activées par défaut.',
             ],
             'seo' => [
                 'title' => 'SEO prêt à l’emploi',
@@ -372,7 +384,7 @@ return [
         'meta_title' => 'À propos',
         'eyebrow' => 'À propos',
         'title' => 'Une marketplace créée par des makers, pour des makers.',
-        'lead' => 'StoreProject est la marketplace tout-en-un pour les scripts Laravel, les API, les templates et le SaaS — où les développeurs indépendants vendent leur travail et où les acheteurs l\'obtiennent instantanément.',
+        'lead' => 'StoreProject est la marketplace tout-en-un pour les scripts, les API, les templates et le SaaS — où les développeurs indépendants vendent leur travail et où les acheteurs l\'obtiennent instantanément.',
         'mission' => [
             'title' => 'Pourquoi nous existons',
             'body_1' => 'Vendre un logiciel devrait porter sur le logiciel. Pourtant, chaque créateur finit par reconstruire la même tuyauterie : paiements, clés de licence, téléchargements sécurisés, abonnements et factures.',
@@ -998,7 +1010,7 @@ return [
     ],
 
     'footer' => [
-        'tagline' => 'La marketplace mono-vendeur pour scripts Laravel, APIs, modèles et SaaS — pensée pour les créateurs qui livrent.',
+        'tagline' => 'La marketplace mono-vendeur pour scripts, APIs, modèles et SaaS — pensée pour les créateurs qui livrent.',
         'status_ok' => 'Tous les systèmes opérationnels',
         'status_degraded' => 'Certains systèmes dégradés — voir l’état',
         'copy' => '© :year StoreProject. Tous droits réservés.',

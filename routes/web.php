@@ -3,12 +3,15 @@
 use App\Http\Controllers\Admin\BlogPostController as AdminBlogPostController;
 use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
+use App\Http\Controllers\Admin\FaqController as AdminFaqController;
 use App\Http\Controllers\Admin\FileStorageController as AdminFileStorageController;
 use App\Http\Controllers\Admin\LicensingController as AdminLicensingController;
 use App\Http\Controllers\Admin\MailSettingsController as AdminMailSettingsController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\PartnerController as AdminPartnerController;
 use App\Http\Controllers\Admin\PaymentGatewayController as AdminPaymentGatewayController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\SocialLoginController as AdminSocialLoginController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
@@ -34,12 +37,25 @@ use App\Http\Controllers\Workspace\TaskController as WorkspaceTaskController;
 use App\Http\Controllers\Workspace\TeamController as WorkspaceTeamController;
 use App\Http\Controllers\Workspace\VendorController as WorkspaceVendorController;
 use App\Http\Controllers\Workspace\VendorProductController as WorkspaceVendorProductController;
+use App\Models\Faq;
+use App\Models\Partner;
 use App\Services\CartService;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return Inertia::render('welcome', [
+        // "Trusted by" logo strip — managed in Admin → Partners.
+        'partners' => Partner::visible()->get(['id', 'name', 'logo_path', 'website_url'])
+            ->map(fn (Partner $p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'logo_url' => $p->logo_url,
+                'website_url' => $p->website_url,
+            ]),
+        // "Frequently asked" — managed in Admin → FAQ, in the visitor's language.
+        'faqs' => Faq::visible()->get()->map(fn (Faq $faq) => $faq->localized(app()->getLocale())),
+    ]);
 })->name('home');
 
 Route::inertia('about', 'about')->name('about');
@@ -187,6 +203,10 @@ Route::middleware(['auth', 'admin'])
         Route::put('mail', [AdminMailSettingsController::class, 'update'])->name('mail.update');
         Route::post('mail/test', [AdminMailSettingsController::class, 'test'])->name('mail.test');
 
+        // "Continue with Google / GitHub" credentials — replaces GOOGLE_* / GITHUB_* in .env.
+        Route::get('social-login', [AdminSocialLoginController::class, 'edit'])->name('social-login.edit');
+        Route::put('social-login', [AdminSocialLoginController::class, 'update'])->name('social-login.update');
+
         // Store-wide Extended License rule.
         Route::get('licensing', [AdminLicensingController::class, 'edit'])->name('licensing.edit');
         Route::put('licensing', [AdminLicensingController::class, 'update'])->name('licensing.update');
@@ -205,6 +225,16 @@ Route::middleware(['auth', 'admin'])
         Route::get('branding', [AdminBrandingController::class, 'edit'])->name('branding.edit');
         Route::post('branding', [AdminBrandingController::class, 'update'])->name('branding.update');
         Route::delete('branding/logo', [AdminBrandingController::class, 'destroyLogo'])->name('branding.logo.destroy');
+
+        // Homepage "trusted by" partner logos.
+        Route::post('partners/{partner}/move', [AdminPartnerController::class, 'move'])->name('partners.move');
+        Route::post('partners/{partner}/toggle', [AdminPartnerController::class, 'toggle'])->name('partners.toggle');
+        Route::resource('partners', AdminPartnerController::class)->except(['show']);
+
+        // Homepage FAQ.
+        Route::post('faqs/{faq}/move', [AdminFaqController::class, 'move'])->name('faqs.move');
+        Route::post('faqs/{faq}/toggle', [AdminFaqController::class, 'toggle'])->name('faqs.toggle');
+        Route::resource('faqs', AdminFaqController::class)->except(['show']);
 
         Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
         Route::patch('users/{user}/role', [AdminUserController::class, 'updateRole'])->name('users.role.update');

@@ -26,6 +26,7 @@ class StoreProductRequest extends FormRequest
             'is_featured' => $this->boolean('is_featured'),
             'currency' => strtoupper(trim((string) $this->input('currency', ''))),
             'remove_download_file' => $this->boolean('remove_download_file'),
+            'remove_extended_file' => $this->boolean('remove_extended_file'),
             // Blank = no support included.
             'support_months' => $this->filled('support_months') ? $this->input('support_months') : 0,
             // Screenshots arrive as one URL per line.
@@ -81,6 +82,10 @@ class StoreProductRequest extends FormRequest
             'remove_download_file' => ['boolean'],
             // Set instead of download_file when the browser uploaded straight to cloud storage.
             'download_file_token' => ['nullable', 'string', 'max:100'],
+            // The Extended License's own file (optional).
+            'extended_file' => ['nullable', 'file', 'max:'.intdiv(ProductFileService::maxUploadBytes(), 1024)],
+            'extended_file_token' => ['nullable', 'string', 'max:100'],
+            'remove_extended_file' => ['boolean'],
         ];
     }
 

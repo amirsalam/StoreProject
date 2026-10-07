@@ -1,9 +1,9 @@
+import { useTranslate } from '@/hooks/use-translate';
 import AppLayout from '@/layouts/app-layout';
 import ProductForm, { type LicensingRule, type ProductFormValues, type UploadOptions } from '@/pages/admin/products/product-form';
 import { type BreadcrumbItem, type Category, type ProductType } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
-import { useTranslate } from '@/hooks/use-translate';
 
 interface Option {
     value: string;
@@ -54,6 +54,9 @@ export default function AdminProductsCreate({ categories, statuses, types, uploa
         download_file: null,
         download_file_token: '',
         remove_download_file: false,
+        extended_file: null,
+        extended_file_token: '',
+        remove_extended_file: false,
     });
 
     const submit = (e: FormEvent) => {
@@ -68,7 +71,7 @@ export default function AdminProductsCreate({ categories, statuses, types, uploa
             <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">{__('New product')}</h1>
-                    <p className="text-sm text-muted-foreground">{__('Add a new digital product to your store.')}</p>
+                    <p className="text-muted-foreground text-sm">{__('Add a new digital product to your store.')}</p>
                 </div>
 
                 <ProductForm

@@ -29,7 +29,7 @@ use Inertia\Response;
 class VendorProductController extends Controller
 {
     /** Form fields that are not mass-assigned onto the product. */
-    private const EXCLUDED = ['download_file', 'remove_download_file', 'download_file_token', 'is_featured'];
+    private const EXCLUDED = ['download_file', 'remove_download_file', 'download_file_token', 'extended_file', 'remove_extended_file', 'extended_file_token', 'is_featured'];
 
     public function index(Request $request, ProductFileService $files): Response
     {
@@ -112,6 +112,7 @@ class VendorProductController extends Controller
                 'is_featured' => false,
             ]);
             $files->sync($product, $request->file('download_file'), false, $request->input('download_file_token'), $request->user()->id);
+            $files->sync($product, $request->file('extended_file'), false, $request->input('extended_file_token'), $request->user()->id, ProductFileService::EXTENDED);
 
             return $product;
         });
@@ -143,6 +144,7 @@ class VendorProductController extends Controller
         DB::transaction(function () use ($request, $product, $files) {
             $product->update($request->safe()->except(self::EXCLUDED));
             $files->sync($product, $request->file('download_file'), $request->boolean('remove_download_file'), $request->input('download_file_token'), $request->user()->id);
+            $files->sync($product, $request->file('extended_file'), $request->boolean('remove_extended_file'), $request->input('extended_file_token'), $request->user()->id, ProductFileService::EXTENDED);
         });
 
         return redirect()
@@ -166,6 +168,7 @@ class VendorProductController extends Controller
         }
 
         $files->remove($product);
+        $files->remove($product, ProductFileService::EXTENDED);
         $product->delete();
 
         return redirect()

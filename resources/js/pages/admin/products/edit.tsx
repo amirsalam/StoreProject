@@ -1,10 +1,10 @@
 import ConfirmDialog from '@/components/confirm-dialog';
+import { useTranslate } from '@/hooks/use-translate';
 import AppLayout from '@/layouts/app-layout';
 import ProductForm, { type LicensingRule, type ProductFormValues, type UploadOptions } from '@/pages/admin/products/product-form';
 import { type BreadcrumbItem, type Category, type Product, type ProductType } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
-import { useTranslate } from '@/hooks/use-translate';
 
 interface Option {
     value: string;
@@ -16,6 +16,8 @@ interface FullProduct extends Product {
     description: string | null;
     download_file_name: string | null;
     download_file_size: number | null;
+    extended_file_name: string | null;
+    extended_file_size: number | null;
     default_activation_limit: number;
     download_limit: number | null;
     seo_title: string | null;
@@ -66,6 +68,9 @@ export default function AdminProductsEdit({ product, categories, statuses, types
         download_file: null,
         download_file_token: '',
         remove_download_file: false,
+        extended_file: null,
+        extended_file_token: '',
+        remove_extended_file: false,
     });
 
     // Files need multipart, which only POST supports: spoof the PUT.
@@ -117,6 +122,7 @@ export default function AdminProductsEdit({ product, categories, statuses, types
                     currencies={currencies}
                     cancelHref={route('admin.products.index')}
                     currentFile={{ name: product.download_file_name, size: product.download_file_size }}
+                    currentExtendedFile={{ name: product.extended_file_name, size: product.extended_file_size }}
                 />
             </div>
 

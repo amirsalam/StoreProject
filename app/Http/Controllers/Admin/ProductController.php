@@ -63,7 +63,7 @@ class ProductController extends Controller
     }
 
     /** Form fields handled by ProductFileService rather than mass-assigned. */
-    private const FILE_FIELDS = ['download_file', 'remove_download_file', 'download_file_token'];
+    private const FILE_FIELDS = ['download_file', 'remove_download_file', 'download_file_token', 'extended_file', 'remove_extended_file', 'extended_file_token'];
 
     public function store(StoreProductRequest $request, PlanGate $gate, ProductFileService $files): RedirectResponse
     {
@@ -79,6 +79,7 @@ class ProductController extends Controller
         $product = DB::transaction(function () use ($request, $files) {
             $product = Product::create($request->safe()->except(self::FILE_FIELDS));
             $files->sync($product, $request->file('download_file'), false, $request->input('download_file_token'), $request->user()->id);
+            $files->sync($product, $request->file('extended_file'), false, $request->input('extended_file_token'), $request->user()->id, ProductFileService::EXTENDED);
 
             return $product;
         });
@@ -106,6 +107,7 @@ class ProductController extends Controller
         DB::transaction(function () use ($request, $product, $files) {
             $product->update($request->safe()->except(self::FILE_FIELDS));
             $files->sync($product, $request->file('download_file'), $request->boolean('remove_download_file'), $request->input('download_file_token'), $request->user()->id);
+            $files->sync($product, $request->file('extended_file'), $request->boolean('remove_extended_file'), $request->input('extended_file_token'), $request->user()->id, ProductFileService::EXTENDED);
         });
 
         return redirect()

@@ -5,12 +5,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTranslate } from '@/hooks/use-translate';
+import { DirectUploadError, directUpload } from '@/lib/direct-upload';
 import { type Category, type ProductType } from '@/types';
 import { Link } from '@inertiajs/react';
-import { DirectUploadError, directUpload } from '@/lib/direct-upload';
 import { CheckCircle2, CloudUpload, FileArchive, Upload, X } from 'lucide-react';
 import { FormEvent, useRef, useState } from 'react';
-import { useTranslate } from '@/hooks/use-translate';
 
 export interface ProductFormValues {
     category_id: string;
@@ -45,6 +45,10 @@ export interface ProductFormValues {
     /** Set instead of download_file after a direct-to-cloud upload. */
     download_file_token: string;
     remove_download_file: boolean;
+    /** The Extended License's own file (optional) — same fields. */
+    extended_file: File | null;
+    extended_file_token: string;
+    remove_extended_file: boolean;
     [key: string]: string | number | boolean | File | null;
 }
 
@@ -77,6 +81,8 @@ interface ProductFormProps {
     types: Option[];
     cancelHref: string;
     currentFile?: CurrentProductFile | null;
+    /** The Extended License's file already stored, if any. */
+    currentExtendedFile?: CurrentProductFile | null;
     /** Admins can feature products on the storefront; sellers can't. */
     showFeatured?: boolean;
     upload: UploadOptions;
@@ -119,6 +125,7 @@ export default function ProductForm({
     types,
     cancelHref,
     currentFile = null,
+    currentExtendedFile = null,
     showFeatured = true,
     upload,
     licensing,
@@ -126,20 +133,16 @@ export default function ProductForm({
 }: ProductFormProps) {
     const { __ } = useTranslate();
     // A direct upload is still running: saving now would lose the file.
-    const [uploading, setUploading] = useState(false);
+    const [uploadingRegular, setUploadingRegular] = useState(false);
+    const [uploadingExtended, setUploadingExtended] = useState(false);
+    const uploading = uploadingRegular || uploadingExtended;
     return (
         <form onSubmit={onSubmit} className="space-y-8">
-            <section className="space-y-4 rounded-lg border bg-card p-6">
+            <section className="bg-card space-y-4 rounded-lg border p-6">
                 <h2 className="text-base font-semibold">{__('Basics')}</h2>
 
                 <Field label={__('Title')} htmlFor="title" error={errors.title} required>
-                    <Input
-                        id="title"
-                        value={data.title}
-                        onChange={(e) => setData('title', e.target.value)}
-                        required
-                        autoFocus
-                    />
+                    <Input id="title" value={data.title} onChange={(e) => setData('title', e.target.value)} required autoFocus />
                 </Field>
 
                 <Field label={__('Slug')} htmlFor="slug" error={errors.slug} hint={__('URL-safe identifier. Auto-derived from title if left blank.')}>
@@ -163,10 +166,7 @@ export default function ProductForm({
                     </Field>
 
                     <Field label={__('Category')} htmlFor="category_id" error={errors.category_id}>
-                        <Select
-                            value={data.category_id}
-                            onValueChange={(v) => setData('category_id', v === '__none__' ? '' : v)}
-                        >
+                        <Select value={data.category_id} onValueChange={(v) => setData('category_id', v === '__none__' ? '' : v)}>
                             <SelectTrigger id="category_id">
                                 <SelectValue placeholder={__('Uncategorized')} />
                             </SelectTrigger>
@@ -197,12 +197,12 @@ export default function ProductForm({
                         value={data.description}
                         onChange={(e) => setData('description', e.target.value)}
                         rows={6}
-                        className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+                        className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm shadow-sm focus-visible:ring-1 focus-visible:outline-hidden"
                     />
                 </Field>
             </section>
 
-            <section className="space-y-4 rounded-lg border bg-card p-6">
+            <section className="bg-card space-y-4 rounded-lg border p-6">
                 <h2 className="text-base font-semibold">{__('Pricing')}</h2>
 
                 <div className="grid gap-4 md:grid-cols-3">
@@ -223,7 +223,12 @@ export default function ProductForm({
                             required
                         />
                     </Field>
-                    <Field label={__('Sale price')} htmlFor="sale_price" error={errors.sale_price} hint={__('Optional — what buyers pay during a sale. Must be lower than the price; clear it to end the sale.')}>
+                    <Field
+                        label={__('Sale price')}
+                        htmlFor="sale_price"
+                        error={errors.sale_price}
+                        hint={__('Optional — what buyers pay during a sale. Must be lower than the price; clear it to end the sale.')}
+                    >
                         <Input
                             id="sale_price"
                             type="number"
@@ -241,7 +246,7 @@ export default function ProductForm({
                 <PricePreview data={data} licensing={licensing} />
             </section>
 
-            <section className="space-y-4 rounded-lg border bg-card p-6">
+            <section className="bg-card space-y-4 rounded-lg border p-6">
                 <h2 className="text-base font-semibold">{__('License & support')}</h2>
 
                 <div className="grid gap-4 md:grid-cols-3">
@@ -267,7 +272,12 @@ export default function ProductForm({
                             onChange={(e) => setData('extended_price', e.target.value)}
                         />
                     </Field>
-                    <Field label={__('Support included (months)')} htmlFor="support_months" error={errors.support_months} hint={__('0 = no support.')}>
+                    <Field
+                        label={__('Support included (months)')}
+                        htmlFor="support_months"
+                        error={errors.support_months}
+                        hint={__('0 = no support.')}
+                    >
                         <Input
                             id="support_months"
                             type="number"
@@ -295,10 +305,15 @@ export default function ProductForm({
                 </div>
             </section>
 
-            <section className="space-y-4 rounded-lg border bg-card p-6">
+            <section className="bg-card space-y-4 rounded-lg border p-6">
                 <h2 className="text-base font-semibold">{__('Preview')}</h2>
 
-                <Field label={__('Live preview URL')} htmlFor="live_preview_url" error={errors.live_preview_url} hint={__('A demo buyers can try before buying.')}>
+                <Field
+                    label={__('Live preview URL')}
+                    htmlFor="live_preview_url"
+                    error={errors.live_preview_url}
+                    hint={__('A demo buyers can try before buying.')}
+                >
                     <Input
                         id="live_preview_url"
                         dir="ltr"
@@ -308,7 +323,12 @@ export default function ProductForm({
                         onChange={(e) => setData('live_preview_url', e.target.value)}
                     />
                 </Field>
-                <Field label={__('Screenshots')} htmlFor="screenshots" error={errors.screenshots ?? errors.gallery} hint={__('One image URL per line (up to 20).')}>
+                <Field
+                    label={__('Screenshots')}
+                    htmlFor="screenshots"
+                    error={errors.screenshots ?? errors.gallery}
+                    hint={__('One image URL per line (up to 20).')}
+                >
                     <textarea
                         id="screenshots"
                         dir="ltr"
@@ -316,15 +336,18 @@ export default function ProductForm({
                         onChange={(e) => setData('screenshots', e.target.value)}
                         rows={4}
                         placeholder="https://…/screenshot-1.png"
-                        className="flex w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs shadow-sm placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-hidden"
+                        className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 font-mono text-xs shadow-sm focus-visible:ring-1 focus-visible:outline-hidden"
                     />
                 </Field>
             </section>
 
-            <section className="space-y-4 rounded-lg border bg-card p-6">
+            <section className="bg-card space-y-4 rounded-lg border p-6">
                 <h2 className="text-base font-semibold">{__('Delivery')}</h2>
 
                 <DownloadFileField
+                    id="download_file"
+                    label={data.type === 'subscription' ? __('Product file') : __('Product file — Regular License')}
+                    description={__('The file buyers download after paying (zip, pdf…). It is stored privately — only buyers can download it.')}
                     upload={upload}
                     current={currentFile}
                     remove={data.remove_download_file}
@@ -332,31 +355,47 @@ export default function ProductForm({
                         setData('download_file_token', token ?? '');
                         if (token) setData('remove_download_file', false);
                     }}
-                    onBusy={setUploading}
+                    onBusy={setUploadingRegular}
                     onRemove={(r) => setData('remove_download_file', r)}
                     error={errors.download_file ?? errors.download_file_token}
                 />
+
+                {data.type !== 'subscription' && (
+                    <DownloadFileField
+                        id="extended_file"
+                        label={__('Extended License file (optional)')}
+                        description={__(
+                            'What Extended License buyers download — e.g. a version with extra rights or sources. Leave empty to give them the Regular License file.',
+                        )}
+                        upload={upload}
+                        current={currentExtendedFile}
+                        remove={Boolean(data.remove_extended_file)}
+                        onUploaded={(token) => {
+                            setData('extended_file_token', token ?? '');
+                            if (token) setData('remove_extended_file', false);
+                        }}
+                        onBusy={setUploadingExtended}
+                        onRemove={(r) => setData('remove_extended_file', r)}
+                        error={errors.extended_file ?? errors.extended_file_token}
+                    />
+                )}
 
                 <div className="grid gap-4 md:grid-cols-2">
                     <Field label={__('Version')} htmlFor="version" error={errors.version}>
                         <Input id="version" value={data.version} onChange={(e) => setData('version', e.target.value)} />
                     </Field>
-                    <Field label={__('License type')} htmlFor="license_type" error={errors.license_type} hint={__('e.g. single-site, unlimited, developer')}>
-                        <Input
-                            id="license_type"
-                            value={data.license_type}
-                            onChange={(e) => setData('license_type', e.target.value)}
-                        />
+                    <Field
+                        label={__('License type')}
+                        htmlFor="license_type"
+                        error={errors.license_type}
+                        hint={__('e.g. single-site, unlimited, developer')}
+                    >
+                        <Input id="license_type" value={data.license_type} onChange={(e) => setData('license_type', e.target.value)} />
                     </Field>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                    <Field
-                        label={__('Default activation limit')}
-                        htmlFor="default_activation_limit"
-                        error={errors.default_activation_limit}
-                        required
-                    >
+                    <Field label={__('Default activation limit')} htmlFor="default_activation_limit" error={errors.default_activation_limit} required>
                         <Input
                             id="default_activation_limit"
                             type="number"
@@ -366,7 +405,12 @@ export default function ProductForm({
                             required
                         />
                     </Field>
-                    <Field label={__('Download limit')} htmlFor="download_limit" error={errors.download_limit} hint={__('Leave blank for unlimited.')}>
+                    <Field
+                        label={__('Download limit')}
+                        htmlFor="download_limit"
+                        error={errors.download_limit}
+                        hint={__('Leave blank for unlimited.')}
+                    >
                         <Input
                             id="download_limit"
                             type="number"
@@ -382,7 +426,7 @@ export default function ProductForm({
                 </Field>
             </section>
 
-            <section className="space-y-4 rounded-lg border bg-card p-6">
+            <section className="bg-card space-y-4 rounded-lg border p-6">
                 <h2 className="text-base font-semibold">{__('Visibility')}</h2>
 
                 <div className="grid gap-4 md:grid-cols-2">
@@ -401,21 +445,17 @@ export default function ProductForm({
                         </Select>
                     </Field>
                     {showFeatured && (
-                    <div className="flex items-center gap-2 pt-7">
-                        <Checkbox
-                            id="is_featured"
-                            checked={data.is_featured}
-                            onCheckedChange={(v) => setData('is_featured', v === true)}
-                        />
-                        <Label htmlFor="is_featured" className="cursor-pointer">
-                            {__('Featured product')}
-                        </Label>
-                    </div>
+                        <div className="flex items-center gap-2 pt-7">
+                            <Checkbox id="is_featured" checked={data.is_featured} onCheckedChange={(v) => setData('is_featured', v === true)} />
+                            <Label htmlFor="is_featured" className="cursor-pointer">
+                                {__('Featured product')}
+                            </Label>
+                        </div>
                     )}
                 </div>
             </section>
 
-            <section className="space-y-4 rounded-lg border bg-card p-6">
+            <section className="bg-card space-y-4 rounded-lg border p-6">
                 <h2 className="text-base font-semibold">{__('SEO')}</h2>
                 <Field label={__('SEO title')} htmlFor="seo_title" error={errors.seo_title}>
                     <Input id="seo_title" value={data.seo_title} onChange={(e) => setData('seo_title', e.target.value)} />
@@ -427,7 +467,7 @@ export default function ProductForm({
                         onChange={(e) => setData('seo_description', e.target.value)}
                         rows={3}
                         maxLength={500}
-                        className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+                        className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm shadow-sm focus-visible:ring-1 focus-visible:outline-hidden"
                     />
                 </Field>
             </section>
@@ -463,10 +503,10 @@ function Field({
         <div className="space-y-1.5">
             <Label htmlFor={htmlFor}>
                 {label}
-                {required && <span className="ml-0.5 text-destructive">*</span>}
+                {required && <span className="text-destructive ml-0.5">*</span>}
             </Label>
             {children}
-            {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
+            {hint && !error && <p className="text-muted-foreground text-xs">{hint}</p>}
             <InputError message={error} />
         </div>
     );
@@ -487,6 +527,9 @@ export function formatBytes(bytes: number | null | undefined): string {
 type UploadState = { status: 'idle' } | { status: 'uploading'; percent: number } | { status: 'done' } | { status: 'error'; message: string };
 
 function DownloadFileField({
+    id,
+    label,
+    description,
     upload,
     current,
     remove,
@@ -495,6 +538,9 @@ function DownloadFileField({
     onRemove,
     error,
 }: {
+    id: string;
+    label: string;
+    description: string;
     upload: UploadOptions;
     current: CurrentProductFile | null;
     remove: boolean;
@@ -560,26 +606,24 @@ function DownloadFileField({
 
     return (
         <div className="space-y-2">
-            <Label htmlFor="download_file">{__('Product file')}</Label>
-            <p className="text-xs text-muted-foreground">
-                {__('The file buyers download after paying (zip, pdf…). It is stored privately — only buyers can download it.')}
-            </p>
+            <Label htmlFor={id}>{label}</Label>
+            <p className="text-muted-foreground text-xs">{description}</p>
 
             {chosen ? (
-                <div className="space-y-2 rounded-md border border-primary/40 bg-primary/5 px-3 py-2 text-sm">
+                <div className="border-primary/40 bg-primary/5 space-y-2 rounded-md border px-3 py-2 text-sm">
                     <div className="flex items-center justify-between gap-3">
                         <span className="flex min-w-0 items-center gap-2">
                             {state.status === 'done' ? (
                                 <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
                             ) : direct ? (
-                                <CloudUpload className="size-4 shrink-0 text-primary" />
+                                <CloudUpload className="text-primary size-4 shrink-0" />
                             ) : (
-                                <Upload className="size-4 shrink-0 text-primary" />
+                                <Upload className="text-primary size-4 shrink-0" />
                             )}
                             <span className="truncate" dir="ltr">
                                 {chosen.name}
                             </span>
-                            <span className="shrink-0 text-xs text-muted-foreground">{formatBytes(chosen.size)}</span>
+                            <span className="text-muted-foreground shrink-0 text-xs">{formatBytes(chosen.size)}</span>
                         </span>
                         <Button type="button" size="sm" variant="ghost" onClick={reset} title={__('Cancel')}>
                             <X />
@@ -587,10 +631,10 @@ function DownloadFileField({
                     </div>
                     {state.status === 'uploading' && (
                         <div className="space-y-1">
-                            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${state.percent}%` }} />
+                            <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+                                <div className="bg-primary h-full rounded-full transition-all" style={{ width: `${state.percent}%` }} />
                             </div>
-                            <p className="text-xs text-muted-foreground">{__('Uploading… :percent%', { percent: state.percent })}</p>
+                            <p className="text-muted-foreground text-xs">{__('Uploading… :percent%', { percent: state.percent })}</p>
                         </div>
                     )}
                     {state.status === 'done' && (
@@ -598,20 +642,20 @@ function DownloadFileField({
                     )}
                 </div>
             ) : hasCurrent ? (
-                <div className="flex items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                <div className="bg-muted/30 flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm">
                     <span className="flex min-w-0 items-center gap-2">
-                        <FileArchive className="size-4 shrink-0 text-muted-foreground" />
+                        <FileArchive className="text-muted-foreground size-4 shrink-0" />
                         <span className="truncate" dir="ltr">
                             {current?.name}
                         </span>
-                        <span className="shrink-0 text-xs text-muted-foreground">{formatBytes(current?.size)}</span>
+                        <span className="text-muted-foreground shrink-0 text-xs">{formatBytes(current?.size)}</span>
                     </span>
                     <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => onRemove(true)}>
                         {__('Remove')}
                     </Button>
                 </div>
             ) : remove ? (
-                <div className="flex items-center justify-between gap-3 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
+                <div className="text-muted-foreground flex items-center justify-between gap-3 rounded-md border border-dashed px-3 py-2 text-sm">
                     <span>{__('The current file will be removed when you save.')}</span>
                     <Button type="button" size="sm" variant="ghost" onClick={() => onRemove(false)}>
                         {__('Undo')}
@@ -620,13 +664,29 @@ function DownloadFileField({
             ) : null}
 
             {/* Re-mounted when the choice is cleared, so the native input empties too. */}
-            <Input key={chosen ? 'chosen' : 'empty'} id="download_file" type="file" onChange={(e) => choose(e.target.files?.[0] ?? null)} />
-            <p className="text-xs text-muted-foreground">
+            {/* Our own button: the native one speaks the browser's language, not the site's. */}
+            <label
+                htmlFor={id}
+                className="border-input bg-background hover:bg-muted/40 focus-within:ring-ring flex cursor-pointer items-center gap-3 rounded-md border px-3 py-2 text-sm transition-colors focus-within:ring-1"
+            >
+                <span className="bg-secondary text-secondary-foreground inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium">
+                    <Upload className="size-3.5" /> {__('Choose a file')}
+                </span>
+                <span className="text-muted-foreground truncate">{chosen ? chosen.name : __('No file chosen')}</span>
+                <input
+                    key={chosen ? 'chosen' : 'empty'}
+                    id={id}
+                    type="file"
+                    className="sr-only"
+                    onChange={(e) => choose(e.target.files?.[0] ?? null)}
+                />
+            </label>
+            <p className="text-muted-foreground text-xs">
                 {direct
                     ? __('Uploaded straight to cloud storage — up to :size.', { size: maxLabel })
                     : __('Maximum file size: :size', { size: maxLabel })}
             </p>
-            {hasCurrent && !chosen && <p className="text-xs text-muted-foreground">{__('Choose a new file to replace the current one.')}</p>}
+            {hasCurrent && !chosen && <p className="text-muted-foreground text-xs">{__('Choose a new file to replace the current one.')}</p>}
             <InputError message={state.status === 'error' ? state.message : error} />
         </div>
     );
@@ -655,17 +715,17 @@ function PricePreview({ data, licensing }: { data: ProductFormValues; licensing?
     if (price === null) return null;
 
     return (
-        <div className="rounded-md border border-dashed bg-muted/30 p-4">
-            <p className="mb-2 text-xs font-medium text-muted-foreground">{__('On the product page')}</p>
+        <div className="bg-muted/30 rounded-md border border-dashed p-4">
+            <p className="text-muted-foreground mb-2 text-xs font-medium">{__('On the product page')}</p>
             <div className="flex flex-wrap items-end justify-between gap-3">
                 <span className="text-sm font-semibold">{__('Regular License')}</span>
                 <span className="text-end">
                     <span className="block text-2xl font-bold tabular-nums">{onSale ? sale : price}</span>
-                    {onSale && <span className="text-sm text-muted-foreground tabular-nums line-through">{price}</span>}
+                    {onSale && <span className="text-muted-foreground text-sm tabular-nums line-through">{price}</span>}
                 </span>
             </div>
             {(extended || support) && (
-                <ul className="mt-2 space-y-0.5 border-t pt-2 text-xs text-muted-foreground">
+                <ul className="text-muted-foreground mt-2 space-y-0.5 border-t pt-2 text-xs">
                     {extended && <li>{__('Extended License: :price', { price: extended })}</li>}
                     {support && <li>{__('Extend support to 12 months: +:price', { price: support })}</li>}
                 </ul>

@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
-    ArrowRight,
     BarChart3,
     CheckCircle2,
     Cloud,
@@ -28,7 +27,14 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-export default function Welcome() {
+interface HomePartner {
+    id: number;
+    name: string;
+    logo_url: string | null;
+    website_url: string | null;
+}
+
+export default function Welcome({ partners = [], faqs = [] }: { partners?: HomePartner[]; faqs?: FAQShape[] }) {
     const { auth, branding } = usePage<SharedData>().props;
     const brandTitle = branding?.title ?? 'StoreProject';
 
@@ -37,12 +43,12 @@ export default function Welcome() {
             <Head title={`${brandTitle} — Premium marketplace for makers`} />
 
             <Hero authed={Boolean(auth?.user)} />
-            <LogoCloud />
+            <LogoCloud partners={partners} />
             <FeatureGrid />
             <ProductTypes />
             <Pricing />
             <Testimonials />
-            <FAQ />
+            <FAQ faqs={faqs} />
             <CTAStrip authed={Boolean(auth?.user)} />
         </StorefrontLayout>
     );
@@ -57,10 +63,10 @@ function Hero({ authed }: { authed: boolean }) {
     const arrow = direction === 'rtl' ? '←' : '→';
 
     return (
-        <Section className="overflow-hidden pt-20 sm:pt-28 lg:pt-32 pb-16 sm:pb-20">
+        <Section className="overflow-hidden pt-20 pb-16 sm:pt-28 sm:pb-20 lg:pt-32">
             <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-                <div className="absolute inset-x-0 top-0 h-[600px] bg-spotlight" />
-                <div className="absolute inset-0 bg-grid opacity-[0.35] mask-fade-b" />
+                <div className="bg-spotlight absolute inset-x-0 top-0 h-[600px]" />
+                <div className="bg-grid mask-fade-b absolute inset-0 opacity-[0.35]" />
             </div>
 
             <Container>
@@ -69,27 +75,20 @@ function Hero({ authed }: { authed: boolean }) {
                         <Sparkles className="size-3" />
                         <span>{t('hero.eyebrow_beta')}</span>
                         <span className="text-foreground/70">·</span>
-                        <span className="font-sans normal-case tracking-normal text-foreground/80">
-                            {t('hero.eyebrow_release')}
-                        </span>
+                        <span className="text-foreground/80 font-sans tracking-normal normal-case">{t('hero.eyebrow_release')}</span>
                     </Eyebrow>
 
-                    <h1 className="text-balance font-display text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-[64px]">
+                    <h1 className="font-display text-4xl leading-[1.05] font-semibold tracking-tight text-balance sm:text-5xl lg:text-[64px]">
                         {t('hero.title_lead')}{' '}
                         <span className="relative whitespace-nowrap">
-                            <span className="relative z-10 bg-gradient-to-r from-primary via-fuchsia-500 to-rose-500 bg-clip-text text-transparent">
+                            <span className="from-primary relative z-10 bg-gradient-to-r via-fuchsia-500 to-rose-500 bg-clip-text text-transparent">
                                 {t('hero.title_highlight')}
                             </span>
-                            <span
-                                aria-hidden
-                                className="absolute inset-x-0 bottom-1 -z-0 h-[10px] bg-primary/10 dark:bg-primary/15"
-                            />
+                            <span aria-hidden className="bg-primary/10 dark:bg-primary/15 absolute inset-x-0 bottom-1 -z-0 h-[10px]" />
                         </span>
                     </h1>
 
-                    <p className="text-pretty max-w-2xl text-base text-muted-foreground sm:text-lg">
-                        {t('hero.subtitle')}
-                    </p>
+                    <p className="text-muted-foreground max-w-2xl text-base text-pretty sm:text-lg">{t('hero.subtitle')}</p>
 
                     <div className="mt-2 flex flex-col items-center gap-3 sm:flex-row">
                         <Button asChild size="lg">
@@ -103,14 +102,10 @@ function Hero({ authed }: { authed: boolean }) {
                         </Button>
                     </div>
 
-                    <ul className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
-                        {[
-                            t('hero.trust_no_card'),
-                            t('hero.trust_payments'),
-                            t('hero.trust_uptime'),
-                        ].map((item) => (
+                    <ul className="text-muted-foreground mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs">
+                        {[t('hero.trust_no_card'), t('hero.trust_payments'), t('hero.trust_uptime')].map((item) => (
                             <li key={item} className="inline-flex items-center gap-1.5">
-                                <CheckCircle2 className="size-3.5 text-foreground/70" />
+                                <CheckCircle2 className="text-foreground/70 size-3.5" />
                                 {item}
                             </li>
                         ))}
@@ -118,25 +113,22 @@ function Hero({ authed }: { authed: boolean }) {
                 </div>
 
                 <div className="relative mx-auto mt-16 max-w-5xl">
-                    <div
-                        aria-hidden
-                        className="absolute -inset-px rounded-2xl bg-gradient-to-b from-foreground/20 via-foreground/5 to-transparent"
-                    />
-                    <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl shadow-foreground/[0.06]">
-                        <div className="flex items-center gap-1.5 border-b border-border/60 bg-muted/40 px-4 py-2.5">
+                    <div aria-hidden className="from-foreground/20 via-foreground/5 absolute -inset-px rounded-2xl bg-gradient-to-b to-transparent" />
+                    <div className="border-border/80 bg-card shadow-foreground/[0.06] relative overflow-hidden rounded-2xl border shadow-2xl">
+                        <div className="border-border/60 bg-muted/40 flex items-center gap-1.5 border-b px-4 py-2.5">
                             <div className="flex items-center gap-1.5">
-                                <span className="size-2.5 rounded-full bg-border" />
-                                <span className="size-2.5 rounded-full bg-border" />
-                                <span className="size-2.5 rounded-full bg-border" />
+                                <span className="bg-border size-2.5 rounded-full" />
+                                <span className="bg-border size-2.5 rounded-full" />
+                                <span className="bg-border size-2.5 rounded-full" />
                             </div>
-                            <div className="ms-3 hidden items-center gap-1.5 rounded-md border border-border/60 bg-background px-2.5 py-1 font-mono text-[11px] text-muted-foreground sm:flex">
+                            <div className="border-border/60 bg-background text-muted-foreground ms-3 hidden items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-[11px] sm:flex">
                                 <Lock className="size-3" />
                                 store.yourbrand.com
                             </div>
                         </div>
 
                         <div className="grid gap-0 sm:grid-cols-[200px_1fr]">
-                            <aside className="hidden flex-col gap-1 border-e border-border/60 bg-muted/20 p-4 text-sm sm:flex">
+                            <aside className="border-border/60 bg-muted/20 hidden flex-col gap-1 border-e p-4 text-sm sm:flex">
                                 {[
                                     { icon: BarChart3, key: 'overview', label: 'Overview', active: true },
                                     { icon: Layers, key: 'products', label: 'Products' },
@@ -149,13 +141,11 @@ function Hero({ authed }: { authed: boolean }) {
                                         key={item.key}
                                         className={cn(
                                             'flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px]',
-                                            item.active
-                                                ? 'bg-background text-foreground shadow-sm'
-                                                : 'text-muted-foreground',
+                                            item.active ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground',
                                         )}
                                     >
                                         <item.icon className="size-3.5" />
-                                        {item.label}
+                                        {t(`hero.preview_nav.${item.key}`)}
                                     </div>
                                 ))}
                             </aside>
@@ -163,14 +153,14 @@ function Hero({ authed }: { authed: boolean }) {
                             <div className="p-5 sm:p-6">
                                 <div className="mb-5 flex items-end justify-between">
                                     <div>
-                                        <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                                        <p className="text-muted-foreground font-mono text-[11px] tracking-wider uppercase">
                                             {t('hero.preview_revenue')}
                                         </p>
-                                        <p className="mt-1 font-display text-2xl font-semibold tabular-nums sm:text-3xl">
-                                            $48,392<span className="ms-1 text-base font-normal text-muted-foreground">.21</span>
+                                        <p className="font-display mt-1 text-2xl font-semibold tabular-nums sm:text-3xl">
+                                            $48,392<span className="text-muted-foreground ms-1 text-base font-normal">.21</span>
                                         </p>
                                     </div>
-                                    <div className="hidden items-center gap-1 rounded-full border border-border/80 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 sm:inline-flex">
+                                    <div className="border-border/80 hidden items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium text-emerald-600 sm:inline-flex dark:text-emerald-400">
                                         ↑ 23.4%
                                     </div>
                                 </div>
@@ -179,13 +169,13 @@ function Hero({ authed }: { authed: boolean }) {
                                     {[40, 65, 50, 80, 55, 90, 70, 95, 60, 85, 75, 100].map((h, i) => (
                                         <div
                                             key={i}
-                                            className="rounded-sm bg-gradient-to-t from-primary/70 to-primary transition-all duration-500 hover:from-primary hover:to-fuchsia-500"
+                                            className="from-primary/70 to-primary hover:from-primary rounded-sm bg-gradient-to-t transition-all duration-500 hover:to-fuchsia-500"
                                             style={{ height: `${h}%` }}
                                         />
                                     ))}
                                 </div>
 
-                                <div className="rounded-lg border border-border/60">
+                                <div className="border-border/60 rounded-lg border">
                                     {[
                                         { id: '#ORD-2841', name: 'Stripe Toolkit Pro', amount: '$129.00', status: 'Paid' },
                                         { id: '#ORD-2840', name: 'CRM Boilerplate', amount: '$49.00', status: 'Paid' },
@@ -195,10 +185,10 @@ function Hero({ authed }: { authed: boolean }) {
                                             key={order.id}
                                             className={cn(
                                                 'grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 px-4 py-2.5 text-[13px]',
-                                                i < arr.length - 1 && 'border-b border-border/60',
+                                                i < arr.length - 1 && 'border-border/60 border-b',
                                             )}
                                         >
-                                            <span className="font-mono text-[11px] text-muted-foreground">{order.id}</span>
+                                            <span className="text-muted-foreground font-mono text-[11px]">{order.id}</span>
                                             <span className="truncate font-medium">{order.name}</span>
                                             <span className="tabular-nums">{order.amount}</span>
                                             <span
@@ -209,7 +199,7 @@ function Hero({ authed }: { authed: boolean }) {
                                                         : 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
                                                 )}
                                             >
-                                                {order.status}
+                                                {t(`hero.preview_status.${order.status.toLowerCase()}`)}
                                             </span>
                                         </div>
                                     ))}
@@ -227,24 +217,49 @@ function Hero({ authed }: { authed: boolean }) {
 /*  LOGO CLOUD                                                                */
 /* ────────────────────────────────────────────────────────────────────────── */
 
-function LogoCloud() {
+function LogoCloud({ partners }: { partners: HomePartner[] }) {
     const { t } = useTranslate();
-    const logos = ['LARAVEL', 'STRIPE', 'INERTIA', 'TAILWIND', 'PADDLE', 'CLOUDFLARE'];
+    // Managed in Admin → Partners; the strip disappears when none are shown.
+    if (partners.length === 0) return null;
+    const columns = Math.min(partners.length, 6);
     return (
-        <section className="border-y border-border/60 bg-muted/20 py-12">
+        <section className="border-border/60 bg-muted/20 border-y py-12">
             <Container>
-                <p className="mb-8 text-center text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                    {t('logo_cloud.tagline')}
-                </p>
-                <div className="grid grid-cols-2 items-center justify-items-center gap-x-12 gap-y-6 sm:grid-cols-3 lg:grid-cols-6">
-                    {logos.map((logo) => (
-                        <span
-                            key={logo}
-                            className="font-display text-base font-semibold tracking-[0.2em] text-muted-foreground/70 transition-colors hover:text-foreground"
-                        >
-                            {logo}
-                        </span>
-                    ))}
+                <p className="text-muted-foreground mb-8 text-center text-xs font-medium tracking-widest uppercase">{t('logo_cloud.tagline')}</p>
+                <div
+                    className={cn(
+                        'grid grid-cols-2 items-center justify-items-center gap-x-12 gap-y-6 sm:grid-cols-3',
+                        {
+                            1: 'lg:grid-cols-1',
+                            2: 'lg:grid-cols-2',
+                            3: 'lg:grid-cols-3',
+                            4: 'lg:grid-cols-4',
+                            5: 'lg:grid-cols-5',
+                            6: 'lg:grid-cols-6',
+                        }[columns],
+                    )}
+                >
+                    {partners.map((partner) => {
+                        const mark = partner.logo_url ? (
+                            <img
+                                src={partner.logo_url}
+                                alt={partner.name}
+                                loading="lazy"
+                                className="h-10 w-auto max-w-[160px] object-contain opacity-80 grayscale transition hover:opacity-100 hover:grayscale-0 sm:h-12"
+                            />
+                        ) : (
+                            <span className="font-display text-muted-foreground/70 hover:text-foreground text-base font-semibold tracking-[0.2em] uppercase transition-colors">
+                                {partner.name}
+                            </span>
+                        );
+                        return partner.website_url ? (
+                            <a key={partner.id} href={partner.website_url} target="_blank" rel="noopener noreferrer" title={partner.name}>
+                                {mark}
+                            </a>
+                        ) : (
+                            <span key={partner.id}>{mark}</span>
+                        );
+                    })}
                 </div>
             </Container>
         </section>
@@ -270,26 +285,23 @@ function FeatureGrid() {
         <Section>
             <Container>
                 <SectionHeading
-                    eyebrow={<><Zap className="size-3" /> {t('features.eyebrow')}</>}
+                    eyebrow={
+                        <>
+                            <Zap className="size-3" /> {t('features.eyebrow')}
+                        </>
+                    }
                     title={t('features.title')}
                     description={t('features.description')}
                 />
 
-                <div className="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border/60 bg-border/60 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="border-border/60 bg-border/60 mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-xl border sm:grid-cols-2 lg:grid-cols-3">
                     {FEATURE_ICONS.map(({ key, icon: Icon }) => (
-                        <div
-                            key={key}
-                            className="group relative bg-card p-6 transition-colors duration-200 hover:bg-muted/40 sm:p-8"
-                        >
-                            <div className="mb-5 inline-flex size-10 items-center justify-center rounded-lg border border-border/80 bg-background text-foreground transition-colors duration-200 group-hover:border-foreground/30">
+                        <div key={key} className="group bg-card hover:bg-muted/40 relative p-6 transition-colors duration-200 sm:p-8">
+                            <div className="border-border/80 bg-background text-foreground group-hover:border-foreground/30 mb-5 inline-flex size-10 items-center justify-center rounded-lg border transition-colors duration-200">
                                 <Icon className="size-4" />
                             </div>
-                            <h3 className="mb-2 font-display text-base font-semibold tracking-tight">
-                                {t(`features.items.${key}.title`)}
-                            </h3>
-                            <p className="text-sm leading-relaxed text-muted-foreground">
-                                {t(`features.items.${key}.body`)}
-                            </p>
+                            <h3 className="font-display mb-2 text-base font-semibold tracking-tight">{t(`features.items.${key}.title`)}</h3>
+                            <p className="text-muted-foreground text-sm leading-relaxed">{t(`features.items.${key}.body`)}</p>
                         </div>
                     ))}
                 </div>
@@ -312,10 +324,14 @@ const PRODUCT_TYPE_ICONS: { key: string; icon: LucideIcon }[] = [
 function ProductTypes() {
     const { t } = useTranslate();
     return (
-        <Section className="border-t border-border/60 bg-muted/20">
+        <Section className="border-border/60 bg-muted/20 border-t">
             <Container>
                 <SectionHeading
-                    eyebrow={<><Layers className="size-3" /> {t('product_types.eyebrow')}</>}
+                    eyebrow={
+                        <>
+                            <Layers className="size-3" /> {t('product_types.eyebrow')}
+                        </>
+                    }
                     title={t('product_types.title')}
                     description={t('product_types.description')}
                 />
@@ -324,23 +340,19 @@ function ProductTypes() {
                     {PRODUCT_TYPE_ICONS.map(({ key, icon: Icon }) => (
                         <div
                             key={key}
-                            className="group relative overflow-hidden rounded-xl border border-border/60 bg-card p-6 transition-shadow hover:shadow-lg hover:shadow-foreground/[0.04] sm:p-7"
+                            className="group border-border/60 bg-card hover:shadow-foreground/[0.04] relative overflow-hidden rounded-xl border p-6 transition-shadow hover:shadow-lg sm:p-7"
                         >
                             <div
                                 aria-hidden
-                                className="absolute -end-12 -top-12 size-40 rounded-full bg-foreground/[0.02] blur-2xl transition-all group-hover:scale-110 dark:bg-foreground/[0.06]"
+                                className="bg-foreground/[0.02] dark:bg-foreground/[0.06] absolute -end-12 -top-12 size-40 rounded-full blur-2xl transition-all group-hover:scale-110"
                             />
                             <div className="relative flex items-start gap-4">
-                                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-background">
+                                <div className="border-border bg-background flex size-10 shrink-0 items-center justify-center rounded-lg border">
                                     <Icon className="size-4" />
                                 </div>
                                 <div className="space-y-1">
-                                    <h3 className="font-display text-base font-semibold tracking-tight">
-                                        {t(`product_types.items.${key}.label`)}
-                                    </h3>
-                                    <p className="text-sm leading-relaxed text-muted-foreground">
-                                        {t(`product_types.items.${key}.desc`)}
-                                    </p>
+                                    <h3 className="font-display text-base font-semibold tracking-tight">{t(`product_types.items.${key}.label`)}</h3>
+                                    <p className="text-muted-foreground text-sm leading-relaxed">{t(`product_types.items.${key}.desc`)}</p>
                                 </div>
                             </div>
                         </div>
@@ -376,7 +388,11 @@ function Pricing() {
         <Section id="pricing">
             <Container>
                 <SectionHeading
-                    eyebrow={<><Cloud className="size-3" /> {t('pricing.eyebrow')}</>}
+                    eyebrow={
+                        <>
+                            <Cloud className="size-3" /> {t('pricing.eyebrow')}
+                        </>
+                    }
                     title={t('pricing.title')}
                     description={t('pricing.description')}
                 />
@@ -389,44 +405,37 @@ function Pricing() {
                             <div
                                 key={id}
                                 className={cn(
-                                    'relative flex flex-col rounded-2xl border bg-card p-6 sm:p-8',
-                                    featured
-                                        ? 'border-foreground/40 shadow-xl shadow-foreground/[0.06] lg:-mt-4 lg:mb-0'
-                                        : 'border-border/60',
+                                    'bg-card relative flex flex-col rounded-2xl border p-6 sm:p-8',
+                                    featured ? 'border-foreground/40 shadow-foreground/[0.06] shadow-xl lg:-mt-4 lg:mb-0' : 'border-border/60',
                                 )}
                             >
                                 {featured && (
-                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-primary to-fuchsia-500 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-white shadow-lg shadow-primary/30">
+                                    <div className="from-primary shadow-primary/30 absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r to-fuchsia-500 px-3 py-1 font-mono text-[10px] tracking-wider text-white uppercase shadow-lg">
                                         {t('pricing.most_popular')}
                                     </div>
                                 )}
 
                                 <div className="mb-6">
-                                    <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                                    <h3 className="font-display text-muted-foreground text-sm font-semibold tracking-wider uppercase">
                                         {plan?.name}
                                     </h3>
                                     <div className="mt-3 flex items-baseline gap-1">
                                         <span className="font-display text-4xl font-semibold tracking-tight">{plan?.price}</span>
-                                        <span className="text-sm text-muted-foreground">{plan?.cadence}</span>
+                                        <span className="text-muted-foreground text-sm">{plan?.cadence}</span>
                                     </div>
-                                    <p className="mt-2 text-sm text-muted-foreground">{plan?.description}</p>
+                                    <p className="text-muted-foreground mt-2 text-sm">{plan?.description}</p>
                                 </div>
 
                                 <ul className="mb-8 flex-1 space-y-3 text-sm">
                                     {features.map((feat) => (
                                         <li key={feat} className="flex items-start gap-2.5">
-                                            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+                                            <CheckCircle2 className="text-primary mt-0.5 size-4 shrink-0" />
                                             <span>{feat}</span>
                                         </li>
                                     ))}
                                 </ul>
 
-                                <Button
-                                    asChild
-                                    size="lg"
-                                    variant={featured ? 'default' : 'outline'}
-                                    className="w-full"
-                                >
+                                <Button asChild size="lg" variant={featured ? 'default' : 'outline'} className="w-full">
                                     <Link href={route('register')}>{plan?.cta}</Link>
                                 </Button>
                             </div>
@@ -434,7 +443,7 @@ function Pricing() {
                     })}
                 </div>
 
-                <p className="mt-8 text-center text-xs text-muted-foreground">{t('pricing.footnote')}</p>
+                <p className="text-muted-foreground mt-8 text-center text-xs">{t('pricing.footnote')}</p>
             </Container>
         </Section>
     );
@@ -454,28 +463,19 @@ function Testimonials() {
     const { t, tList } = useTranslate();
     const items = tList<TestimonialShape[]>('testimonials.items') ?? [];
     return (
-        <Section id="testimonials" className="border-t border-border/60">
+        <Section id="testimonials" className="border-border/60 border-t">
             <Container>
-                <SectionHeading
-                    eyebrow={t('testimonials.eyebrow')}
-                    title={t('testimonials.title')}
-                    description={t('testimonials.description')}
-                />
+                <SectionHeading eyebrow={t('testimonials.eyebrow')} title={t('testimonials.title')} description={t('testimonials.description')} />
 
                 <div className="mt-16 grid gap-4 md:grid-cols-3">
                     {items.map((tm, i) => (
-                        <figure
-                            key={i}
-                            className="flex flex-col gap-6 rounded-xl border border-border/60 bg-card p-6 sm:p-7"
-                        >
-                            <div aria-hidden className="font-display text-3xl leading-none text-foreground/15">
+                        <figure key={i} className="border-border/60 bg-card flex flex-col gap-6 rounded-xl border p-6 sm:p-7">
+                            <div aria-hidden className="font-display text-foreground/15 text-3xl leading-none">
                                 “
                             </div>
-                            <blockquote className="text-pretty flex-1 text-[15px] leading-relaxed text-foreground/90">
-                                {tm.quote}
-                            </blockquote>
-                            <figcaption className="flex items-center gap-3 border-t border-border/60 pt-4">
-                                <div className="flex size-9 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
+                            <blockquote className="text-foreground/90 flex-1 text-[15px] leading-relaxed text-pretty">{tm.quote}</blockquote>
+                            <figcaption className="border-border/60 flex items-center gap-3 border-t pt-4">
+                                <div className="bg-foreground text-background flex size-9 items-center justify-center rounded-full text-xs font-semibold">
                                     {tm.name
                                         .split(' ')
                                         .map((n) => n[0])
@@ -484,7 +484,7 @@ function Testimonials() {
                                 </div>
                                 <div className="text-sm">
                                     <div className="font-medium">{tm.name}</div>
-                                    <div className="text-xs text-muted-foreground">{tm.role}</div>
+                                    <div className="text-muted-foreground text-xs">{tm.role}</div>
                                 </div>
                             </figcaption>
                         </figure>
@@ -500,36 +500,34 @@ function Testimonials() {
 /* ────────────────────────────────────────────────────────────────────────── */
 
 interface FAQShape {
+    id: number;
     q: string;
     a: string;
 }
 
-function FAQ() {
-    const { t, tList } = useTranslate();
-    const faqs = tList<FAQShape[]>('faq.items') ?? [];
+function FAQ({ faqs }: { faqs: FAQShape[] }) {
+    const { t } = useTranslate();
     const [open, setOpen] = useState<number | null>(0);
+    // Managed in Admin → FAQ; the section disappears when none are shown.
+    if (faqs.length === 0) return null;
     return (
-        <Section id="faq" className="border-t border-border/60 bg-muted/20">
+        <Section id="faq" className="border-border/60 bg-muted/20 border-t">
             <Container>
-                <SectionHeading
-                    eyebrow={t('faq.eyebrow')}
-                    title={t('faq.title')}
-                    description={t('faq.description')}
-                />
+                <SectionHeading eyebrow={t('faq.eyebrow')} title={t('faq.title')} description={t('faq.description')} />
 
-                <div className="mx-auto mt-16 max-w-3xl divide-y divide-border/60 overflow-hidden rounded-xl border border-border/60 bg-card">
+                <div className="divide-border/60 border-border/60 bg-card mx-auto mt-16 max-w-3xl divide-y overflow-hidden rounded-xl border">
                     {faqs.map((faq, i) => {
                         const isOpen = open === i;
                         return (
-                            <div key={i}>
+                            <div key={faq.id}>
                                 <button
                                     type="button"
                                     onClick={() => setOpen(isOpen ? null : i)}
-                                    className="flex w-full items-center justify-between gap-4 px-5 py-4 text-start text-sm transition-colors hover:bg-muted/40 sm:px-6 sm:py-5"
+                                    className="hover:bg-muted/40 flex w-full items-center justify-between gap-4 px-5 py-4 text-start text-sm transition-colors sm:px-6 sm:py-5"
                                     aria-expanded={isOpen}
                                 >
                                     <span className="font-medium">{faq.q}</span>
-                                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-border/80 text-muted-foreground">
+                                    <span className="border-border/80 text-muted-foreground flex size-6 shrink-0 items-center justify-center rounded-full border">
                                         {isOpen ? <Minus className="size-3" /> : <Plus className="size-3" />}
                                     </span>
                                 </button>
@@ -540,9 +538,7 @@ function FAQ() {
                                     )}
                                 >
                                     <div className="min-h-0">
-                                        <p className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground sm:px-6 sm:pb-6">
-                                            {faq.a}
-                                        </p>
+                                        <p className="text-muted-foreground px-5 pb-5 text-sm leading-relaxed sm:px-6 sm:pb-6">{faq.a}</p>
                                     </div>
                                 </div>
                             </div>
@@ -562,36 +558,25 @@ function CTAStrip({ authed }: { authed: boolean }) {
     const { t, direction } = useTranslate();
     const arrow = direction === 'rtl' ? '←' : '→';
     return (
-        <Section className="border-t border-border/60 pb-24 pt-20 sm:pb-32">
+        <Section className="border-border/60 border-t pt-20 pb-24 sm:pb-32">
             <Container>
-                <div className="relative isolate overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-10 text-white shadow-2xl shadow-primary/30 sm:p-16 dark:from-indigo-500 dark:via-violet-500 dark:to-fuchsia-500">
+                <div className="border-primary/20 shadow-primary/30 relative isolate overflow-hidden rounded-2xl border bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-10 text-white shadow-2xl sm:p-16 dark:from-indigo-500 dark:via-violet-500 dark:to-fuchsia-500">
                     <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-                        <div className="absolute inset-0 bg-grid opacity-[0.18]" />
+                        <div className="bg-grid absolute inset-0 opacity-[0.18]" />
                         <div className="absolute -end-32 -top-32 size-72 rounded-full bg-white/15 blur-3xl" />
-                        <div className="absolute -bottom-24 -start-20 size-64 rounded-full bg-fuchsia-300/30 blur-3xl" />
+                        <div className="absolute -start-20 -bottom-24 size-64 rounded-full bg-fuchsia-300/30 blur-3xl" />
                     </div>
                     <div className="mx-auto flex max-w-xl flex-col items-center gap-5 text-center">
-                        <h2 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-                            {t('cta_strip.title')}
-                        </h2>
-                        <p className="text-pretty text-base text-white/85">{t('cta_strip.body')}</p>
+                        <h2 className="font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">{t('cta_strip.title')}</h2>
+                        <p className="text-base text-pretty text-white/85">{t('cta_strip.body')}</p>
                         <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                            <Button
-                                asChild
-                                size="lg"
-                                className="border-transparent bg-white text-indigo-700 shadow-md hover:bg-white/90"
-                            >
+                            <Button asChild size="lg" className="border-transparent bg-white text-indigo-700 shadow-md hover:bg-white/90">
                                 <Link href={authed ? route('dashboard') : route('register')}>
                                     {authed ? t('common.go_to_dashboard') : t('cta_strip.primary')}
                                     <span aria-hidden>{arrow}</span>
                                 </Link>
                             </Button>
-                            <Button
-                                asChild
-                                size="lg"
-                                variant="ghost"
-                                className="text-white hover:bg-white/10 hover:text-white"
-                            >
+                            <Button asChild size="lg" variant="ghost" className="text-white hover:bg-white/10 hover:text-white">
                                 <Link href={route('products.index')}>{t('cta_strip.secondary')}</Link>
                             </Button>
                         </div>

@@ -11,11 +11,14 @@ import {
     FileText,
     Folder,
     FolderKanban,
+    Handshake,
     HardDrive,
     KeyRound,
     LayoutGrid,
     ListTodo,
+    LogIn,
     Mail,
+    MessageCircleQuestion,
     Newspaper,
     Package,
     PackageOpen,
@@ -119,6 +122,16 @@ const adminNavItems: NavItem[] = [
         icon: Palette,
     },
     {
+        title: 'Partners',
+        url: '/admin/partners',
+        icon: Handshake,
+    },
+    {
+        title: 'FAQ',
+        url: '/admin/faqs',
+        icon: MessageCircleQuestion,
+    },
+    {
         title: 'Payment Gateways',
         url: '/admin/payment-gateways',
         icon: Wallet,
@@ -132,6 +145,11 @@ const adminNavItems: NavItem[] = [
         title: 'Email',
         url: '/admin/mail',
         icon: Send,
+    },
+    {
+        title: 'Social login',
+        url: '/admin/social-login',
+        icon: LogIn,
     },
     {
         title: 'File storage',

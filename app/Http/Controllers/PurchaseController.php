@@ -25,7 +25,7 @@ class PurchaseController extends Controller
             ->whereHas('order', fn ($q) => $q
                 ->where('user_id', $request->user()->id)
                 ->where('status', Order::STATUS_PAID))
-            ->with(['order:id,order_number,paid_at,created_at', 'product', 'licenses', 'download'])
+            ->with(['order:id,order_number,paid_at,created_at', 'product', 'licenses', 'download.orderItem'])
             ->latest('id')
             ->paginate(20);
 
@@ -56,11 +56,12 @@ class PurchaseController extends Controller
                 ])->values(),
                 'download' => $download ? [
                     'url' => route('purchases.download', $download),
-                    'file_name' => $product?->download_file_name,
-                    'file_size' => $product?->download_file_size,
+                    // Regular or Extended License file, by what was bought.
+                    'file_name' => $product ? $files->fileInfo($product, $files->slotFor($download))['name'] : null,
+                    'file_size' => $product ? $files->fileInfo($product, $files->slotFor($download))['size'] : null,
                     'count' => $download->downloads_count,
                     'max' => $download->max_downloads,
-                    'available' => $download->canDownload() && $product !== null && $files->exists($product),
+                    'available' => $download->canDownload() && $product !== null && $files->exists($product, $files->slotFor($download)),
                     'reason' => $this->unavailableReason($download, $files),
                 ] : null,
             ];
@@ -94,7 +95,7 @@ class PurchaseController extends Controller
             return __('You have used all :count downloads for this product.', ['count' => $download->max_downloads]);
         }
 
-        if (! $download->product || ! $files->exists($download->product)) {
+        if (! $download->product || ! $files->exists($download->product, $files->slotFor($download))) {
             return __('The file isn’t available yet — please try again later or contact support.');
         }
 

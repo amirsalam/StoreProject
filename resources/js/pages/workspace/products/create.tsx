@@ -53,6 +53,9 @@ export default function SellerProductsCreate({ categories, statuses, types, uplo
         download_file: null,
         download_file_token: '',
         remove_download_file: false,
+        extended_file: null,
+        extended_file_token: '',
+        remove_extended_file: false,
     });
 
     const submit = (e: FormEvent) => {
@@ -67,7 +70,7 @@ export default function SellerProductsCreate({ categories, statuses, types, uplo
             <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">{__('New product')}</h1>
-                    <p className="text-sm text-muted-foreground">{__('Add a new digital product to your store.')}</p>
+                    <p className="text-muted-foreground text-sm">{__('Add a new digital product to your store.')}</p>
                 </div>
 
                 <ProductForm

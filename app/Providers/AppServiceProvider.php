@@ -4,11 +4,13 @@ namespace App\Providers;
 
 use App\Domain\Licensing\LicenseActivationService;
 use App\Services\MailSettings;
+use App\Services\SocialLoginSettings;
 use App\Tenancy\TenantContext;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Socialite\Contracts\Factory;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,5 +34,9 @@ class AppServiceProvider extends ServiceProvider
         // SMTP settings saved in Admin → Email override .env — applied the
         // first time the mailer is used, so ordinary requests pay nothing.
         $this->app->resolving('mail.manager', fn () => $this->app->make(MailSettings::class)->apply());
+
+        // Google / GitHub credentials saved in Admin → Social login override
+        // .env — applied when Socialite is first used (login buttons only).
+        $this->app->resolving(Factory::class, fn () => $this->app->make(SocialLoginSettings::class)->apply());
     }
 }
