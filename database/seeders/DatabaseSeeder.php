@@ -10,22 +10,63 @@ use App\Models\License;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Models\Plan;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\Subscription;
+use App\Models\Tenant;
+use App\Models\TenantSubscription;
 use App\Models\User;
 use App\Models\Wishlist;
+use App\Tenancy\TenantContext;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Seed the SaaS plan catalog FIRST — every newly provisioned
+        // tenant gets the default (Starter) plan attached below.
+        $this->call(PlansSeeder::class);
+
         $admin = User::factory()->admin()->create([
             'name' => 'Store Admin',
             'email' => 'admin@example.com',
         ]);
+
+        // Provision a default tenant + set it as the active context. Every
+        // model with the BelongsToTenant trait auto-fills tenant_id from
+        // this context during creation, so the rest of this seeder doesn't
+        // need to pass tenant_id around.
+        $tenant = Tenant::firstOrCreate(
+            ['slug' => 'demo'],
+            [
+                'name' => 'Demo Workspace',
+                'owner_id' => $admin->id,
+                'settings' => null,
+                'trial_ends_at' => now()->addDays(30),
+            ],
+        );
+        app(TenantContext::class)->set($tenant);
+
+        // Attach a trialing Pro subscription to the demo tenant so the
+        // seeded marketplace data (24 products) fits within plan limits.
+        // The Starter plan caps at 10 products, which would block any
+        // attempt to use the admin UI to create new ones.
+        $proPlan = Plan::query()->where('slug', Plan::SLUG_PRO)->first();
+        if ($proPlan && ! $tenant->currentSubscription) {
+            TenantSubscription::create([
+                'tenant_id' => $tenant->id,
+                'plan_id' => $proPlan->id,
+                'status' => TenantSubscription::STATUS_TRIALING,
+                'billing_cycle' => TenantSubscription::CYCLE_MONTHLY,
+                'current_period_start' => now(),
+                'current_period_end' => now()->addDays(14),
+                'trial_ends_at' => now()->addDays(14),
+            ]);
+        }
 
         User::factory()->create([
             'name' => 'Test User',
@@ -33,6 +74,21 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $customers = User::factory()->count(9)->create();
+
+        // Attach every seeded user to the default tenant as a member; the
+        // admin lands in as owner so the tenancy ownership chain is intact.
+        $allUsers = User::all();
+        foreach ($allUsers as $user) {
+            DB::table('tenant_user')->updateOrInsert(
+                ['tenant_id' => $tenant->id, 'user_id' => $user->id],
+                [
+                    'role' => $user->id === $admin->id ? Tenant::ROLE_OWNER : Tenant::ROLE_MEMBER,
+                    'joined_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+            );
+        }
 
         $categoryTree = [
             'Laravel Scripts' => ['CRM Scripts', 'Ecommerce Scripts'],
@@ -91,10 +147,12 @@ class DatabaseSeeder extends Seeder
 
         Product::query()->whereIn('id', $products->random(5)->pluck('id'))->update(['is_featured' => true]);
 
+        // Showcase codes never expire — the factory's random expiry made a
+        // fresh seed's LAUNCH20 silently stop working weeks later.
         $coupons = collect([
-            Coupon::factory()->percentage(20)->create(['code' => 'LAUNCH20', 'description' => 'Launch sale — 20% off']),
-            Coupon::factory()->percentage(50)->create(['code' => 'BLACKFRIDAY50', 'description' => 'Black Friday blowout']),
-            Coupon::factory()->fixed(10)->create(['code' => 'WELCOME10', 'description' => '$10 off your first order']),
+            Coupon::factory()->percentage(20)->create(['code' => 'LAUNCH20', 'description' => 'Launch sale — 20% off', 'expires_at' => null]),
+            Coupon::factory()->percentage(50)->create(['code' => 'BLACKFRIDAY50', 'description' => 'Black Friday blowout', 'expires_at' => null]),
+            Coupon::factory()->fixed(10)->create(['code' => 'WELCOME10', 'description' => '$10 off your first order', 'expires_at' => null]),
         ]);
         Coupon::factory()->count(2)->create();
 
