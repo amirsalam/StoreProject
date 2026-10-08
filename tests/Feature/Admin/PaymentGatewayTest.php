@@ -273,6 +273,46 @@ class PaymentGatewayTest extends TestCase
         return $fake;
     }
 
+    public function test_an_active_bank_transfer_gateway_needs_all_its_bank_details(): void
+    {
+        $admin = $this->admin();
+        $base = [
+            'provider' => 'bank_transfer',
+            'name' => 'Bank transfer',
+            'display_name' => 'Bank transfer',
+            'environment' => 'production',
+            'is_active' => '1',
+            'fee_fixed' => '0',
+            'fee_percent' => '0',
+        ];
+        $details = [
+            'account_name' => 'Acme SARL',
+            'bank_name' => 'Attijariwafa bank',
+            'account_number' => '007 780 0001234567890123 45',
+            'iban' => 'MA64 0077 8000 0123 4567 8901 2345',
+            'swift' => 'BCMAMAMC',
+        ];
+
+        // Active with nothing filled in: every required bank field is reported.
+        $this->actingAs($admin)->post('/admin/payment-gateways', $base + ['credentials' => []])
+            ->assertSessionHasErrors(['credentials.account_name', 'credentials.bank_name', 'credentials.account_number', 'credentials.iban', 'credentials.swift'])
+            ->assertSessionDoesntHaveErrors('credentials.instructions');
+        $this->assertSame(0, PaymentGateway::query()->count());
+
+        // Switched off, it can be saved as a draft.
+        $this->actingAs($admin)->post('/admin/payment-gateways', ['is_active' => '0'] + $base + ['credentials' => []])->assertSessionHasNoErrors();
+        PaymentGateway::query()->delete();
+
+        // Complete: saved. Editing later with blank fields keeps the stored values.
+        $this->actingAs($admin)->post('/admin/payment-gateways', $base + ['credentials' => $details])->assertSessionHasNoErrors();
+        $gateway = PaymentGateway::query()->sole();
+
+        $this->actingAs($admin)
+            ->put(route('admin.payment-gateways.update', $gateway), $base + ['display_name' => 'Virement', 'credentials' => ['iban' => '']])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('MA64 0077 8000 0123 4567 8901 2345', $gateway->refresh()->credentials['iban']);
+    }
+
     public function test_validation_rejects_unknown_provider(): void
     {
         $this->actingAs($this->admin())->post('/admin/payment-gateways', [

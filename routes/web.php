@@ -19,6 +19,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\InvoiceDocumentController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Payments\CmiController;
 use App\Http\Controllers\Payments\PayPalController;
@@ -109,6 +110,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('purchases', [PurchaseController::class, 'index'])->name('purchases.index');
     Route::get('purchases/downloads/{download}', [PurchaseController::class, 'download'])->name('purchases.download');
 
+    // Printable invoice (store orders and workspace invoices) — the buyer,
+    // the issuing workspace's members and admins only.
+    Route::get('invoices/{invoice}', InvoiceDocumentController::class)->whereNumber('invoice')->name('invoices.show');
+
     // Product file uploads: a signed URL for cloud storage, or chunks to this server.
     Route::post('uploads/product-file', [ProductUploadController::class, 'store'])
         ->middleware('throttle:30,1')
@@ -197,6 +202,8 @@ Route::middleware(['auth', 'admin'])
     ->group(function () {
         Route::resource('products', AdminProductController::class)->except(['show']);
         Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
+        // Bank transfer received → paid (fulfilment, email, invoice).
+        Route::post('orders/{order}/mark-paid', [AdminOrderController::class, 'markPaid'])->name('orders.mark-paid');
 
         // Outgoing email (SMTP) — replaces MAIL_* in .env.
         Route::get('mail', [AdminMailSettingsController::class, 'edit'])->name('mail.edit');

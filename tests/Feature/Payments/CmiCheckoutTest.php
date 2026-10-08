@@ -64,6 +64,40 @@ class CmiCheckoutTest extends TestCase
             );
     }
 
+    public function test_a_dirham_cart_is_charged_by_cmi_as_is(): void
+    {
+        $this->cmiGateway();
+        $this->addToCart(46.16, currency: 'MAD');
+
+        $this->actingAs($this->buyer)->get($this->url('/checkout'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('cmi.amount_mad', '46.16')
+                ->where('cmi.rate', null));
+
+        $response = $this->actingAs($this->buyer)->postJson($this->url('/checkout'), $this->billing())->assertOk();
+        $order = Order::query()->forTenant($this->tenant)->sole();
+
+        $this->assertSame('MAD', $order->currency);
+        $this->assertSame('46.16', $order->payments()->sole()->raw_response['cmi']['amount_mad']);
+
+        $html = $this->actingAs($this->buyer)->get($response->json('redirect_url'))->assertOk()->getContent();
+        preg_match_all('/name="([^"]+)" value="([^"]*)"/', $html, $m);
+        $fields = array_combine($m[1], array_map('html_entity_decode', $m[2]));
+        $this->assertSame('46.16', $fields['amount']);
+        $this->assertSame('504', $fields['currency']);
+    }
+
+    public function test_cmi_is_not_offered_for_currencies_other_than_dirham_and_dollar(): void
+    {
+        $this->cmiGateway();
+        $this->addToCart(20.00, currency: 'EUR');
+
+        $this->actingAs($this->buyer)->get($this->url('/checkout'))
+            ->assertInertia(fn (Assert $page) => $page->where('cmi', null));
+
+        $this->actingAs($this->buyer)->postJson($this->url('/checkout'), $this->billing())->assertStatus(503);
+    }
+
     public function test_placing_a_cmi_order_sends_the_buyer_to_a_signed_cmi_form(): void
     {
         $this->cmiGateway();
@@ -213,10 +247,10 @@ class CmiCheckoutTest extends TestCase
         return Order::query()->forTenant($this->tenant)->sole();
     }
 
-    private function addToCart(float $price, bool $license = false): void
+    private function addToCart(float $price, bool $license = false, string $currency = 'USD'): void
     {
         $factory = $license ? Product::factory()->license() : Product::factory()->digitalDownload();
-        $product = $factory->create(['tenant_id' => $this->tenant->id, 'status' => Product::STATUS_PUBLISHED, 'price' => $price, 'sale_price' => null]);
+        $product = $factory->create(['tenant_id' => $this->tenant->id, 'status' => Product::STATUS_PUBLISHED, 'price' => $price, 'sale_price' => null, 'currency' => $currency]);
 
         $this->actingAs($this->buyer)->post($this->url('/cart'), ['product_id' => $product->id, 'quantity' => 1]);
     }

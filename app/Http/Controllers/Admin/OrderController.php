@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Marketplace\CheckoutService;
+use App\Domain\Payments\BankTransfer\BankTransferGateway;
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Services\MailSettings;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -52,6 +56,9 @@ class OrderController extends Controller
             'currency' => $order->currency,
             'status' => $order->status,
             'payment' => $this->paymentSummary($order->payments->first()),
+            // Waiting for a bank transfer: the admin confirms it arrived.
+            'awaiting_transfer' => $order->status === Order::STATUS_PENDING
+                && $order->payment_method === CheckoutService::METHOD_BANK_TRANSFER,
             'created_at' => $order->created_at,
             'paid_at' => $order->paid_at,
         ]);
@@ -76,6 +83,21 @@ class OrderController extends Controller
                 'refunded' => Order::query()->where('status', Order::STATUS_REFUNDED)->count(),
             ],
         ]);
+    }
+
+    /**
+     * A bank transfer arrived: mark the order paid — which delivers the
+     * products, emails the buyer and issues the invoice, like a card payment.
+     */
+    public function markPaid(Order $order, BankTransferGateway $bank): RedirectResponse
+    {
+        if (! $bank->confirm($order)) {
+            return back()->with('error', __('Only unpaid bank-transfer orders can be marked as paid here.'));
+        }
+
+        ActivityLog::record('order.bank_transfer_confirmed', request()->user(), ['order' => $order->order_number]);
+
+        return back()->with('success', __('Order :number marked as paid. The buyer now has their products.', ['number' => $order->order_number]));
     }
 
     /**

@@ -244,6 +244,28 @@ class CheckoutTest extends TestCase
         $this->actingAs($user)->get('/checkout')->assertOk();
     }
 
+    public function test_an_admin_also_sees_why_the_gateway_refused(): void
+    {
+        $this->app->instance(StripeGateway::class, new class extends StripeGateway
+        {
+            public function createPaymentIntent(int $amountCents, string $currency, array $metadata = []): array
+            {
+                throw AuthenticationException::factory('Expired API Key provided: rk_test_***');
+            }
+        });
+        $admin = User::factory()->admin()->create();
+        $product = Product::factory()->digitalDownload()->create(['status' => Product::STATUS_PUBLISHED, 'price' => 30.00, 'sale_price' => null]);
+        $this->actingAs($admin)->post('/cart', ['product_id' => $product->id]);
+
+        $message = $this->actingAs($admin)
+            ->postJson('/checkout', ['billing_name' => 'Ada', 'billing_email' => 'ada@example.test'])
+            ->assertStatus(503)
+            ->json('errors.cart.0');
+
+        $this->assertStringStartsWith('Payments are not available right now.', $message);
+        $this->assertStringContainsString('Expired API Key provided', $message);
+    }
+
     public function test_checkout_without_a_configured_gateway_is_refused_cleanly(): void
     {
         // Real StripeGateway, but the store has no Stripe gateway configured.

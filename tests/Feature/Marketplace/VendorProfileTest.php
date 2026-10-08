@@ -89,6 +89,28 @@ class VendorProfileTest extends TestCase
             ->assertSessionHasErrors(['name', 'website']);
     }
 
+    public function test_country_must_be_a_real_country_code(): void
+    {
+        $user = User::factory()->create();
+        $vendor = Vendor::factory()->create(['owner_user_id' => $user->id]);
+
+        $this->actingAs($user)->get('/workspace/vendor')->assertInertia(
+            fn (AssertableInertia $page) => $page->has('countries', 249)->where('countries', fn ($codes) => collect($codes)->contains('MA')),
+        );
+
+        // Two letters but not a country.
+        $this->actingAs($user)
+            ->put('/workspace/vendor', ['name' => 'Store', 'country' => 'XX'])
+            ->assertSessionHasErrors('country');
+
+        // Lower-case is accepted and stored upper-case; empty clears it.
+        $this->actingAs($user)->put('/workspace/vendor', ['name' => 'Store', 'country' => 'ma'])->assertSessionHasNoErrors();
+        $this->assertSame('MA', $vendor->refresh()->load('profile')->profile->country);
+
+        $this->actingAs($user)->put('/workspace/vendor', ['name' => 'Store', 'country' => ''])->assertSessionHasNoErrors();
+        $this->assertNull($vendor->refresh()->load('profile')->profile->country);
+    }
+
     public function test_policy_allows_owner_blocks_others_and_admins_pass(): void
     {
         $owner = User::factory()->create();

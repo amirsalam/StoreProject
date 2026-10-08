@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Marketplace\ProductFileService;
 use App\Models\Download;
+use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\RedirectResponse;
@@ -29,7 +30,12 @@ class PurchaseController extends Controller
             ->latest('id')
             ->paginate(20);
 
-        $items->through(function (OrderItem $item) use ($files) {
+        // Each order's invoice (issued when it was paid), for a "Invoice" link.
+        $invoiceIds = Invoice::query()
+            ->whereIn('order_id', $items->getCollection()->pluck('order_id')->unique())
+            ->pluck('id', 'order_id');
+
+        $items->through(function (OrderItem $item) use ($files, $invoiceIds) {
             $download = $item->download;
             $product = $item->product;
             $purchasedAt = $item->order->paid_at ?? $item->order->created_at;
@@ -43,6 +49,7 @@ class PurchaseController extends Controller
                 'thumbnail' => $product?->thumbnail,
                 'version' => $product?->version,
                 'order_number' => $item->order->order_number,
+                'invoice_url' => isset($invoiceIds[$item->order_id]) ? route('invoices.show', $invoiceIds[$item->order_id]) : null,
                 'purchased_at' => $purchasedAt?->toIso8601String(),
                 'quantity' => $item->quantity,
                 'support_until' => $supportMonths > 0 ? $purchasedAt?->copy()->addMonths($supportMonths)->toIso8601String() : null,

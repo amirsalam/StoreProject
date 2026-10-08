@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use App\Models\PaymentGateway;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -51,5 +52,52 @@ class StorePaymentGatewayRequest extends FormRequest
             'max_amount' => ['nullable', 'numeric', 'min:0', 'max:9999999.99', 'gte:min_amount'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
         ];
+    }
+
+    /**
+     * An active gateway needs every credential its provider marks required
+     * (config/payment_gateways.php) — typed now, or already saved (on edit
+     * a blank field keeps the stored value). An inactive one may be saved
+     * half-filled, as a draft.
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator) {
+                if (! $this->boolean('is_active')) {
+                    return;
+                }
+
+                $fields = (array) config('payment_gateways.providers.'.$this->input('provider').'.fields', []);
+                $stored = $this->storedCredentials();
+
+                foreach ($fields as $key => $meta) {
+                    if (! ($meta['required'] ?? false)) {
+                        continue;
+                    }
+                    if (blank($this->input("credentials.$key")) && blank($stored[$key] ?? null)) {
+                        $validator->errors()->add(
+                            "credentials.$key",
+                            __('validation.required', ['attribute' => __($meta['label'] ?? $key)]),
+                        );
+                    }
+                }
+            },
+        ];
+    }
+
+    /**
+     * Credentials already saved on the gateway being edited (none on create,
+     * or when switching it to another provider).
+     *
+     * @return array<string, mixed>
+     */
+    private function storedCredentials(): array
+    {
+        $gateway = $this->route('payment_gateway');
+
+        return $gateway instanceof PaymentGateway && $gateway->provider === $this->input('provider')
+            ? (array) ($gateway->credentials ?? [])
+            : [];
     }
 }

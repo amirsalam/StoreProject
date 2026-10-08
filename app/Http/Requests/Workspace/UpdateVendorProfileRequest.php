@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Workspace;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Update the caller's own vendor store + profile. Ownership is enforced
@@ -15,6 +16,14 @@ class UpdateVendorProfileRequest extends FormRequest
     public function authorize(): bool
     {
         return $this->user() !== null;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('country'))) {
+            $country = strtoupper(trim($this->input('country')));
+            $this->merge(['country' => $country !== '' ? $country : null]);
+        }
     }
 
     /**
@@ -31,7 +40,8 @@ class UpdateVendorProfileRequest extends FormRequest
             'social_links.*' => ['nullable', 'url', 'max:255'],
             'contact_email' => ['nullable', 'email', 'max:160'],
             'contact_phone' => ['nullable', 'string', 'max:40'],
-            'country' => ['nullable', 'string', 'size:2'],
+            // Any ISO 3166-1 code (config/countries.php).
+            'country' => ['nullable', 'string', Rule::in(config('countries'))],
             'founded_year' => ['nullable', 'integer', 'min:1900', 'max:'.((int) date('Y'))],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'banner' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],

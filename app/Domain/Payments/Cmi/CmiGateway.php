@@ -20,7 +20,8 @@ use App\Tenancy\TenantContext;
  *
  * Configured per store in Admin → Payment Gateways (provider "cmi"):
  * Client ID, Store Key, and the USD → MAD rate — CMI charges in dirhams
- * (ISO 4217 504) while the store prices in USD.
+ * (ISO 4217 504): MAD carts are charged as they are, USD carts converted
+ * at that rate.
  */
 class CmiGateway
 {
@@ -67,10 +68,24 @@ class CmiGateway
         return (float) str_replace(',', '.', (string) ($gateway->credentials['mad_rate'] ?? '0'));
     }
 
-    /** USD → MAD, formatted the way CMI expects ("123.45"). */
-    public function madAmount(float|string $usd, PaymentGateway $gateway): string
+    /**
+     * Carts CMI can take: dirhams as they are, or dollars converted at the
+     * gateway's rate.
+     */
+    public static function supportsCurrency(string $currency): bool
     {
-        return number_format(round((float) $usd * $this->rate($gateway), 2), 2, '.', '');
+        return in_array(strtoupper($currency), ['MAD', 'USD'], true);
+    }
+
+    /**
+     * The amount CMI charges, in dirhams, formatted the way CMI expects
+     * ("123.45"): a MAD cart as is, a USD cart converted at the rate.
+     */
+    public function madAmount(float|string $amount, PaymentGateway $gateway, string $currency = 'USD'): string
+    {
+        $mad = strtoupper($currency) === 'MAD' ? (float) $amount : (float) $amount * $this->rate($gateway);
+
+        return number_format(round($mad, 2), 2, '.', '');
     }
 
     /**
@@ -82,7 +97,7 @@ class CmiGateway
     {
         $fields = [
             'clientid' => (string) $gateway->credentials['client_id'],
-            'amount' => (string) ($payment->raw_response['cmi']['amount_mad'] ?? $this->madAmount($order->total, $gateway)),
+            'amount' => (string) ($payment->raw_response['cmi']['amount_mad'] ?? $this->madAmount($order->total, $gateway, (string) $order->currency)),
             'currency' => self::CURRENCY_MAD,
             'oid' => $order->order_number,
             'okUrl' => route('checkout.cmi.ok', $order->order_number),

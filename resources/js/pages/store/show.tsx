@@ -1,6 +1,8 @@
+import { countryName } from '@/components/country-select';
 import ProductCard from '@/components/product-card';
 import { Badge } from '@/components/ui/badge';
 import { Container } from '@/components/ui/container';
+import { useTranslate } from '@/hooks/use-translate';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import { type Paginated, type Product, type Vendor } from '@/types';
 import { Head, Link } from '@inertiajs/react';
@@ -20,6 +22,7 @@ function assetUrl(path: string | null | undefined): string | null {
 }
 
 export default function StoreShow({ vendor, products, averageRating, reviewsCount, productsCount }: StoreShowProps) {
+    const { locale } = useTranslate();
     const profile = vendor.profile ?? null;
     const banner = assetUrl(profile?.banner_path);
     const logo = assetUrl(profile?.logo_path);
@@ -67,7 +70,7 @@ export default function StoreShow({ vendor, products, averageRating, reviewsCoun
                                     {averageRating.toFixed(1)} ({reviewsCount})
                                 </span>
                             )}
-                            {profile?.country && <span>{profile.country}</span>}
+                            {profile?.country && <span>{countryName(profile.country, locale)}</span>}
                             {profile?.founded_year && <span>Since {profile.founded_year}</span>}
                         </div>
                     </div>

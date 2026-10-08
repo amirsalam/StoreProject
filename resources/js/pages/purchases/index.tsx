@@ -6,7 +6,7 @@ import AppLayout from '@/layouts/app-layout';
 import { formatBytes } from '@/pages/admin/products/product-form';
 import { type BreadcrumbItem, type Paginated } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { CheckCircle2, Copy, Download, KeyRound, ShoppingBag } from 'lucide-react';
+import { CheckCircle2, Copy, Download, FileText, KeyRound, ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
 
 interface Purchase {
@@ -17,6 +17,8 @@ interface Purchase {
     thumbnail: string | null;
     version: string | null;
     order_number: string;
+    /** Printable invoice for the order (issued when it was paid). */
+    invoice_url: string | null;
     purchased_at: string | null;
     quantity: number;
     support_until: string | null;
@@ -55,18 +57,18 @@ export default function PurchasesIndex({ purchases }: PurchasesProps) {
 
             <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 {flash?.error && (
-                    <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive">{flash.error}</div>
+                    <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-4 py-2 text-sm">{flash.error}</div>
                 )}
 
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">{__('My purchases')}</h1>
-                    <p className="text-sm text-muted-foreground">{__('Download your files and copy your license keys to activate your products.')}</p>
+                    <p className="text-muted-foreground text-sm">{__('Download your files and copy your license keys to activate your products.')}</p>
                 </div>
 
                 {purchases.data.length === 0 ? (
-                    <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed bg-card p-10 text-center">
-                        <ShoppingBag className="size-8 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">{__('You haven’t bought anything yet.')}</p>
+                    <div className="bg-card flex flex-col items-center gap-3 rounded-lg border border-dashed p-10 text-center">
+                        <ShoppingBag className="text-muted-foreground size-8" />
+                        <p className="text-muted-foreground text-sm">{__('You haven’t bought anything yet.')}</p>
                         <Button asChild>
                             <Link href={route('products.index')}>{__('Browse products')}</Link>
                         </Button>
@@ -89,7 +91,7 @@ function PurchaseCard({ item }: { item: Purchase }) {
     const { __ } = useTranslate();
 
     return (
-        <article className="rounded-lg border bg-card p-5 shadow-sm">
+        <article className="bg-card rounded-lg border p-5 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                     <h2 className="truncate text-base font-semibold">
@@ -101,16 +103,30 @@ function PurchaseCard({ item }: { item: Purchase }) {
                             item.title
                         )}
                     </h2>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
+                    <p className="text-muted-foreground mt-0.5 text-xs">
                         <span dir="ltr" className="font-mono">
                             {item.order_number}
                         </span>
                         {item.purchased_at && <> · {new Date(item.purchased_at).toLocaleDateString()}</>}
                         {item.version && <> · {__('Version :version', { version: item.version })}</>}
                         {item.quantity > 1 && <> · ×{item.quantity}</>}
+                        {item.invoice_url && (
+                            <>
+                                {' · '}
+                                <a
+                                    href={item.invoice_url}
+                                    target="_blank"
+                                    rel="noopener"
+                                    className="text-primary inline-flex items-center gap-1 hover:underline"
+                                >
+                                    <FileText className="size-3" />
+                                    {__('Invoice')}
+                                </a>
+                            </>
+                        )}
                     </p>
                     {item.support_until && (
-                        <p className="mt-0.5 text-xs text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 text-xs">
                             {new Date(item.support_until) > new Date()
                                 ? __('Support until :date', { date: new Date(item.support_until).toLocaleDateString() })
                                 : __('Support ended on :date', { date: new Date(item.support_until).toLocaleDateString() })}
@@ -126,7 +142,7 @@ function PurchaseCard({ item }: { item: Purchase }) {
                     <LicenseBox key={license.key} license={license} />
                 ))}
                 {!item.download && item.licenses.length === 0 && (
-                    <p className="text-sm text-muted-foreground">{__('Nothing to download for this item.')}</p>
+                    <p className="text-muted-foreground text-sm">{__('Nothing to download for this item.')}</p>
                 )}
             </div>
         </article>
@@ -138,19 +154,17 @@ function DownloadBox({ download }: { download: NonNullable<Purchase['download']>
     const remaining = download.max !== null ? Math.max(0, download.max - download.count) : null;
 
     return (
-        <div className="space-y-2 rounded-md border bg-muted/20 p-4">
-            <p className="flex items-center gap-1.5 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+        <div className="bg-muted/20 space-y-2 rounded-md border p-4">
+            <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium tracking-wider uppercase">
                 <Download className="size-3.5" /> {__('Download')}
             </p>
             {download.file_name && (
                 <p className="truncate text-sm" dir="ltr">
-                    {download.file_name} <span className="text-xs text-muted-foreground">{formatBytes(download.file_size)}</span>
+                    {download.file_name} <span className="text-muted-foreground text-xs">{formatBytes(download.file_size)}</span>
                 </p>
             )}
-            <p className="text-xs text-muted-foreground">
-                {remaining === null
-                    ? __('Unlimited downloads')
-                    : __(':remaining of :max downloads left', { remaining, max: download.max ?? 0 })}
+            <p className="text-muted-foreground text-xs">
+                {remaining === null ? __('Unlimited downloads') : __(':remaining of :max downloads left', { remaining, max: download.max ?? 0 })}
             </p>
             {download.available ? (
                 // A plain link: the response is a file, not an Inertia page.
@@ -177,15 +191,15 @@ function LicenseBox({ license }: { license: Purchase['licenses'][number] }) {
     };
 
     return (
-        <div className="space-y-2 rounded-md border bg-muted/20 p-4">
+        <div className="bg-muted/20 space-y-2 rounded-md border p-4">
             <div className="flex items-center justify-between gap-2">
-                <p className="flex items-center gap-1.5 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium tracking-wider uppercase">
                     <KeyRound className="size-3.5" /> {license.tier === 'extended' ? __('Extended License') : __('Regular License')}
                 </p>
                 <Badge variant={license.status === 'active' ? 'default' : 'destructive'}>{__(license.status)}</Badge>
             </div>
             <div className="flex items-stretch gap-2">
-                <code dir="ltr" className="flex-1 truncate rounded-md border bg-background px-3 py-2 font-mono text-sm">
+                <code dir="ltr" className="bg-background flex-1 truncate rounded-md border px-3 py-2 font-mono text-sm">
                     {license.key}
                 </code>
                 <Button type="button" size="sm" variant="outline" onClick={copy} className="shrink-0">
@@ -193,7 +207,7 @@ function LicenseBox({ license }: { license: Purchase['licenses'][number] }) {
                     {copied ? __('Copied') : __('Copy')}
                 </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
                 {__(':used of :limit activations used', { used: license.activations_used, limit: license.activation_limit })}
                 {license.expires_at && <> · {__('Valid until :date', { date: new Date(license.expires_at).toLocaleDateString() })}</>}
             </p>

@@ -1,27 +1,30 @@
+import CountrySelect from '@/components/country-select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslate } from '@/hooks/use-translate';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Vendor } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { BadgeCheck, ExternalLink, Store } from 'lucide-react';
 import { FormEvent } from 'react';
-import { useTranslate } from '@/hooks/use-translate';
 
 interface VendorEditProps {
     vendor: Vendor | null;
     storeUrl: string | null;
+    /** ISO 3166-1 codes for the country picker (config/countries.php). */
+    countries?: string[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Vendor store', href: '/workspace/vendor' }];
 
-export default function VendorEdit({ vendor, storeUrl }: VendorEditProps) {
+export default function VendorEdit({ vendor, storeUrl, countries = [] }: VendorEditProps) {
     const { __ } = useTranslate();
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={__('Vendor store')} />
             <div className="mx-auto w-full max-w-3xl space-y-6 p-4 sm:p-6">
-                {vendor ? <ProfileForm vendor={vendor} storeUrl={storeUrl} /> : <OpenStore />}
+                {vendor ? <ProfileForm vendor={vendor} storeUrl={storeUrl} countries={countries} /> : <OpenStore />}
             </div>
         </AppLayout>
     );
@@ -59,7 +62,7 @@ function OpenStore() {
     );
 }
 
-function ProfileForm({ vendor, storeUrl }: { vendor: Vendor; storeUrl: string | null }) {
+function ProfileForm({ vendor, storeUrl, countries }: { vendor: Vendor; storeUrl: string | null; countries: string[] }) {
     const { __ } = useTranslate();
     const p = vendor.profile;
     const { data, setData, post, processing, errors, recentlySuccessful } = useForm<{
@@ -157,13 +160,8 @@ function ProfileForm({ vendor, storeUrl }: { vendor: Vendor; storeUrl: string | 
                     <Input value={data.contact_phone} onChange={(e) => setData('contact_phone', e.target.value)} />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label={__('Country (2-letter)')} error={errors.country}>
-                        <Input
-                            value={data.country}
-                            maxLength={2}
-                            onChange={(e) => setData('country', e.target.value.toUpperCase())}
-                            placeholder="US"
-                        />
+                    <Field label={__('Country')} error={errors.country}>
+                        <CountrySelect value={data.country} onChange={(code) => setData('country', code)} countries={countries} />
                     </Field>
                     <Field label={__('Founded year')} error={errors.founded_year}>
                         <Input type="number" value={data.founded_year} onChange={(e) => setData('founded_year', e.target.value)} placeholder="2020" />

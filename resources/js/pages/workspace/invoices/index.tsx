@@ -2,12 +2,12 @@ import { useConfirmDialog } from '@/components/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useTranslate } from '@/hooks/use-translate';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Paginated } from '@/types';
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { CheckCircle2, FileText, Send, Trash2 } from 'lucide-react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { CheckCircle2, ExternalLink, FileText, Send, ShoppingBag, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
-import { useTranslate } from '@/hooks/use-translate';
 
 interface Invoice {
     id: number;
@@ -22,6 +22,9 @@ interface Invoice {
     sent_at: string | null;
     paid_at: string | null;
     client?: { id: number; name: string; email: string } | null;
+    /** Set for invoices issued automatically for a paid store order. */
+    order_id: number | null;
+    order?: { id: number; order_number: string } | null;
 }
 
 interface Option {
@@ -45,16 +48,19 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Invoices', href: '/workspace/invoices' },
 ];
 
-function money(cents: number, currency = 'USD'): string {
+/** Amounts are stored in the currency's minor unit (cents; whole yen for JPY). */
+function money(minor: number, currency = 'USD', locale = 'en'): string {
     try {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(cents / 100);
+        const format = new Intl.NumberFormat(locale, { style: 'currency', currency });
+        const digits = format.resolvedOptions().maximumFractionDigits ?? 2;
+        return format.format(minor / 10 ** digits);
     } catch {
-        return `$${(cents / 100).toFixed(2)}`;
+        return `${currency} ${(minor / 100).toFixed(2)}`;
     }
 }
 
 export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: InvoicesIndexProps) {
-    const { __ } = useTranslate();
+    const { __, locale } = useTranslate();
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
     const [search, setSearch] = useState(filters.search);
 
@@ -87,9 +93,7 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
         });
     };
 
-    const totalOutstanding = invoices.data
-        .filter((i) => i.status === 'sent' || i.status === 'overdue')
-        .reduce((sum, i) => sum + i.total_cents, 0);
+    const totalOutstanding = invoices.data.filter((i) => i.status === 'sent' || i.status === 'overdue').reduce((sum, i) => sum + i.total_cents, 0);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -101,14 +105,21 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
                         {flash.success}
                     </div>
                 )}
+                {flash?.error && (
+                    <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-4 py-2 text-sm">{flash.error}</div>
+                )}
 
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>
                         <h1 className="font-display text-2xl font-semibold tracking-tight">{__('Invoices')}</h1>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                             {invoices.total === 1 ? __('1 invoice') : __(':count invoices', { count: invoices.total })}
                             {totalOutstanding > 0 && (
-                                <> · <span className="font-medium text-foreground">{money(totalOutstanding)}</span> {__('outstanding')}</>
+                                <>
+                                    {' '}
+                                    · <span className="text-foreground font-medium">{money(totalOutstanding, 'USD', locale)}</span>{' '}
+                                    {__('outstanding')}
+                                </>
                             )}
                         </p>
                     </div>
@@ -117,7 +128,7 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
                 <form onSubmit={submitSearch} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <Input
                         type="search"
-                        placeholder={__('Search by number or client…')}
+                        placeholder={__('Search by number, client or order…')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full sm:w-72"
@@ -125,60 +136,73 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
                     <select
                         value={filters.status}
                         onChange={(e) => applyFilter({ status: e.target.value })}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-auto"
+                        className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm sm:w-auto"
                     >
                         <option value="">{__('All statuses')}</option>
                         {statuses.map((s) => (
-                            <option key={s.value} value={s.value}>{s.label}</option>
+                            <option key={s.value} value={s.value}>
+                                {s.label}
+                            </option>
                         ))}
                     </select>
-                    <Button type="submit" variant="secondary">{__('Filter')}</Button>
+                    <Button type="submit" variant="secondary">
+                        {__('Filter')}
+                    </Button>
                 </form>
 
                 {invoices.data.length === 0 ? (
                     <EmptyState />
                 ) : (
-                    <div className="overflow-hidden rounded-lg border bg-card">
-                        <table className="w-full text-sm">
-                            <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                    <div className="bg-card overflow-x-auto rounded-lg border">
+                        <table className="w-full min-w-[720px] text-sm">
+                            <thead className="bg-muted/50 text-muted-foreground text-left text-xs tracking-wider uppercase">
                                 <tr>
                                     <th className="px-4 py-3 font-medium">{__('Number')}</th>
                                     <th className="px-4 py-3 font-medium">{__('Client')}</th>
                                     <th className="px-4 py-3 font-medium">{__('Status')}</th>
                                     <th className="px-4 py-3 font-medium">{__('Issued')}</th>
                                     <th className="px-4 py-3 font-medium">{__('Due')}</th>
-                                    <th className="px-4 py-3 font-medium text-right">{__('Total')}</th>
-                                    <th className="px-4 py-3 font-medium text-right">{__('Actions')}</th>
+                                    <th className="px-4 py-3 text-right font-medium">{__('Total')}</th>
+                                    <th className="px-4 py-3 text-right font-medium">{__('Actions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y">
                                 {invoices.data.map((inv) => (
                                     <tr key={inv.id} className="hover:bg-muted/30">
-                                        <td className="px-4 py-3 font-mono text-[12px]">{inv.number}</td>
+                                        <td className="px-4 py-3 font-mono text-[12px] whitespace-nowrap">{inv.number}</td>
                                         <td className="px-4 py-3">
                                             {inv.client ? (
                                                 <div>
                                                     <div className="truncate font-medium">{inv.client.name}</div>
-                                                    <div className="truncate text-xs text-muted-foreground">{inv.client.email}</div>
+                                                    <div className="text-muted-foreground truncate text-xs">{inv.client.email}</div>
                                                 </div>
                                             ) : (
                                                 <span className="text-muted-foreground">—</span>
+                                            )}
+                                            {inv.order && (
+                                                <div className="text-muted-foreground mt-0.5 inline-flex items-center gap-1 text-xs">
+                                                    <ShoppingBag className="size-3" />
+                                                    <span className="font-mono">{inv.order.order_number}</span>
+                                                </div>
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
                                             <StatusBadge status={inv.status} />
                                         </td>
-                                        <td className="px-4 py-3 tabular-nums text-muted-foreground">
+                                        <td className="text-muted-foreground px-4 py-3 tabular-nums">
                                             {new Date(inv.issued_on).toLocaleDateString()}
                                         </td>
-                                        <td className="px-4 py-3 tabular-nums text-muted-foreground">
-                                            {new Date(inv.due_on).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-4 py-3 text-right font-display tabular-nums">
-                                            {money(inv.total_cents, inv.currency)}
+                                        <td className="text-muted-foreground px-4 py-3 tabular-nums">{new Date(inv.due_on).toLocaleDateString()}</td>
+                                        <td className="font-display px-4 py-3 text-right tabular-nums">
+                                            {money(inv.total_cents, inv.currency, locale)}
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <div className="flex justify-end gap-1">
+                                                <Button asChild size="sm" variant="ghost">
+                                                    <a href={route('invoices.show', inv.id)} target="_blank" rel="noopener">
+                                                        <ExternalLink className="size-3.5" /> {__('View')}
+                                                    </a>
+                                                </Button>
                                                 {inv.status === 'draft' && (
                                                     <Button size="sm" variant="ghost" onClick={() => markSent(inv)}>
                                                         <Send className="size-3.5" /> {__('Send')}
@@ -189,14 +213,17 @@ export default function WorkspaceInvoicesIndex({ invoices, filters, statuses }: 
                                                         <CheckCircle2 className="size-3.5" /> {__('Mark paid')}
                                                     </Button>
                                                 )}
-                                                <Button
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    onClick={() => remove(inv)}
-                                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                                >
-                                                    <Trash2 />
-                                                </Button>
+                                                {/* Store-order invoices are sales records: a refund voids them. */}
+                                                {!inv.order_id && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => remove(inv)}
+                                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                    >
+                                                        <Trash2 />
+                                                    </Button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -231,13 +258,15 @@ function StatusBadge({ status }: { status: 'draft' | 'sent' | 'paid' | 'overdue'
 function EmptyState() {
     const { __ } = useTranslate();
     return (
-        <div className="rounded-xl border border-dashed border-border/80 bg-muted/20 px-6 py-20 text-center">
-            <div className="mx-auto mb-5 inline-flex size-12 items-center justify-center rounded-full border border-border/80 bg-background text-muted-foreground">
+        <div className="border-border/80 bg-muted/20 rounded-xl border border-dashed px-6 py-20 text-center">
+            <div className="border-border/80 bg-background text-muted-foreground mx-auto mb-5 inline-flex size-12 items-center justify-center rounded-full border">
                 <FileText className="size-5" />
             </div>
             <h2 className="font-display text-lg font-semibold tracking-tight">{__('No invoices yet')}</h2>
-            <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                {__('Bill your clients for completed work. Invoices live alongside your projects.')}
+            <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-sm">
+                {__(
+                    'An invoice is created automatically for every paid store order. Orders still waiting for payment get one as soon as they are paid.',
+                )}
             </p>
         </div>
     );

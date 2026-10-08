@@ -4,6 +4,7 @@ namespace App\Domain\Marketplace;
 
 use App\Domain\Billing\MissingStripeKeysException;
 use App\Domain\Billing\StripeGateway;
+use App\Domain\Payments\BankTransfer\BankTransferGateway;
 use App\Domain\Payments\Cmi\CmiGateway;
 use App\Domain\Payments\OrderPaymentProcessor;
 use App\Domain\Payments\PayPal\PayPalGateway;
@@ -56,12 +57,16 @@ class CheckoutService
     /** PayPal: approval on paypal.com, captured when the buyer returns. */
     public const METHOD_PAYPAL = 'paypal';
 
+    /** Bank transfer: placed unpaid, marked paid by an admin when the money arrives. */
+    public const METHOD_BANK_TRANSFER = 'bank_transfer';
+
     public function __construct(
         private readonly CartService $cart,
         private readonly StripeGateway $gateway,
         private readonly CmiGateway $cmi,
         private readonly PayPalGateway $paypal,
         private readonly PayPalPayments $paypalPayments,
+        private readonly BankTransferGateway $bank,
     ) {}
 
     /**
@@ -87,8 +92,8 @@ class CheckoutService
         // we need now is a configured gateway to send them to.
         $cmiGateway = null;
         if ($method === self::METHOD_CMI) {
-            // CMI's rate is set as 1 USD = X MAD, so it takes USD carts only.
-            $cmiGateway = ($this->currency === 'USD' ? $this->cmi->gateway() : null)
+            // CMI charges dirhams: MAD carts as they are, USD carts converted.
+            $cmiGateway = (CmiGateway::supportsCurrency($this->currency) ? $this->cmi->gateway() : null)
                 ?? throw new PaymentUnavailableException(__('messages.checkout.payments_unavailable'));
         }
 
@@ -99,12 +104,19 @@ class CheckoutService
                 ?? throw new PaymentUnavailableException(__('messages.checkout.payments_unavailable'));
         }
 
+        // Bank transfer: any currency — only needs bank details to show.
+        $bankGateway = null;
+        if ($method === self::METHOD_BANK_TRANSFER) {
+            $bankGateway = $this->bank->gateway()
+                ?? throw new PaymentUnavailableException(__('messages.checkout.payments_unavailable'));
+        }
+
         // Order, items, coupon redemption, payment row and the Stripe intent
         // are one unit: if Stripe refuses (bad keys, outage) nothing is left
         // behind — no orphan pending order, no burnt coupon use.
         try {
             [$order, $payment, $intent] = DB::transaction(
-                fn () => $this->createOrderWithIntent($user, $billing, $lineItems, $subtotal, $discount, $total, $coupon, $cmiGateway, $paypalGateway),
+                fn () => $this->createOrderWithIntent($user, $billing, $lineItems, $subtotal, $discount, $total, $coupon, $cmiGateway, $paypalGateway, $bankGateway),
             );
         } catch (ApiErrorException|MissingStripeKeysException|RequestException|ConnectionException $e) {
             report($e);
@@ -136,6 +148,11 @@ class CheckoutService
             return new CheckoutResult($order, null, $intent['paypal_url']);
         }
 
+        if ($bankGateway) {
+            // The buyer is shown the bank details and the order number to quote.
+            return new CheckoutResult($order, null, route('checkout.confirmation', $order->order_number));
+        }
+
         return new CheckoutResult($order, $intent['client_secret']);
     }
 
@@ -144,8 +161,15 @@ class CheckoutService
      * @param  array<string, mixed>  $billing
      * @return array{0: Order, 1: Payment, 2: array{id: string, client_secret: string|null, customer: string|null}|null}
      */
-    private function createOrderWithIntent(User $user, array $billing, Collection $lineItems, float $subtotal, float $discount, float $total, ?Coupon $coupon, ?PaymentGateway $cmiGateway = null, ?PaymentGateway $paypalGateway = null): array
+    private function createOrderWithIntent(User $user, array $billing, Collection $lineItems, float $subtotal, float $discount, float $total, ?Coupon $coupon, ?PaymentGateway $cmiGateway = null, ?PaymentGateway $paypalGateway = null, ?PaymentGateway $bankGateway = null): array
     {
+        $method = match (true) {
+            $paypalGateway !== null => self::METHOD_PAYPAL,
+            $cmiGateway !== null => self::METHOD_CMI,
+            $bankGateway !== null => self::METHOD_BANK_TRANSFER,
+            default => self::METHOD_STRIPE,
+        };
+
         $order = Order::create([
             'user_id' => $user->id,
             'coupon_id' => $coupon?->id,
@@ -155,7 +179,7 @@ class CheckoutService
             'total' => $total,
             'currency' => $this->currency,
             'status' => Order::STATUS_PENDING,
-            'payment_method' => $paypalGateway ? self::METHOD_PAYPAL : ($cmiGateway ? self::METHOD_CMI : self::METHOD_STRIPE),
+            'payment_method' => $method,
             'billing_name' => $billing['billing_name'],
             'billing_email' => $billing['billing_email'],
             'billing_country' => $billing['billing_country'] ?? null,
@@ -195,11 +219,11 @@ class CheckoutService
         $payment = Payment::create([
             'order_id' => $order->id,
             'user_id' => $user->id,
-            'gateway' => $paypalGateway ? self::METHOD_PAYPAL : ($cmiGateway ? self::METHOD_CMI : self::METHOD_STRIPE),
+            'gateway' => $method,
             'amount' => $total,
             'currency' => $this->currency,
             'status' => Payment::STATUS_PENDING,
-            'payment_method' => 'card',
+            'payment_method' => $bankGateway ? 'bank_transfer' : 'card',
         ]);
 
         if ($total <= 0) {
@@ -213,10 +237,18 @@ class CheckoutService
             $payment->update([
                 'gateway_payment_id' => $order->order_number,
                 'raw_response' => ['cmi' => [
-                    'amount_mad' => $this->cmi->madAmount($total, $cmiGateway),
-                    'rate' => $this->cmi->rate($cmiGateway),
+                    'amount_mad' => $this->cmi->madAmount($total, $cmiGateway, $this->currency),
+                    // No conversion for a cart already in dirhams.
+                    'rate' => $this->currency === 'MAD' ? 1.0 : $this->cmi->rate($cmiGateway),
                 ]],
             ]);
+
+            return [$order, $payment, null];
+        }
+
+        if ($bankGateway) {
+            // Found again by this id when an admin confirms the transfer.
+            $payment->update(['gateway_payment_id' => BankTransferGateway::reference($order)]);
 
             return [$order, $payment, null];
         }

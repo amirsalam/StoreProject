@@ -2,10 +2,10 @@ import { StripeWebhookSteps, type StripeWebhookInfo } from '@/components/stripe-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslate } from '@/hooks/use-translate';
 import { type PaymentProvider } from '@/types';
 import { Link, useForm } from '@inertiajs/react';
 import { FormEvent, useMemo } from 'react';
-import { useTranslate } from '@/hooks/use-translate';
 
 export interface GatewayFormValues {
     id?: number;
@@ -58,16 +58,16 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
         sort_order: gateway?.sort_order ?? 0,
     });
 
-    const activeProvider = useMemo(
-        () => providers.find((p) => p.value === form.data.provider),
-        [providers, form.data.provider],
-    );
+    const activeProvider = useMemo(() => providers.find((p) => p.value === form.data.provider), [providers, form.data.provider]);
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
 
         const toList = (s: string) =>
-            s.split(',').map((x) => x.trim()).filter(Boolean);
+            s
+                .split(',')
+                .map((x) => x.trim())
+                .filter(Boolean);
 
         form.transform((data) => ({
             ...data,
@@ -84,13 +84,12 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
         }
     };
 
-    const setCredential = (key: string, value: string) =>
-        form.setData('credentials', { ...form.data.credentials, [key]: value });
+    const setCredential = (key: string, value: string) => form.setData('credentials', { ...form.data.credentials, [key]: value });
 
     return (
         <form onSubmit={submit} className="space-y-6">
             {/* Provider + identity */}
-            <section className="rounded-lg border bg-card p-6">
+            <section className="bg-card rounded-lg border p-6">
                 <h2 className="mb-4 text-base font-semibold">{__('Provider')}</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                     <Field label={__('Provider')} error={form.errors.provider}>
@@ -100,7 +99,7 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                             <select
                                 value={form.data.provider}
                                 onChange={(e) => form.setData('provider', e.target.value)}
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
                             >
                                 {providers.map((p) => (
                                     <option key={p.value} value={p.value}>
@@ -115,7 +114,7 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                         <select
                             value={form.data.environment}
                             onChange={(e) => form.setData('environment', e.target.value as 'sandbox' | 'production')}
-                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
                         >
                             <option value="sandbox">{__('Sandbox (test)')}</option>
                             <option value="production">{__('Production (live)')}</option>
@@ -125,11 +124,7 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                         <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} required />
                     </Field>
                     <Field label={__('Display name (customer-facing)')} error={form.errors.display_name}>
-                        <Input
-                            value={form.data.display_name}
-                            onChange={(e) => form.setData('display_name', e.target.value)}
-                            required
-                        />
+                        <Input value={form.data.display_name} onChange={(e) => form.setData('display_name', e.target.value)} required />
                     </Field>
                     <Field label={__('Logo / icon (emoji or URL)')} error={form.errors.logo} className="sm:col-span-2">
                         <Input value={form.data.logo} onChange={(e) => form.setData('logo', e.target.value)} placeholder="💳" />
@@ -139,7 +134,7 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                             value={form.data.description}
                             onChange={(e) => form.setData('description', e.target.value)}
                             rows={2}
-                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
                         />
                     </Field>
                 </div>
@@ -147,9 +142,9 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
 
             {/* Credentials (dynamic per provider) */}
             {(activeProvider?.fields.length ?? 0) > 0 && (
-                <section className="rounded-lg border bg-card p-6">
+                <section className="bg-card rounded-lg border p-6">
                     <h2 className="text-base font-semibold">{__('API credentials')}</h2>
-                    <p className="mb-4 text-xs text-muted-foreground">
+                    <p className="text-muted-foreground mb-4 text-xs">
                         {__('Stored encrypted.')} {isEdit && __('Leave a field blank to keep its current value.')}
                     </p>
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -158,7 +153,7 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                             return (
                                 <Field
                                     key={f.key}
-                                    label={`${f.label}${f.required && !isEdit ? ' *' : ''}`}
+                                    label={`${f.label}${f.required ? ' *' : ''}`}
                                     error={form.errors[`credentials.${f.key}` as keyof typeof form.errors] as string}
                                 >
                                     <Input
@@ -167,7 +162,9 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                                         value={form.data.credentials[f.key] ?? ''}
                                         onChange={(e) => setCredential(f.key, e.target.value)}
                                         placeholder={configured ? __('•••••••• configured') : ''}
-                                        required={f.required && !isEdit}
+                                        // On edit a blank field keeps its saved value, so only
+                                        // a required field with nothing saved must be typed.
+                                        required={f.required && form.data.is_active && !configured}
                                     />
                                 </Field>
                             );
@@ -178,7 +175,7 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
 
             {/* Webhook */}
             {activeProvider?.supports_webhook && (
-                <section className="rounded-lg border bg-card p-6">
+                <section className="bg-card rounded-lg border p-6">
                     <h2 className="mb-4 text-base font-semibold">{__('Webhook')}</h2>
                     {form.data.provider === 'stripe' && stripeWebhook && <StripeWebhookSteps info={stripeWebhook} />}
                     <Field label={__('Webhook secret')} error={form.errors.webhook_secret}>
@@ -194,7 +191,7 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
             )}
 
             {/* Commercial settings */}
-            <section className="rounded-lg border bg-card p-6">
+            <section className="bg-card rounded-lg border p-6">
                 <h2 className="mb-4 text-base font-semibold">{__('Fees, limits & coverage')}</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                     <Field label={__('Transaction fee — percentage (%)')} error={form.errors.fee_percent}>
@@ -263,7 +260,7 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                             type="checkbox"
                             checked={form.data.is_active}
                             onChange={(e) => form.setData('is_active', e.target.checked)}
-                            className="size-4 rounded border-input"
+                            className="border-input size-4 rounded"
                         />
                         {__('Active (available at checkout)')}
                     </label>
@@ -272,7 +269,7 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
                             type="checkbox"
                             checked={form.data.is_default}
                             onChange={(e) => form.setData('is_default', e.target.checked)}
-                            className="size-4 rounded border-input"
+                            className="border-input size-4 rounded"
                         />
                         {__('Set as the default gateway')}
                     </label>
@@ -291,22 +288,12 @@ export default function GatewayForm({ providers, gateway, stripeWebhook }: Props
     );
 }
 
-function Field({
-    label,
-    error,
-    children,
-    className = '',
-}: {
-    label: string;
-    error?: string;
-    children: React.ReactNode;
-    className?: string;
-}) {
+function Field({ label, error, children, className = '' }: { label: string; error?: string; children: React.ReactNode; className?: string }) {
     return (
         <div className={className}>
             <Label className="mb-1 block text-xs">{label}</Label>
             {children}
-            {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+            {error && <p className="text-destructive mt-1 text-xs">{error}</p>}
         </div>
     );
 }

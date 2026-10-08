@@ -27,6 +27,7 @@ class VendorController extends Controller
 
         return Inertia::render('workspace/vendor/edit', [
             'vendor' => $vendor,
+            'countries' => config('countries'),
             'storeUrl' => $vendor?->isActive()
                 ? route('store.show', $vendor->slug)
                 : null,
