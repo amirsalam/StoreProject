@@ -2,6 +2,7 @@ import { DashboardGrid, type WidgetPayload } from '@/components/widgets';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface PageProps {
     user: { id: number; name: string; role: string };
@@ -13,13 +14,14 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function CustomerDashboard({ user, widgets }: PageProps) {
+    const { __ } = useTranslate();
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Your dashboard" />
+            <Head title={__('Your dashboard')} />
             <DashboardGrid
                 user={user}
                 widgets={widgets}
-                intro="Your orders, subscriptions, and wallet at a glance."
+                intro={__('Your orders, subscriptions, and wallet at a glance.')}
             />
         </AppLayout>
     );

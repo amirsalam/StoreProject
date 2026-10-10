@@ -31,6 +31,8 @@ export interface BrandingSummary {
     has_custom_logo: boolean;
 }
 
+export type SystemStatusState = 'operational' | 'degraded';
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
@@ -40,8 +42,11 @@ export interface SharedData {
     branding: BrandingSummary;
     locale: Locale;
     direction: 'ltr' | 'rtl';
+    system_status: SystemStatusState;
     supportedLocales: Locale[];
     translations: TranslationDict;
+    /** Dashboard phrase translations for the current locale (English text → translation). */
+    phrases: Record<string, string>;
     [key: string]: unknown;
 }
 
@@ -81,16 +86,47 @@ export interface VendorProfile {
     founded_year: number | null;
 }
 
-export type VendorStatus = 'pending' | 'active' | 'suspended' | 'rejected';
-
 export interface Vendor {
     id: number;
     name: string;
     slug: string;
-    status?: VendorStatus;
+    status?: string;
     is_verified?: boolean;
     verified_at?: string | null;
     profile?: VendorProfile | null;
+}
+
+export interface ContactMessage {
+    id: number;
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+    status: 'new' | 'read' | 'archived';
+    read_at: string | null;
+    created_at: string;
+}
+
+/** Fields a blog post exposes in listings (index cards, related links). */
+export interface BlogPostSummary {
+    id: number;
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    tags?: string[] | null;
+    published_at: string | null;
+    author?: Pick<User, 'id' | 'name'> | null;
+}
+
+export interface BlogPost extends BlogPostSummary {
+    content: string;
+    thumbnail: string | null;
+    status: 'draft' | 'published';
+    seo_title: string | null;
+    seo_description: string | null;
+    views_count: number;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Product {
@@ -110,6 +146,17 @@ export interface Product {
     license_type: string | null;
     is_featured: boolean;
     sales_count: number;
+    /** Extended License price; null = Regular License only. */
+    extended_price?: string | null;
+    /** Own Extended price, or the store-wide default (Admin → Licensing); null when not offered. */
+    effective_extended_price?: string | null;
+    /** Months of seller support included (0 = none). */
+    support_months?: number;
+    /** Price to extend support to 12 months; null = not offered. */
+    support_extension_price?: string | null;
+    live_preview_url?: string | null;
+    /** Screenshot URLs. */
+    gallery?: string[] | null;
     category?: Pick<Category, 'id' | 'name' | 'slug'> | null;
     vendor?: Pick<Vendor, 'id' | 'name' | 'slug' | 'status'> | null;
     created_at: string;

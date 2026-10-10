@@ -1,6 +1,7 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
+import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
@@ -10,11 +11,23 @@ import {
     FileText,
     Folder,
     FolderKanban,
+    Handshake,
+    HardDrive,
+    KeyRound,
     LayoutGrid,
     ListTodo,
+    LogIn,
+    Mail,
+    MessageCircleQuestion,
+    Newspaper,
     Package,
+    PackageOpen,
     Palette,
+    Receipt,
+    Send,
+    ShoppingBag,
     Store,
+    TrendingUp,
     UserCog,
     Users,
     Wallet,
@@ -26,6 +39,11 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         url: '/dashboard',
         icon: LayoutGrid,
+    },
+    {
+        title: 'My purchases',
+        url: '/purchases',
+        icon: ShoppingBag,
     },
 ];
 
@@ -51,6 +69,16 @@ const workspaceNavItems: NavItem[] = [
         icon: Store,
     },
     {
+        title: 'My products',
+        url: '/workspace/products',
+        icon: PackageOpen,
+    },
+    {
+        title: 'Sales',
+        url: '/workspace/sales',
+        icon: TrendingUp,
+    },
+    {
         title: 'Team',
         url: '/workspace/team',
         icon: UserCog,
@@ -69,9 +97,19 @@ const adminNavItems: NavItem[] = [
         icon: Package,
     },
     {
-        title: 'Vendors',
-        url: '/admin/vendors',
-        icon: Store,
+        title: 'Orders',
+        url: '/admin/orders',
+        icon: Receipt,
+    },
+    {
+        title: 'Blog',
+        url: '/admin/blog-posts',
+        icon: Newspaper,
+    },
+    {
+        title: 'Contact',
+        url: '/admin/contact',
+        icon: Mail,
     },
     {
         title: 'Users',
@@ -84,9 +122,39 @@ const adminNavItems: NavItem[] = [
         icon: Palette,
     },
     {
+        title: 'Partners',
+        url: '/admin/partners',
+        icon: Handshake,
+    },
+    {
+        title: 'FAQ',
+        url: '/admin/faqs',
+        icon: MessageCircleQuestion,
+    },
+    {
         title: 'Payment Gateways',
         url: '/admin/payment-gateways',
         icon: Wallet,
+    },
+    {
+        title: 'Licensing',
+        url: '/admin/licensing',
+        icon: KeyRound,
+    },
+    {
+        title: 'Email',
+        url: '/admin/mail',
+        icon: Send,
+    },
+    {
+        title: 'Social login',
+        url: '/admin/social-login',
+        icon: LogIn,
+    },
+    {
+        title: 'File storage',
+        url: '/admin/storage',
+        icon: HardDrive,
     },
 ];
 
@@ -104,13 +172,16 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, direction } = usePage<SharedData>().props;
     const isAdmin = Boolean(auth?.user?.is_admin);
 
     return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
+        // The sidebar sits on the reading-start edge: the spacer that reserves its
+        // width is a flex item and flips with dir="rtl", so the fixed panel must too.
+        // Closing hides it fully (offcanvas); SidebarToggle here and in the page header show/hide it.
+        <Sidebar side={direction === 'rtl' ? 'right' : 'left'} collapsible="offcanvas" variant="inset">
+            <SidebarHeader className="flex-row items-center">
+                <SidebarMenu className="min-w-0 flex-1">
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/dashboard" prefetch>
@@ -119,6 +190,7 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
+                <SidebarToggle />
             </SidebarHeader>
 
             <SidebarContent>

@@ -1,6 +1,6 @@
 import { type SharedData, type TranslationDict } from '@/types';
 import { router, usePage } from '@inertiajs/react';
-import { useCallback, useEffect } from 'react';
+import { Fragment, createElement, useCallback, useEffect, type ReactNode } from 'react';
 
 /**
  * Resolve a translation key path against the shared dictionary.
@@ -27,7 +27,7 @@ function interpolate(template: string, replacements: Record<string, string | num
 }
 
 export function useTranslate() {
-    const { translations, locale, direction } = usePage<SharedData>().props;
+    const { translations, phrases, locale, direction } = usePage<SharedData>().props;
 
     // Keep <html lang> + <html dir> in sync with the live locale prop.
     useEffect(() => {
@@ -62,6 +62,40 @@ export function useTranslate() {
         [translations],
     );
 
+    /**
+     * Phrase translation for the dashboard: the English text is the key
+     * (Laravel JSON translations, lang/{locale}.json), so an untranslated
+     * phrase simply shows in English.
+     *
+     *   __('Save changes')                 → "حفظ التغييرات"
+     *   __('Welcome back, :name', { name }) → interpolated
+     */
+    const __ = useCallback(
+        (text: string, replacements?: Record<string, string | number>): string => {
+            const value = phrases?.[text] ?? text;
+            return replacements ? interpolate(value, replacements) : value;
+        },
+        [phrases],
+    );
+
+    /**
+     * Like __(), but placeholders can be React nodes, so a sentence keeps its
+     * markup in any word order:
+     *
+     *   __el(":name joined", { name: <strong>{user.name}</strong> })
+     */
+    const __el = useCallback(
+        (text: string, nodes: Record<string, ReactNode>): ReactNode[] =>
+            (phrases?.[text] ?? text)
+                .split(/(:\w+)/)
+                .map((part, i) =>
+                    part.startsWith(':') && Object.prototype.hasOwnProperty.call(nodes, part.slice(1))
+                        ? createElement(Fragment, { key: i }, nodes[part.slice(1)])
+                        : part,
+                ),
+        [phrases],
+    );
+
     const switchLocale = useCallback((next: string) => {
         if (next === locale) return;
         router.patch(
@@ -71,5 +105,5 @@ export function useTranslate() {
         );
     }, [locale]);
 
-    return { t, tList, locale, direction, switchLocale };
+    return { t, tList, __, __el, locale, direction, switchLocale };
 }

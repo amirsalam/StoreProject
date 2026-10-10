@@ -20,8 +20,8 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
     const navLinks = [
         { label: t('nav.products'), href: '/products' },
         { label: t('nav.pricing'), href: '/#pricing' },
-        { label: t('nav.customers'), href: '/#testimonials' },
-        { label: t('nav.docs'), href: '/#faq' },
+        { label: t('nav.customers'), href: route('customers') },
+        { label: t('nav.docs'), href: route('docs') },
     ];
 
     useEffect(() => {
@@ -156,7 +156,9 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
 }
 
 function SiteFooter() {
+    const { system_status } = usePage<SharedData>().props;
     const { t } = useTranslate();
+    const healthy = system_status !== 'degraded';
 
     const columns: { titleKey: string; links: { labelKey: string; href: string }[] }[] = [
         {
@@ -164,35 +166,33 @@ function SiteFooter() {
             links: [
                 { labelKey: 'footer.columns.product.browse', href: '/products' },
                 { labelKey: 'footer.columns.product.pricing', href: '/#pricing' },
-                { labelKey: 'footer.columns.product.changelog', href: '#' },
-                { labelKey: 'footer.columns.product.roadmap', href: '#' },
             ],
         },
         {
             titleKey: 'footer.columns.resources.title',
             links: [
-                { labelKey: 'footer.columns.resources.docs', href: '#' },
-                { labelKey: 'footer.columns.resources.guides', href: '#' },
-                { labelKey: 'footer.columns.resources.api', href: '#' },
-                { labelKey: 'footer.columns.resources.status', href: '#' },
+                { labelKey: 'footer.columns.resources.docs', href: route('docs') },
+                { labelKey: 'footer.columns.resources.guides', href: route('guides') },
+                { labelKey: 'footer.columns.resources.api', href: route('api-reference') },
+                { labelKey: 'footer.columns.resources.status', href: route('status') },
             ],
         },
         {
             titleKey: 'footer.columns.company.title',
             links: [
-                { labelKey: 'footer.columns.company.about', href: '#' },
-                { labelKey: 'footer.columns.company.blog', href: '#' },
-                { labelKey: 'footer.columns.company.customers', href: '/#testimonials' },
-                { labelKey: 'footer.columns.company.contact', href: '#' },
+                { labelKey: 'footer.columns.company.about', href: route('about') },
+                { labelKey: 'footer.columns.company.blog', href: route('blog.index') },
+                { labelKey: 'footer.columns.company.customers', href: route('customers') },
+                { labelKey: 'footer.columns.company.contact', href: route('contact') },
             ],
         },
         {
             titleKey: 'footer.columns.legal.title',
             links: [
-                { labelKey: 'footer.columns.legal.terms', href: '#' },
-                { labelKey: 'footer.columns.legal.privacy', href: '#' },
-                { labelKey: 'footer.columns.legal.license', href: '#' },
-                { labelKey: 'footer.columns.legal.refunds', href: '#' },
+                { labelKey: 'footer.columns.legal.terms', href: route('terms') },
+                { labelKey: 'footer.columns.legal.privacy', href: route('privacy') },
+                { labelKey: 'footer.columns.legal.license', href: route('license') },
+                { labelKey: 'footer.columns.legal.refunds', href: route('refunds') },
             ],
         },
     ];
@@ -206,10 +206,11 @@ function SiteFooter() {
                             <BrandLockup />
                         </Link>
                         <p className="text-sm text-muted-foreground">{t('footer.tagline')}</p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span className="inline-flex size-2 rounded-full bg-emerald-500 animate-pulse-soft" />
-                            {t('footer.status_ok')}
-                        </div>
+                        {/* Live: SystemStatus checks, cached for a minute. */}
+                        <Link href={route('status')} className="flex w-fit items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
+                            <span className={cn('inline-flex size-2 rounded-full', healthy ? 'bg-emerald-500 animate-pulse-soft' : 'bg-amber-500')} />
+                            {healthy ? t('footer.status_ok') : t('footer.status_degraded')}
+                        </Link>
                     </div>
 
                     <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
@@ -223,9 +224,8 @@ function SiteFooter() {
                     </div>
                 </div>
 
-                <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-border/60 pt-8 text-xs text-muted-foreground sm:flex-row sm:items-center">
+                <div className="mt-14 border-t border-border/60 pt-8 text-xs text-muted-foreground">
                     <p>{t('footer.copy', { year: new Date().getFullYear() })}</p>
-                    <p className="font-mono">v1.0.0 · built with Laravel + React</p>
                 </div>
             </Container>
         </footer>

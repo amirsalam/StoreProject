@@ -64,7 +64,7 @@ class ProjectController extends Controller
 
         return redirect()
             ->route('workspace.projects.index')
-            ->with('success', "Project \"{$project->name}\" created.");
+            ->with('success', __('Project ":name" created.', ['name' => $project->name]));
     }
 
     public function update(Request $request, Project $project): RedirectResponse
@@ -81,7 +81,7 @@ class ProjectController extends Controller
 
         return redirect()
             ->route('workspace.projects.index')
-            ->with('success', "Project \"{$project->name}\" updated.");
+            ->with('success', __('Project ":name" updated.', ['name' => $project->name]));
     }
 
     public function destroy(Project $project): RedirectResponse
@@ -90,7 +90,7 @@ class ProjectController extends Controller
 
         return redirect()
             ->route('workspace.projects.index')
-            ->with('success', 'Project archived.');
+            ->with('success', __('Project archived.'));
     }
 
     /**
@@ -99,9 +99,9 @@ class ProjectController extends Controller
     private function statuses(): array
     {
         return [
-            ['value' => Project::STATUS_ACTIVE, 'label' => 'Active'],
-            ['value' => Project::STATUS_PAUSED, 'label' => 'Paused'],
-            ['value' => Project::STATUS_ARCHIVED, 'label' => 'Archived'],
+            ['value' => Project::STATUS_ACTIVE, 'label' => __('Active')],
+            ['value' => Project::STATUS_PAUSED, 'label' => __('Paused')],
+            ['value' => Project::STATUS_ARCHIVED, 'label' => __('Archived')],
         ];
     }
 

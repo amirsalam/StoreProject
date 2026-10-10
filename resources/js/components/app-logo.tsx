@@ -10,6 +10,7 @@ export default function AppLogo() {
             <BrandLockup
                 iconOnly
                 iconClassName="size-8"
+                logoClassName="h-8 max-w-28"
                 className="font-display text-sm font-semibold"
             />
             <div className="ms-1 grid flex-1 text-left text-sm">

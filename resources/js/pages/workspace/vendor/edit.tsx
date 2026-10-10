@@ -1,31 +1,37 @@
+import CountrySelect from '@/components/country-select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslate } from '@/hooks/use-translate';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type Vendor, type VendorStatus } from '@/types';
+import { type BreadcrumbItem, type Vendor } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { BadgeCheck, Ban, Clock, ExternalLink, Store, XCircle } from 'lucide-react';
+import { BadgeCheck, ExternalLink, Store } from 'lucide-react';
 import { FormEvent } from 'react';
 
 interface VendorEditProps {
     vendor: Vendor | null;
     storeUrl: string | null;
+    /** ISO 3166-1 codes for the country picker (config/countries.php). */
+    countries?: string[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Vendor store', href: '/workspace/vendor' }];
 
-export default function VendorEdit({ vendor, storeUrl }: VendorEditProps) {
+export default function VendorEdit({ vendor, storeUrl, countries = [] }: VendorEditProps) {
+    const { __ } = useTranslate();
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Vendor store" />
+            <Head title={__('Vendor store')} />
             <div className="mx-auto w-full max-w-3xl space-y-6 p-4 sm:p-6">
-                {vendor ? <ProfileForm vendor={vendor} storeUrl={storeUrl} /> : <OpenStore />}
+                {vendor ? <ProfileForm vendor={vendor} storeUrl={storeUrl} countries={countries} /> : <OpenStore />}
             </div>
         </AppLayout>
     );
 }
 
 function OpenStore() {
+    const { __ } = useTranslate();
     const { data, setData, post, processing, errors } = useForm({ name: '' });
 
     const submit = (e: FormEvent) => {
@@ -38,25 +44,26 @@ function OpenStore() {
             <div className="bg-primary/10 text-primary mx-auto mb-4 flex size-12 items-center justify-center rounded-full">
                 <Store className="size-6" />
             </div>
-            <h1 className="font-display text-xl font-semibold tracking-tight">Open your store</h1>
+            <h1 className="font-display text-xl font-semibold tracking-tight">{__('Open your store')}</h1>
             <p className="text-muted-foreground mx-auto mt-1 max-w-md text-sm">
-                Start selling on the marketplace. Pick a store name — you can add your logo, bio, and links next.
+                {__('Start selling on the marketplace. Pick a store name — you can add your logo, bio, and links next.')}
             </p>
             <form onSubmit={submit} className="mx-auto mt-6 flex max-w-sm flex-col gap-3 text-left">
                 <div>
-                    <Label htmlFor="name">Store name</Label>
+                    <Label htmlFor="name">{__('Store name')}</Label>
                     <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder="Acme Digital" autoFocus />
                     {errors.name && <p className="text-destructive mt-1 text-sm">{errors.name}</p>}
                 </div>
                 <Button type="submit" disabled={processing} className="w-full">
-                    {processing ? 'Creating…' : 'Open store'}
+                    {processing ? __('Creating…') : __('Open store')}
                 </Button>
             </form>
         </div>
     );
 }
 
-function ProfileForm({ vendor, storeUrl }: { vendor: Vendor; storeUrl: string | null }) {
+function ProfileForm({ vendor, storeUrl, countries }: { vendor: Vendor; storeUrl: string | null; countries: string[] }) {
+    const { __ } = useTranslate();
     const p = vendor.profile;
     const { data, setData, post, processing, errors, recentlySuccessful } = useForm<{
         _method: string;
@@ -97,72 +104,66 @@ function ProfileForm({ vendor, storeUrl }: { vendor: Vendor; storeUrl: string | 
 
     return (
         <form onSubmit={submit} className="space-y-6">
-            {vendor.status && <StatusBanner status={vendor.status} />}
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <div className="flex items-center gap-2">
                         <h1 className="font-display text-xl font-semibold tracking-tight">{vendor.name}</h1>
                         {vendor.is_verified && <BadgeCheck className="text-primary size-5" />}
                     </div>
-                    <p className="text-muted-foreground text-sm">Manage your public storefront.</p>
+                    <p className="text-muted-foreground text-sm">{__('Manage your public storefront.')}</p>
                 </div>
                 {storeUrl && (
                     <Button asChild variant="outline" size="sm">
                         <Link href={storeUrl}>
-                            View store
+                            {__('View store')}
                             <ExternalLink className="ms-1.5 size-3.5" />
                         </Link>
                     </Button>
                 )}
             </div>
 
-            <Section title="Store details">
-                <Field label="Store name" error={errors.name}>
+            <Section title={__('Store details')}>
+                <Field label={__('Store name')} error={errors.name}>
                     <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
                 </Field>
-                <Field label="Company name" error={errors.company_name}>
+                <Field label={__('Company name')} error={errors.company_name}>
                     <Input value={data.company_name} onChange={(e) => setData('company_name', e.target.value)} />
                 </Field>
-                <Field label="Bio" error={errors.bio}>
+                <Field label={__('Bio')} error={errors.bio}>
                     <textarea
                         value={data.bio}
                         onChange={(e) => setData('bio', e.target.value)}
                         rows={4}
                         className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-                        placeholder="Tell buyers what your store offers…"
+                        placeholder={__('Tell buyers what your store offers…')}
                     />
                 </Field>
             </Section>
 
-            <Section title="Branding">
-                <Field label="Logo (JPG/PNG/WebP)" error={errors.logo}>
+            <Section title={__('Branding')}>
+                <Field label={__('Logo (JPG/PNG/WebP)')} error={errors.logo}>
                     <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setData('logo', e.target.files?.[0] ?? null)} />
                 </Field>
-                <Field label="Banner (JPG/PNG/WebP)" error={errors.banner}>
+                <Field label={__('Banner (JPG/PNG/WebP)')} error={errors.banner}>
                     <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setData('banner', e.target.files?.[0] ?? null)} />
                 </Field>
             </Section>
 
-            <Section title="Contact & links">
-                <Field label="Website" error={errors.website}>
+            <Section title={__('Contact & links')}>
+                <Field label={__('Website')} error={errors.website}>
                     <Input value={data.website} onChange={(e) => setData('website', e.target.value)} placeholder="https://" />
                 </Field>
-                <Field label="Contact email" error={errors.contact_email}>
+                <Field label={__('Contact email')} error={errors.contact_email}>
                     <Input type="email" value={data.contact_email} onChange={(e) => setData('contact_email', e.target.value)} />
                 </Field>
-                <Field label="Contact phone" error={errors.contact_phone}>
+                <Field label={__('Contact phone')} error={errors.contact_phone}>
                     <Input value={data.contact_phone} onChange={(e) => setData('contact_phone', e.target.value)} />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Country (2-letter)" error={errors.country}>
-                        <Input
-                            value={data.country}
-                            maxLength={2}
-                            onChange={(e) => setData('country', e.target.value.toUpperCase())}
-                            placeholder="US"
-                        />
+                    <Field label={__('Country')} error={errors.country}>
+                        <CountrySelect value={data.country} onChange={(code) => setData('country', code)} countries={countries} />
                     </Field>
-                    <Field label="Founded year" error={errors.founded_year}>
+                    <Field label={__('Founded year')} error={errors.founded_year}>
                         <Input type="number" value={data.founded_year} onChange={(e) => setData('founded_year', e.target.value)} placeholder="2020" />
                     </Field>
                 </div>
@@ -179,9 +180,9 @@ function ProfileForm({ vendor, storeUrl }: { vendor: Vendor; storeUrl: string | 
 
             <div className="flex items-center gap-3">
                 <Button type="submit" disabled={processing}>
-                    {processing ? 'Saving…' : 'Save changes'}
+                    {processing ? __('Saving…') : __('Save changes')}
                 </Button>
-                {recentlySuccessful && <span className="text-muted-foreground text-sm">Saved.</span>}
+                {recentlySuccessful && <span className="text-muted-foreground text-sm">{__('Saved.')}</span>}
             </div>
         </form>
     );
@@ -202,50 +203,6 @@ function Field({ label, error, children }: { label: string; error?: string; chil
             <Label className="mb-1.5 block">{label}</Label>
             {children}
             {error && <p className="text-destructive mt-1 text-sm">{error}</p>}
-        </div>
-    );
-}
-
-const STATUS_BANNERS: Partial<Record<VendorStatus, { icon: typeof Clock; title: string; body: string; tone: 'warning' | 'danger' }>> = {
-    pending: {
-        icon: Clock,
-        title: 'Awaiting approval',
-        body: "An admin is reviewing your store. It isn't listed yet — you can finish your profile in the meantime.",
-        tone: 'warning',
-    },
-    rejected: {
-        icon: XCircle,
-        title: 'Application not approved',
-        body: "Your store wasn't approved, so it isn't listed. Check your notifications for the reason.",
-        tone: 'danger',
-    },
-    suspended: {
-        icon: Ban,
-        title: 'Store suspended',
-        body: 'Your store and products are hidden from buyers. Check your notifications for details.',
-        tone: 'danger',
-    },
-};
-
-function StatusBanner({ status }: { status: VendorStatus }) {
-    const banner = STATUS_BANNERS[status];
-    if (!banner) return null;
-
-    const Icon = banner.icon;
-    return (
-        <div
-            role="status"
-            className={
-                banner.tone === 'warning'
-                    ? 'flex gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200'
-                    : 'border-destructive/30 bg-destructive/[0.06] text-destructive flex gap-3 rounded-lg border p-4'
-            }
-        >
-            <Icon className="mt-0.5 size-5 shrink-0" />
-            <div>
-                <p className="text-sm font-medium">{banner.title}</p>
-                <p className="text-sm opacity-90">{banner.body}</p>
-            </div>
         </div>
     );
 }

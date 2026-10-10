@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Marketplace\ProductFileService;
 use App\Domain\Plans\PlanGate;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\LicensingSettings;
 use App\Tenancy\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -50,13 +53,19 @@ class ProductController extends Controller
     public function create(): Response
     {
         return Inertia::render('admin/products/create', [
+            'currencies' => array_keys(config('currencies')),
+            'licensing' => app(LicensingSettings::class)->forForm(),
+            'upload' => app(ProductFileService::class)->uploadOptions(),
             'categories' => $this->categories(),
             'statuses' => $this->statuses(),
             'types' => $this->types(),
         ]);
     }
 
-    public function store(StoreProductRequest $request, PlanGate $gate): RedirectResponse
+    /** Form fields handled by ProductFileService rather than mass-assigned. */
+    private const FILE_FIELDS = ['download_file', 'remove_download_file', 'download_file_token', 'extended_file', 'remove_extended_file', 'extended_file_token'];
+
+    public function store(StoreProductRequest $request, PlanGate $gate, ProductFileService $files): RedirectResponse
     {
         $tenant = app(TenantContext::class)->current();
 
@@ -66,16 +75,26 @@ class ProductController extends Controller
             abort(402, 'You\'ve reached your plan\'s product limit. Upgrade to add more.');
         }
 
-        $product = Product::create($request->validated());
+        // One transaction: a rejected upload must not leave a file-less product behind.
+        $product = DB::transaction(function () use ($request, $files) {
+            $product = Product::create($request->safe()->except(self::FILE_FIELDS));
+            $files->sync($product, $request->file('download_file'), false, $request->input('download_file_token'), $request->user()->id);
+            $files->sync($product, $request->file('extended_file'), false, $request->input('extended_file_token'), $request->user()->id, ProductFileService::EXTENDED);
+
+            return $product;
+        });
 
         return redirect()
             ->route('admin.products.index')
-            ->with('success', "Product \"{$product->title}\" created.");
+            ->with('success', __('Product ":title" created.', ['title' => $product->title]));
     }
 
     public function edit(Product $product): Response
     {
         return Inertia::render('admin/products/edit', [
+            'currencies' => array_keys(config('currencies')),
+            'licensing' => app(LicensingSettings::class)->forForm(),
+            'upload' => app(ProductFileService::class)->uploadOptions(),
             'product' => $product,
             'categories' => $this->categories(),
             'statuses' => $this->statuses(),
@@ -83,23 +102,40 @@ class ProductController extends Controller
         ]);
     }
 
-    public function update(UpdateProductRequest $request, Product $product): RedirectResponse
+    public function update(UpdateProductRequest $request, Product $product, ProductFileService $files): RedirectResponse
     {
-        $product->update($request->validated());
+        DB::transaction(function () use ($request, $product, $files) {
+            $product->update($request->safe()->except(self::FILE_FIELDS));
+            $files->sync($product, $request->file('download_file'), $request->boolean('remove_download_file'), $request->input('download_file_token'), $request->user()->id);
+            $files->sync($product, $request->file('extended_file'), $request->boolean('remove_extended_file'), $request->input('extended_file_token'), $request->user()->id, ProductFileService::EXTENDED);
+        });
 
         return redirect()
             ->route('admin.products.index')
-            ->with('success', "Product \"{$product->title}\" updated.");
+            ->with('success', __('Product ":title" updated.', ['title' => $product->title]));
     }
 
     public function destroy(Product $product): RedirectResponse
     {
         $title = $product->title;
+
+        // A sold product is referenced by order lines, licenses, downloads
+        // or subscriptions, and deleting it would erase customers' purchase
+        // history and access (the database refuses anyway). Archive it
+        // instead: hidden from the store, buyers keep what they paid for.
+        if ($product->hasSalesHistory()) {
+            $product->update(['status' => Product::STATUS_ARCHIVED]);
+
+            return redirect()
+                ->route('admin.products.index')
+                ->with('success', __('Product ":title" has been sold, so it was archived instead of deleted — it\'s hidden from the store and buyers keep their access.', ['title' => $title]));
+        }
+
         $product->delete();
 
         return redirect()
             ->route('admin.products.index')
-            ->with('success', "Product \"{$title}\" deleted.");
+            ->with('success', __('Product ":title" deleted.', ['title' => $title]));
     }
 
     /**
@@ -108,9 +144,9 @@ class ProductController extends Controller
     private function statuses(): array
     {
         return [
-            ['value' => Product::STATUS_DRAFT, 'label' => 'Draft'],
-            ['value' => Product::STATUS_PUBLISHED, 'label' => 'Published'],
-            ['value' => Product::STATUS_ARCHIVED, 'label' => 'Archived'],
+            ['value' => Product::STATUS_DRAFT, 'label' => __('Draft')],
+            ['value' => Product::STATUS_PUBLISHED, 'label' => __('Published')],
+            ['value' => Product::STATUS_ARCHIVED, 'label' => __('Archived')],
         ];
     }
 
@@ -120,10 +156,10 @@ class ProductController extends Controller
     private function types(): array
     {
         return [
-            ['value' => Product::TYPE_DIGITAL_DOWNLOAD, 'label' => 'Digital download'],
-            ['value' => Product::TYPE_SUBSCRIPTION, 'label' => 'Subscription'],
-            ['value' => Product::TYPE_API_ACCESS, 'label' => 'API access'],
-            ['value' => Product::TYPE_LICENSE, 'label' => 'License'],
+            ['value' => Product::TYPE_DIGITAL_DOWNLOAD, 'label' => __('Digital download')],
+            ['value' => Product::TYPE_SUBSCRIPTION, 'label' => __('Subscription')],
+            ['value' => Product::TYPE_API_ACCESS, 'label' => __('API access')],
+            ['value' => Product::TYPE_LICENSE, 'label' => __('License')],
         ];
     }
 

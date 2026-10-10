@@ -27,6 +27,7 @@ class VendorController extends Controller
 
         return Inertia::render('workspace/vendor/edit', [
             'vendor' => $vendor,
+            'countries' => config('countries'),
             'storeUrl' => $vendor?->isActive()
                 ? route('store.show', $vendor->slug)
                 : null,
@@ -40,13 +41,11 @@ class VendorController extends Controller
             return redirect()->route('workspace.vendor.edit');
         }
 
-        $vendor = $this->vendors->registerForUser($request->user(), $request->validated());
+        $this->vendors->registerForUser($request->user(), $request->validated());
 
         return redirect()
             ->route('workspace.vendor.edit')
-            ->with('success', $vendor->isActive()
-                ? 'Your store is live. Add your details below.'
-                : 'Your store has been submitted for review. Add your details while you wait.');
+            ->with('success', __('Your store is live. Add your details below.'));
     }
 
     public function update(UpdateVendorProfileRequest $request): RedirectResponse
@@ -63,6 +62,6 @@ class VendorController extends Controller
 
         return redirect()
             ->route('workspace.vendor.edit')
-            ->with('success', 'Store profile updated.');
+            ->with('success', __('Store profile updated.'));
     }
 }

@@ -147,10 +147,12 @@ class DatabaseSeeder extends Seeder
 
         Product::query()->whereIn('id', $products->random(5)->pluck('id'))->update(['is_featured' => true]);
 
+        // Showcase codes never expire — the factory's random expiry made a
+        // fresh seed's LAUNCH20 silently stop working weeks later.
         $coupons = collect([
-            Coupon::factory()->percentage(20)->create(['code' => 'LAUNCH20', 'description' => 'Launch sale — 20% off']),
-            Coupon::factory()->percentage(50)->create(['code' => 'BLACKFRIDAY50', 'description' => 'Black Friday blowout']),
-            Coupon::factory()->fixed(10)->create(['code' => 'WELCOME10', 'description' => '$10 off your first order']),
+            Coupon::factory()->percentage(20)->create(['code' => 'LAUNCH20', 'description' => 'Launch sale — 20% off', 'expires_at' => null]),
+            Coupon::factory()->percentage(50)->create(['code' => 'BLACKFRIDAY50', 'description' => 'Black Friday blowout', 'expires_at' => null]),
+            Coupon::factory()->fixed(10)->create(['code' => 'WELCOME10', 'description' => '$10 off your first order', 'expires_at' => null]),
         ]);
         Coupon::factory()->count(2)->create();
 

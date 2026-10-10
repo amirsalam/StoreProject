@@ -2,9 +2,16 @@
 
 namespace App\Domain\Payments;
 
+use App\Domain\Billing\StripeGateway;
+use App\Domain\Payments\PayPal\PayPalGateway;
 use App\Models\ActivityLog;
 use App\Models\PaymentGateway;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\DB;
+use Stripe\Exception\ApiConnectionException;
+use Stripe\Exception\ApiErrorException;
+use Stripe\Exception\AuthenticationException;
+use Stripe\Exception\PermissionException;
 
 /**
  * Business logic for managing payment-gateway configurations.
@@ -148,12 +155,49 @@ class PaymentGatewayService
         $missing = [];
         foreach ($fields as $key => $meta) {
             if (($meta['required'] ?? false) && blank($creds[$key] ?? null)) {
-                $missing[] = $meta['label'] ?? $key;
+                $missing[] = __($meta['label'] ?? $key);
             }
         }
 
         if ($missing !== []) {
-            return ['ok' => false, 'message' => 'Missing required credentials: '.implode(', ', $missing)];
+            return ['ok' => false, 'message' => __('Missing required credentials: :fields', ['fields' => implode(', ', $missing)])];
+        }
+
+        $message = __('Configuration looks complete.');
+
+        if ($gateway->provider === 'stripe') {
+            $problem = $this->checkStripe($gateway);
+            if ($problem !== null) {
+                return ['ok' => false, 'message' => $problem];
+            }
+            $message = __('Connected to Stripe — the keys work.');
+        }
+
+        if ($gateway->provider === 'paypal') {
+            // A real check: ask PayPal for an access token with these keys.
+            try {
+                app(PayPalGateway::class)->accessToken($gateway);
+            } catch (RequestException $e) {
+                return ['ok' => false, 'message' => __('PayPal refused these credentials (:error). Check the Client ID, the Secret and the environment (sandbox keys only work in Sandbox).', [
+                    'error' => $e->response->json('error_description') ?? $e->response->status(),
+                ])];
+            } catch (\Throwable $e) {
+                return ['ok' => false, 'message' => __('Could not reach PayPal: :error', ['error' => $e->getMessage()])];
+            }
+            $message = __('Connected to PayPal — the credentials work.');
+        }
+
+        if ($gateway->provider === 'cmi') {
+            // CMI has no API to ping; check what can be checked locally.
+            $rate = (float) str_replace(',', '.', (string) ($gateway->credentials['mad_rate'] ?? ''));
+            if ($rate <= 0) {
+                return ['ok' => false, 'message' => __('Enter the exchange rate as a number, e.g. 10.00 (1 USD = 10.00 MAD).')];
+            }
+            $platform = $gateway->environment === PaymentGateway::ENV_PRODUCTION ? 'live' : 'test';
+            $message = __("CMI is configured (:platform platform, 1 USD = :rate MAD). CMI can't be contacted without a payment — make a test purchase to confirm.", [
+                'platform' => __($platform),
+                'rate' => $rate,
+            ]);
         }
 
         $gateway->update(['last_connection_at' => now()]);
@@ -163,7 +207,47 @@ class PaymentGatewayService
             'provider' => $gateway->provider,
         ]);
 
-        return ['ok' => true, 'message' => 'Configuration looks complete.'];
+        return ['ok' => true, 'message' => $message];
+    }
+
+    /**
+     * Stripe-specific checks: key formats, test/live consistency with the
+     * gateway's environment, then a live read-only call with the secret key.
+     * Returns a message describing the first problem, or null if all pass.
+     */
+    private function checkStripe(PaymentGateway $gateway): ?string
+    {
+        $publishable = (string) ($gateway->credentials['publishable_key'] ?? '');
+        $secret = (string) ($gateway->credentials['secret_key'] ?? '');
+
+        if (! preg_match(StripeCredentials::PUBLISHABLE_KEY_PATTERN, $publishable, $pk)) {
+            return __('The publishable key should start with pk_test_ or pk_live_.');
+        }
+        if (! preg_match(StripeCredentials::SECRET_KEY_PATTERN, $secret, $sk)) {
+            return __('The secret key should be a Stripe secret or restricted key (sk_…, rk_…, rkcs_…), pasted exactly as Stripe shows it.');
+        }
+        if ($pk[1] !== $sk[1]) {
+            return __('The publishable and secret keys are from different modes — one is test, the other live.');
+        }
+
+        $expected = $gateway->environment === PaymentGateway::ENV_PRODUCTION ? 'live' : 'test';
+        if ($pk[1] !== $expected) {
+            return __("This gateway's environment is :environment, but these are :mode keys.", ['environment' => __($gateway->environment), 'mode' => __($pk[1])]);
+        }
+
+        try {
+            app(StripeGateway::class)->verifySecretKey($secret);
+        } catch (AuthenticationException) {
+            return __('Stripe rejected the secret key — paste it again exactly as Stripe shows it (a changed prefix makes it invalid).');
+        } catch (PermissionException) {
+            return __('Stripe accepted the key, but it is not allowed to create payments. Give the restricted key write access to PaymentIntents.');
+        } catch (ApiConnectionException) {
+            return __('Could not reach Stripe — check the server’s internet connection.');
+        } catch (ApiErrorException $e) {
+            return __('Stripe returned an error: :error', ['error' => $e->getMessage()]);
+        }
+
+        return null;
     }
 
     private function demoteOtherDefaults(PaymentGateway $gateway): void

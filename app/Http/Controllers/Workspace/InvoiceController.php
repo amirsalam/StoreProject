@@ -19,7 +19,7 @@ class InvoiceController extends Controller
             'search' => (string) $request->string('search'),
         ];
 
-        $query = Invoice::query()->with('client:id,name,email');
+        $query = Invoice::query()->with(['client:id,name,email', 'order:id,order_number']);
 
         if ($filters['status'] !== '') {
             $query->where('status', $filters['status']);
@@ -29,6 +29,7 @@ class InvoiceController extends Controller
             $query->where(fn ($q) => $q
                 ->where('number', 'like', $term)
                 ->orWhereHas('client', fn ($u) => $u->where('name', 'like', $term)->orWhere('email', 'like', $term))
+                ->orWhereHas('order', fn ($o) => $o->where('order_number', 'like', $term))
             );
         }
 
@@ -57,7 +58,7 @@ class InvoiceController extends Controller
         $tax = (int) ($data['tax_cents'] ?? 0);
 
         $invoice = Invoice::create($data + [
-            'number' => $this->nextInvoiceNumber(),
+            'number' => Invoice::nextNumber((int) app(TenantContext::class)->id()),
             'status' => Invoice::STATUS_DRAFT,
             'tax_cents' => $tax,
             'total_cents' => $subtotal + $tax,
@@ -65,7 +66,7 @@ class InvoiceController extends Controller
 
         return redirect()
             ->route('workspace.invoices.index')
-            ->with('success', "Invoice {$invoice->number} created.");
+            ->with('success', __('Invoice :number created.', ['number' => $invoice->number]));
     }
 
     public function markSent(Invoice $invoice): RedirectResponse
@@ -94,11 +95,18 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice): RedirectResponse
     {
+        // A store order's invoice is a sales record; a refund voids it.
+        if ($invoice->order_id !== null) {
+            return redirect()
+                ->route('workspace.invoices.index')
+                ->with('error', __('Invoices of store orders cannot be deleted. Refunding the order voids its invoice.'));
+        }
+
         $invoice->delete();
 
         return redirect()
             ->route('workspace.invoices.index')
-            ->with('success', 'Invoice removed.');
+            ->with('success', __('Invoice removed.'));
     }
 
     /**
@@ -107,27 +115,11 @@ class InvoiceController extends Controller
     private function statuses(): array
     {
         return [
-            ['value' => Invoice::STATUS_DRAFT, 'label' => 'Draft'],
-            ['value' => Invoice::STATUS_SENT, 'label' => 'Sent'],
-            ['value' => Invoice::STATUS_PAID, 'label' => 'Paid'],
-            ['value' => Invoice::STATUS_OVERDUE, 'label' => 'Overdue'],
-            ['value' => Invoice::STATUS_VOID, 'label' => 'Void'],
+            ['value' => Invoice::STATUS_DRAFT, 'label' => __('Draft')],
+            ['value' => Invoice::STATUS_SENT, 'label' => __('Sent')],
+            ['value' => Invoice::STATUS_PAID, 'label' => __('Paid')],
+            ['value' => Invoice::STATUS_OVERDUE, 'label' => __('Overdue')],
+            ['value' => Invoice::STATUS_VOID, 'label' => __('Void')],
         ];
-    }
-
-    /**
-     * Allocate the next invoice number for the current tenant.
-     * Format: INV-YYYY-####, sequential within tenant.
-     */
-    private function nextInvoiceNumber(): string
-    {
-        $tenant = app(TenantContext::class)->current();
-        $year = now()->year;
-
-        $count = Invoice::query()
-            ->where('number', 'like', "INV-{$year}-%")
-            ->count();
-
-        return sprintf('INV-%d-%04d', $year, $count + 1);
     }
 }

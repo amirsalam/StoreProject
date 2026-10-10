@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Marketplace\CurrencyMismatchException;
 use App\Models\Product;
 use App\Services\CartService;
 use Illuminate\Http\RedirectResponse;
@@ -25,6 +26,10 @@ class CartController extends Controller
                 'price' => (string) $row['product']->price,
                 'sale_price' => $row['product']->sale_price !== null ? (string) $row['product']->sale_price : null,
             ],
+            'key' => $row['key'],
+            'extended' => $row['extended'],
+            'extended_support' => $row['extended_support'],
+            'support_months' => $row['support_months'],
             'quantity' => $row['quantity'],
             'unit_price' => $row['unit_price'],
             'line_total' => $row['line_total'],
@@ -33,7 +38,7 @@ class CartController extends Controller
         return Inertia::render('cart/index', [
             'items' => $items,
             'subtotal' => $this->cart->subtotal(),
-            'currency' => 'USD',
+            'currency' => $this->cart->currency(),
         ]);
     }
 
@@ -42,40 +47,52 @@ class CartController extends Controller
         $data = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'quantity' => ['nullable', 'integer', 'min:1', 'max:99'],
+            // Purchase options from the product page (ignored if not offered).
+            'extended' => ['nullable', 'boolean'],
+            'extended_support' => ['nullable', 'boolean'],
         ]);
 
         $product = Product::query()
             ->where('id', $data['product_id'])
-            ->listed()
+            ->where('status', Product::STATUS_PUBLISHED)
             ->firstOrFail();
 
-        $this->cart->add($product, $data['quantity'] ?? 1);
+        try {
+            $this->cart->add(
+                $product,
+                $data['quantity'] ?? 1,
+                (bool) ($data['extended'] ?? false),
+                (bool) ($data['extended_support'] ?? false),
+            );
+        } catch (CurrencyMismatchException $e) {
+            return back()->withErrors(['cart' => $e->getMessage()]);
+        }
 
-        return back()->with('success', "Added \"{$product->title}\" to your cart.");
+        return back()->with('success', __('Added ":title" to your cart.', ['title' => $product->title]));
     }
 
-    public function update(Request $request, Product $product): RedirectResponse
+    public function update(Request $request, string $line): RedirectResponse
     {
         $data = $request->validate([
             'quantity' => ['required', 'integer', 'min:0', 'max:99'],
         ]);
 
-        $this->cart->update($product, $data['quantity']);
+        $this->cart->update($line, $data['quantity']);
 
         return back();
     }
 
-    public function destroy(Product $product): RedirectResponse
+    public function destroy(string $line): RedirectResponse
     {
-        $this->cart->remove($product);
+        $this->cart->remove($line);
 
-        return back()->with('success', 'Item removed from cart.');
+        return back()->with('success', __('Item removed from cart.'));
     }
 
     public function clear(): RedirectResponse
     {
         $this->cart->clear();
 
-        return back()->with('success', 'Cart cleared.');
+        return back()->with('success', __('Cart cleared.'));
     }
 }

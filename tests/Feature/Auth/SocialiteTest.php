@@ -15,6 +15,20 @@ class SocialiteTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Buttons only work once a provider has credentials (.env or
+        // Admin → Social login); give both test values from "the .env".
+        config([
+            'services.google.client_id' => 'test-google-id',
+            'services.google.client_secret' => 'test-google-secret',
+            'services.github.client_id' => 'test-github-id',
+            'services.github.client_secret' => 'test-github-secret',
+        ]);
+    }
+
     public function test_redirect_returns_a_redirect_to_the_provider(): void
     {
         // Don't follow the redirect — we just want to confirm it was issued.
@@ -102,7 +116,7 @@ class SocialiteTest extends TestCase
      */
     private function mockSocialite(string $provider, string $id, ?string $email, ?string $name): void
     {
-        $abstract = new SocialiteUser();
+        $abstract = new SocialiteUser;
         $abstract->id = $id;
         $abstract->name = $name;
         $abstract->email = $email;

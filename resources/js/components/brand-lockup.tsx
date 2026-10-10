@@ -15,6 +15,11 @@ interface BrandLockupProps {
      */
     iconClassName?: string;
     /**
+     * Height class for an uploaded logo image (width follows its aspect
+     * ratio). Defaults to h-10.
+     */
+    logoClassName?: string;
+    /**
      * Wordmark text class — defaults to a small display-font label.
      */
     titleClassName?: string;
@@ -31,6 +36,7 @@ interface BrandLockupProps {
 export default function BrandLockup({
     iconOnly = false,
     iconClassName,
+    logoClassName,
     titleClassName,
     className,
 }: BrandLockupProps) {
@@ -40,25 +46,26 @@ export default function BrandLockup({
 
     return (
         <span className={cn('inline-flex items-center gap-2 font-display text-sm font-semibold tracking-tight', className)}>
-            <span
-                className={cn(
-                    'flex aspect-square items-center justify-center overflow-hidden rounded-md',
-                    !hasCustomLogo && 'bg-foreground text-background',
-                    iconClassName ?? 'size-7',
-                )}
-            >
-                {hasCustomLogo ? (
-                    <img
-                        src={branding.logo_url!}
-                        alt={title}
-                        className="size-full object-contain"
-                        loading="eager"
-                        draggable={false}
-                    />
-                ) : (
+            {hasCustomLogo ? (
+                // Uploaded logos keep their own aspect ratio: fixed height,
+                // natural width (capped), so wide marks aren't squashed into a square.
+                <img
+                    src={branding.logo_url!}
+                    alt={title}
+                    className={cn('w-auto max-w-44 shrink-0 object-contain', logoClassName ?? 'h-10')}
+                    loading="eager"
+                    draggable={false}
+                />
+            ) : (
+                <span
+                    className={cn(
+                        'flex aspect-square items-center justify-center overflow-hidden rounded-md bg-foreground text-background',
+                        iconClassName ?? 'size-7',
+                    )}
+                >
                     <AppLogoIcon className="size-4" />
-                )}
-            </span>
+                </span>
+            )}
             {!iconOnly && <span className={titleClassName}>{title}</span>}
         </span>
     );

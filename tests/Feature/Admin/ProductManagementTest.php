@@ -3,6 +3,9 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\Category;
+use App\Models\Download;
+use App\Models\License;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -220,6 +223,42 @@ class ProductManagementTest extends TestCase
             ->assertRedirect('/admin/products');
 
         $this->assertDatabaseMissing('products', ['id' => $product->id]);
+    }
+
+    public function test_deleting_a_sold_product_archives_it_and_keeps_purchase_history(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $product = Product::factory()->digitalDownload()->create(['status' => Product::STATUS_PUBLISHED]);
+        $order = Order::factory()->create();
+        $item = $order->items()->create([
+            'product_id' => $product->id,
+            'product_title' => $product->title,
+            'product_type' => $product->type,
+            'quantity' => 1,
+            'unit_price' => $product->price,
+            'total_price' => $product->price,
+        ]);
+        Download::factory()->create(['product_id' => $product->id, 'order_item_id' => $item->id, 'user_id' => $order->user_id]);
+
+        $this->actingAs($admin)
+            ->delete("/admin/products/{$product->id}")
+            ->assertRedirect('/admin/products')
+            ->assertSessionHas('success', fn (string $message) => str_contains($message, 'archived instead of deleted'));
+
+        $this->assertSame(Product::STATUS_ARCHIVED, $product->refresh()->status);
+        $this->assertDatabaseHas('order_items', ['id' => $item->id, 'product_id' => $product->id]);
+        $this->assertDatabaseHas('downloads', ['product_id' => $product->id]);
+    }
+
+    public function test_a_product_with_only_a_license_is_archived_not_deleted(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $product = Product::factory()->license()->create();
+        License::factory()->create(['product_id' => $product->id]);
+
+        $this->actingAs($admin)->delete("/admin/products/{$product->id}")->assertRedirect('/admin/products');
+
+        $this->assertSame(Product::STATUS_ARCHIVED, $product->refresh()->status);
     }
 
     public function test_non_admins_cannot_mutate_products(): void

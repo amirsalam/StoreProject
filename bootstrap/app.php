@@ -8,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -36,8 +37,18 @@ return Application::configure(basePath: dirname(__DIR__))
         // signature verification in the controller is what protects it.
         $middleware->validateCsrfTokens(except: [
             'webhooks/stripe',
+            // CMI posts the payment result back from its own site; each of
+            // these is verified with the Store Key hash (CmiPayments).
+            'payments/cmi/callback',
+            'checkout/*/cmi/ok',
+            'checkout/*/cmi/fail',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // API clients (license-activation scripts, curl) often omit
+        // `Accept: application/json`; without this a 422/429/401 on
+        // /api/* would render as a redirect or an HTML page.
+        $exceptions->shouldRenderJsonWhen(
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
+        );
     })->create();

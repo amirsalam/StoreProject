@@ -214,6 +214,22 @@ SVG;
             );
     }
 
+    public function test_the_browser_tab_icon_follows_the_uploaded_logo(): void
+    {
+        // Default mark until a logo is uploaded.
+        $this->get('/')->assertOk()->assertSee('favicon.svg', false);
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->post('/admin/branding', ['title' => 'Acme', 'logo' => UploadedFile::fake()->image('brand.png', 200, 200)]);
+        $logoUrl = app(BrandingService::class)->summary()['logo_url'];
+        $this->assertNotNull($logoUrl);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('<link rel="icon" href="'.e($logoUrl).'" data-brand-icon>', false)
+            ->assertDontSee('favicon.svg', false);
+    }
+
     public function test_non_admins_cannot_mutate_or_delete(): void
     {
         $user = User::factory()->create(['is_admin' => false]);

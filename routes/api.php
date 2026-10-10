@@ -1,9 +1,26 @@
 <?php
 
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\LicenseController;
 use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Middleware\ResolveTenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+/**
+ * License activation — unauthenticated; the license key is the
+ * credential. ResolveTenant scopes the key lookup to the store whose
+ * host is called (acme.example.com/api/v1/licenses/activate), and the
+ * `license-api` limiter (AppServiceProvider) caps calls per IP.
+ */
+Route::prefix('v1/licenses')
+    ->middleware([ResolveTenant::class, 'throttle:license-api'])
+    ->name('api.v1.licenses.')
+    ->group(function () {
+        Route::post('activate', [LicenseController::class, 'activate'])->name('activate');
+        Route::post('deactivate', [LicenseController::class, 'deactivate'])->name('deactivate');
+        Route::get('validate', [LicenseController::class, 'validate'])->name('validate');
+    });
 
 /**
  * Public API. Guarded by Sanctum personal access tokens issued from

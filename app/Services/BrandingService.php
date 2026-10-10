@@ -59,8 +59,22 @@ class BrandingService
     {
         $this->deleteLogo();
 
+        $filename = $this->storeImage($file, self::LOGO_DIRECTORY, 'logo');
+
+        Setting::put(self::LOGO_KEY, $filename, 'file');
+
+        return $filename;
+    }
+
+    /**
+     * Store an uploaded logo-type image on the public disk, made safe:
+     * SVGs are sanitized, raster images resized and re-encoded. Shared by
+     * the site logo and partner logos. Returns the stored path.
+     */
+    public function storeImage(UploadedFile $file, string $directory, string $prefix): string
+    {
         $extension = strtolower($file->getClientOriginalExtension());
-        $filename = self::LOGO_DIRECTORY . '/logo-' . Str::random(16) . '.' . $extension;
+        $filename = $directory.'/'.$prefix.'-'.Str::random(16).'.'.$extension;
 
         if ($extension === 'svg') {
             // Sanitize SVG contents on disk to strip <script>, on* attrs,
@@ -81,8 +95,6 @@ class BrandingService
                 }
             }
         }
-
-        Setting::put(self::LOGO_KEY, $filename, 'file');
 
         return $filename;
     }
@@ -173,6 +185,7 @@ class BrandingService
             $dst = imagecreatetruecolor($dstW, $dstH);
             if (! $dst instanceof \GdImage) {
                 imagedestroy($src);
+
                 return null;
             }
             // Preserve transparency for PNG/WebP.

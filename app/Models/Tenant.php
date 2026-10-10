@@ -80,6 +80,20 @@ class Tenant extends Model
         return $membership ? (string) $membership->pivot->role : null;
     }
 
+    /**
+     * Whether the user may configure this workspace's payment gateway (the
+     * Stripe keys checkout charges with): the owner, a workspace admin, or
+     * a platform admin. Plain members can see billing but not the keys.
+     */
+    public function canManagePayments(User $user): bool
+    {
+        if ($user->is_admin || $user->hasRole('admin') || $this->owner_id === $user->id) {
+            return true;
+        }
+
+        return in_array($this->roleOf($user), [self::ROLE_OWNER, self::ROLE_ADMIN], true);
+    }
+
     public function subscriptions(): HasMany
     {
         return $this->hasMany(TenantSubscription::class);

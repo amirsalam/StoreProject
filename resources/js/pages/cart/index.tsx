@@ -17,6 +17,11 @@ interface CartItem {
         price: string;
         sale_price: string | null;
     };
+    /** Cart line key: product id + options (e.g. 12, 12-x, 12-s). */
+    key: string;
+    extended: boolean;
+    extended_support: boolean;
+    support_months: number;
     quantity: number;
     unit_price: number;
     line_total: number;
@@ -28,7 +33,8 @@ interface CartIndexProps {
     currency: string;
 }
 
-const QUANTITY_LOCKED: ProductType[] = ['subscription', 'api_access', 'license'];
+// One license key is issued per unit, so only subscriptions are locked to 1.
+const QUANTITY_LOCKED: ProductType[] = ['subscription'];
 
 function money(value: number, currency = 'USD') {
     try {
@@ -42,16 +48,16 @@ export default function CartIndex({ items, subtotal, currency }: CartIndexProps)
     const { t } = useTranslate();
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
 
-    const updateQty = (productId: number, quantity: number) => {
+    const updateQty = (line: string, quantity: number) => {
         router.patch(
-            route('cart.update', productId),
+            route('cart.update', line),
             { quantity },
             { preserveScroll: true, preserveState: true },
         );
     };
 
-    const removeItem = (productId: number) => {
-        router.delete(route('cart.destroy', productId), { preserveScroll: true });
+    const removeItem = (line: string) => {
+        router.delete(route('cart.destroy', line), { preserveScroll: true });
     };
 
     const clearAll = () => {
@@ -99,7 +105,7 @@ export default function CartIndex({ items, subtotal, currency }: CartIndexProps)
                             {items.map((item) => {
                                 const locked = QUANTITY_LOCKED.includes(item.product.type);
                                 return (
-                                    <li key={item.product.id} className="p-4 sm:p-5">
+                                    <li key={item.key} className="p-4 sm:p-5">
                                         <div className="flex gap-4">
                                             <Link
                                                 href={route('products.show', item.product.slug)}
@@ -127,6 +133,16 @@ export default function CartIndex({ items, subtotal, currency }: CartIndexProps)
                                                     <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
                                                         {t(`product.types.${item.product.type}`)}
                                                     </p>
+                                                    {(item.extended || item.extended_support) && (
+                                                        <p className="text-xs text-primary">
+                                                            {[
+                                                                item.extended ? t('product.option_extended') : null,
+                                                                item.extended_support ? t('product.option_support') : null,
+                                                            ]
+                                                                .filter(Boolean)
+                                                                .join(' · ')}
+                                                        </p>
+                                                    )}
                                                     {item.product.sale_price && (
                                                         <p className="text-xs text-muted-foreground">
                                                             <span className="line-through">
@@ -143,7 +159,7 @@ export default function CartIndex({ items, subtotal, currency }: CartIndexProps)
                                                     <QuantityStepper
                                                         value={item.quantity}
                                                         locked={locked}
-                                                        onChange={(q) => updateQty(item.product.id, q)}
+                                                        onChange={(q) => updateQty(item.key, q)}
                                                     />
                                                     <div className="text-right">
                                                         <div className="font-display text-base font-semibold tabular-nums">
@@ -157,7 +173,7 @@ export default function CartIndex({ items, subtotal, currency }: CartIndexProps)
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeItem(item.product.id)}
+                                                        onClick={() => removeItem(item.key)}
                                                         className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-destructive"
                                                     >
                                                         <Trash2 className="size-3" />

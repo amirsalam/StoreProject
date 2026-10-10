@@ -11,10 +11,16 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * An invoice the tenant issues to one of their own clients.
  *
+ * Two kinds share this table:
+ *   - written by hand for client work (no order_id), and
+ *   - issued automatically for every paid store order (order_id set; see
+ *     OrderInvoiceService) — already paid, and the buyer can open it from
+ *     "My purchases".
+ *
  * Distinct from the marketplace `payments` table (gateway charges on
  * orders) and `tenant_subscriptions` (the platform's own SaaS bill to
- * this tenant). This row is the deliverable a freelancer or agency
- * sends to a customer for completed work.
+ * this tenant). Amounts are in the currency's minor unit (cents for USD,
+ * whole yen for JPY).
  */
 class Invoice extends Model
 {
@@ -34,9 +40,11 @@ class Invoice extends Model
         'tenant_id',
         'client_id',
         'project_id',
+        'order_id',
         'number',
         'status',
         'subtotal_cents',
+        'discount_cents',
         'tax_cents',
         'total_cents',
         'currency',
@@ -57,6 +65,7 @@ class Invoice extends Model
             'paid_at' => 'datetime',
             'line_items' => 'array',
             'subtotal_cents' => 'integer',
+            'discount_cents' => 'integer',
             'tax_cents' => 'integer',
             'total_cents' => 'integer',
         ];
@@ -70,6 +79,34 @@ class Invoice extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    /**
+     * Next number in the tenant's sequence: INV-YYYY-0001, 0002, …
+     *
+     * Looks at every invoice of that tenant this year — deleted ones too,
+     * since their numbers stay taken by the (tenant_id, number) unique
+     * index. Scoped explicitly, so it works without a tenant in context
+     * (payment webhooks).
+     */
+    public static function nextNumber(int $tenantId): string
+    {
+        $prefix = 'INV-'.now()->year.'-';
+
+        $last = static::query()
+            ->withTrashed()
+            ->forTenant($tenantId)
+            ->where('number', 'like', $prefix.'%')
+            ->pluck('number')
+            ->map(fn (string $number) => (int) substr($number, strlen($prefix)))
+            ->max() ?? 0;
+
+        return $prefix.str_pad((string) ($last + 1), 4, '0', STR_PAD_LEFT);
     }
 
     public function isOverdue(): bool

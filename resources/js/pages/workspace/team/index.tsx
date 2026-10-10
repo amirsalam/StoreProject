@@ -1,3 +1,4 @@
+import { useConfirmDialog } from '@/components/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +7,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Mail, Trash2, UserPlus, Users } from 'lucide-react';
 import { FormEvent } from 'react';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface Member {
     id: number;
@@ -40,6 +42,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function WorkspaceTeamIndex({ members, invitations, roles }: TeamIndexProps) {
+    const { __ } = useTranslate();
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -55,14 +58,22 @@ export default function WorkspaceTeamIndex({ members, invitations, roles }: Team
         });
     };
 
+    const { ask, confirmDialog } = useConfirmDialog();
+
     const revoke = (invitation: PendingInvitation) => {
-        if (!confirm(`Revoke invitation for ${invitation.email}?`)) return;
-        router.delete(route('workspace.team.invitations.revoke', invitation.id), { preserveScroll: true });
+        ask({
+            title: __('Revoke this invitation?'),
+            description: __('The invitation link sent to :email stops working.', { email: invitation.email }),
+            confirmLabel: __('Revoke invitation'),
+            destructive: true,
+            action: (finish) =>
+                router.delete(route('workspace.team.invitations.revoke', invitation.id), { preserveScroll: true, onFinish: finish }),
+        });
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Workspace · Team" />
+            <Head title={__('Workspace · Team')} />
 
             <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 {flash?.success && (
@@ -72,16 +83,16 @@ export default function WorkspaceTeamIndex({ members, invitations, roles }: Team
                 )}
 
                 <div>
-                    <h1 className="font-display text-2xl font-semibold tracking-tight">Team</h1>
+                    <h1 className="font-display text-2xl font-semibold tracking-tight">{__('Team')}</h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Invite people to your workspace. They&apos;ll get a sign-in link by email.
+                        {__("Invite people to your workspace. They'll get a sign-in link by email.")}
                     </p>
                 </div>
 
                 {/* INVITE FORM */}
                 <section className="rounded-xl border bg-card p-5 shadow-sm sm:p-6">
                     <h2 className="mb-4 inline-flex items-center gap-2 font-display text-base font-semibold tracking-tight">
-                        <UserPlus className="size-4" /> Invite a teammate
+                        <UserPlus className="size-4" /> {__('Invite a teammate')}
                     </h2>
                     <form onSubmit={submitInvite} className="flex flex-col gap-3 sm:flex-row">
                         <Input
@@ -101,7 +112,7 @@ export default function WorkspaceTeamIndex({ members, invitations, roles }: Team
                                 <option key={r.value} value={r.value}>{r.label}</option>
                             ))}
                         </select>
-                        <Button type="submit" disabled={processing}>Send invite</Button>
+                        <Button type="submit" disabled={processing}>{__('Send invite')}</Button>
                     </form>
                     {(errors.email || errors.role) && (
                         <p className="mt-2 text-xs text-destructive">{errors.email ?? errors.role}</p>
@@ -113,7 +124,7 @@ export default function WorkspaceTeamIndex({ members, invitations, roles }: Team
                     <section className="rounded-xl border bg-card shadow-sm">
                         <header className="flex items-center justify-between border-b px-5 py-3 sm:px-6">
                             <h2 className="inline-flex items-center gap-2 font-display text-sm font-semibold tracking-tight">
-                                <Mail className="size-4" /> Pending invitations
+                                <Mail className="size-4" /> {__('Pending invitations')}
                                 <Badge variant="secondary" className="ms-1 font-mono text-[10px]">
                                     {invitations.length}
                                 </Badge>
@@ -125,7 +136,7 @@ export default function WorkspaceTeamIndex({ members, invitations, roles }: Team
                                     <div className="min-w-0">
                                         <div className="truncate text-sm font-medium">{inv.email}</div>
                                         <div className="text-xs text-muted-foreground">
-                                            {inv.role} · expires {new Date(inv.expires_at).toLocaleDateString()}
+                                            {__(inv.role)} · {__('expires :date', { date: new Date(inv.expires_at).toLocaleDateString() })}
                                         </div>
                                     </div>
                                     <Button
@@ -134,7 +145,7 @@ export default function WorkspaceTeamIndex({ members, invitations, roles }: Team
                                         onClick={() => revoke(inv)}
                                         className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                     >
-                                        <Trash2 className="size-3.5" /> Revoke
+                                        <Trash2 className="size-3.5" /> {__('Revoke')}
                                     </Button>
                                 </li>
                             ))}
@@ -146,7 +157,7 @@ export default function WorkspaceTeamIndex({ members, invitations, roles }: Team
                 <section className="rounded-xl border bg-card shadow-sm">
                     <header className="flex items-center justify-between border-b px-5 py-3 sm:px-6">
                         <h2 className="inline-flex items-center gap-2 font-display text-sm font-semibold tracking-tight">
-                            <Users className="size-4" /> Members
+                            <Users className="size-4" /> {__('Members')}
                             <Badge variant="secondary" className="ms-1 font-mono text-[10px]">
                                 {members.length}
                             </Badge>
@@ -162,12 +173,14 @@ export default function WorkspaceTeamIndex({ members, invitations, roles }: Team
                                     <div className="truncate text-sm font-medium">{m.name}</div>
                                     <div className="truncate text-xs text-muted-foreground">{m.email}</div>
                                 </div>
-                                <Badge variant="outline" className="capitalize">{m.role}</Badge>
+                                <Badge variant="outline" className="capitalize">{__(m.role)}</Badge>
                             </li>
                         ))}
                     </ul>
                 </section>
             </div>
+
+            {confirmDialog}
         </AppLayout>
     );
 }

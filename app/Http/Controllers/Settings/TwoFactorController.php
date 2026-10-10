@@ -36,7 +36,7 @@ class TwoFactorController extends Controller
     {
         $this->twoFactor->enable($request->user());
 
-        return back()->with('success', 'Two-factor authentication enabled. Confirm with a code from your authenticator app to finish setup.');
+        return back()->with('success', __('Two-factor authentication enabled. Confirm with a code from your authenticator app to finish setup.'));
     }
 
     public function confirm(Request $request): RedirectResponse
@@ -54,7 +54,7 @@ class TwoFactorController extends Controller
 
         ActivityLog::record('2fa.enabled', $user, description: 'Two-factor authentication confirmed');
 
-        return back()->with('success', 'Two-factor authentication is now active.');
+        return back()->with('success', __('Two-factor authentication is now active.'));
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -65,7 +65,7 @@ class TwoFactorController extends Controller
 
         ActivityLog::record('2fa.disabled', $request->user(), description: 'Two-factor authentication removed');
 
-        return back()->with('success', 'Two-factor authentication disabled.');
+        return back()->with('success', __('Two-factor authentication disabled.'));
     }
 
     public function regenerateRecoveryCodes(Request $request): RedirectResponse
@@ -77,6 +77,6 @@ class TwoFactorController extends Controller
 
         ActivityLog::record('2fa.recovery_codes_regenerated', $request->user());
 
-        return back()->with('success', 'New recovery codes generated.');
+        return back()->with('success', __('New recovery codes generated.'));
     }
 }

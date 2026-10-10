@@ -6,8 +6,6 @@ use App\Models\DailyMetric;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Tenant;
-use App\Models\User;
-use App\Support\Money;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
@@ -32,12 +30,18 @@ class MetricsAggregator
         for ($d = $from; $d->lte($to); $d = $d->addDay()) {
             $written += $this->rebuildDay($d);
         }
+
         return $written;
     }
 
     /**
      * Rebuild every daily_metric for the given day across every tenant
      * (and the platform-wide null-tenant rollup).
+     */
+    /**
+     * Cross-tenant by design: every model query skips the tenant global
+     * scope explicitly, so the result is the same from the console and from
+     * a web request (where a tenant is in context — see RefreshDashboardMetrics).
      */
     public function rebuildDay(CarbonImmutable $day): int
     {
@@ -62,14 +66,14 @@ class MetricsAggregator
         $end = $day->endOfDay();
 
         // Revenue in cents — sum of paid orders for this tenant for this day.
-        $revenueCents = (int) round(((float) Order::query()
+        $revenueCents = (int) round(((float) Order::query()->withoutGlobalScope('tenant')
             ->where('tenant_id', $tenantId)
             ->where('status', Order::STATUS_PAID)
             ->whereBetween('paid_at', [$start, $end])
             ->sum('total')) * 100);
 
         // Order count.
-        $ordersCount = (int) Order::query()
+        $ordersCount = (int) Order::query()->withoutGlobalScope('tenant')
             ->where('tenant_id', $tenantId)
             ->where('status', Order::STATUS_PAID)
             ->whereBetween('paid_at', [$start, $end])
@@ -84,7 +88,7 @@ class MetricsAggregator
         );
 
         // Refunds.
-        $refundsCents = (int) round(((float) Payment::query()
+        $refundsCents = (int) round(((float) Payment::query()->withoutGlobalScope('tenant')
             ->where('tenant_id', $tenantId)
             ->where('status', Payment::STATUS_REFUNDED)
             ->whereBetween('updated_at', [$start, $end])
@@ -107,12 +111,12 @@ class MetricsAggregator
             ->whereBetween('created_at', [$start, $end])
             ->count();
 
-        $totalRevenueCents = (int) round(((float) Order::query()
+        $totalRevenueCents = (int) round(((float) Order::query()->withoutGlobalScope('tenant')
             ->where('status', Order::STATUS_PAID)
             ->whereBetween('paid_at', [$start, $end])
             ->sum('total')) * 100);
 
-        $totalOrders = (int) Order::query()
+        $totalOrders = (int) Order::query()->withoutGlobalScope('tenant')
             ->where('status', Order::STATUS_PAID)
             ->whereBetween('paid_at', [$start, $end])
             ->count();

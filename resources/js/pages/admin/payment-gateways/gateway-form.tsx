@@ -1,6 +1,8 @@
+import { StripeWebhookSteps, type StripeWebhookInfo } from '@/components/stripe-webhook-steps';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslate } from '@/hooks/use-translate';
 import { type PaymentProvider } from '@/types';
 import { Link, useForm } from '@inertiajs/react';
 import { FormEvent, useMemo } from 'react';
@@ -29,9 +31,11 @@ export interface GatewayFormValues {
 interface Props {
     providers: PaymentProvider[];
     gateway?: GatewayFormValues;
+    stripeWebhook?: StripeWebhookInfo;
 }
 
-export default function GatewayForm({ providers, gateway }: Props) {
+export default function GatewayForm({ providers, gateway, stripeWebhook }: Props) {
+    const { __ } = useTranslate();
     const isEdit = Boolean(gateway?.id);
 
     const form = useForm({
@@ -54,16 +58,16 @@ export default function GatewayForm({ providers, gateway }: Props) {
         sort_order: gateway?.sort_order ?? 0,
     });
 
-    const activeProvider = useMemo(
-        () => providers.find((p) => p.value === form.data.provider),
-        [providers, form.data.provider],
-    );
+    const activeProvider = useMemo(() => providers.find((p) => p.value === form.data.provider), [providers, form.data.provider]);
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
 
         const toList = (s: string) =>
-            s.split(',').map((x) => x.trim()).filter(Boolean);
+            s
+                .split(',')
+                .map((x) => x.trim())
+                .filter(Boolean);
 
         form.transform((data) => ({
             ...data,
@@ -80,23 +84,22 @@ export default function GatewayForm({ providers, gateway }: Props) {
         }
     };
 
-    const setCredential = (key: string, value: string) =>
-        form.setData('credentials', { ...form.data.credentials, [key]: value });
+    const setCredential = (key: string, value: string) => form.setData('credentials', { ...form.data.credentials, [key]: value });
 
     return (
         <form onSubmit={submit} className="space-y-6">
             {/* Provider + identity */}
-            <section className="rounded-lg border bg-card p-6">
-                <h2 className="mb-4 text-base font-semibold">Provider</h2>
+            <section className="bg-card rounded-lg border p-6">
+                <h2 className="mb-4 text-base font-semibold">{__('Provider')}</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Provider" error={form.errors.provider}>
+                    <Field label={__('Provider')} error={form.errors.provider}>
                         {isEdit ? (
                             <Input value={activeProvider?.label ?? form.data.provider} readOnly className="bg-muted/40" />
                         ) : (
                             <select
                                 value={form.data.provider}
                                 onChange={(e) => form.setData('provider', e.target.value)}
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
                             >
                                 {providers.map((p) => (
                                     <option key={p.value} value={p.value}>
@@ -107,35 +110,31 @@ export default function GatewayForm({ providers, gateway }: Props) {
                             </select>
                         )}
                     </Field>
-                    <Field label="Environment" error={form.errors.environment}>
+                    <Field label={__('Environment')} error={form.errors.environment}>
                         <select
                             value={form.data.environment}
                             onChange={(e) => form.setData('environment', e.target.value as 'sandbox' | 'production')}
-                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
                         >
-                            <option value="sandbox">Sandbox (test)</option>
-                            <option value="production">Production (live)</option>
+                            <option value="sandbox">{__('Sandbox (test)')}</option>
+                            <option value="production">{__('Production (live)')}</option>
                         </select>
                     </Field>
-                    <Field label="Gateway name (internal)" error={form.errors.name}>
+                    <Field label={__('Gateway name (internal)')} error={form.errors.name}>
                         <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} required />
                     </Field>
-                    <Field label="Display name (customer-facing)" error={form.errors.display_name}>
-                        <Input
-                            value={form.data.display_name}
-                            onChange={(e) => form.setData('display_name', e.target.value)}
-                            required
-                        />
+                    <Field label={__('Display name (customer-facing)')} error={form.errors.display_name}>
+                        <Input value={form.data.display_name} onChange={(e) => form.setData('display_name', e.target.value)} required />
                     </Field>
-                    <Field label="Logo / icon (emoji or URL)" error={form.errors.logo} className="sm:col-span-2">
+                    <Field label={__('Logo / icon (emoji or URL)')} error={form.errors.logo} className="sm:col-span-2">
                         <Input value={form.data.logo} onChange={(e) => form.setData('logo', e.target.value)} placeholder="💳" />
                     </Field>
-                    <Field label="Description" error={form.errors.description} className="sm:col-span-2">
+                    <Field label={__('Description')} error={form.errors.description} className="sm:col-span-2">
                         <textarea
                             value={form.data.description}
                             onChange={(e) => form.setData('description', e.target.value)}
                             rows={2}
-                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
                         />
                     </Field>
                 </div>
@@ -143,10 +142,10 @@ export default function GatewayForm({ providers, gateway }: Props) {
 
             {/* Credentials (dynamic per provider) */}
             {(activeProvider?.fields.length ?? 0) > 0 && (
-                <section className="rounded-lg border bg-card p-6">
-                    <h2 className="text-base font-semibold">API credentials</h2>
-                    <p className="mb-4 text-xs text-muted-foreground">
-                        Stored encrypted. {isEdit && 'Leave a field blank to keep its current value.'}
+                <section className="bg-card rounded-lg border p-6">
+                    <h2 className="text-base font-semibold">{__('API credentials')}</h2>
+                    <p className="text-muted-foreground mb-4 text-xs">
+                        {__('Stored encrypted.')} {isEdit && __('Leave a field blank to keep its current value.')}
                     </p>
                     <div className="grid gap-4 sm:grid-cols-2">
                         {activeProvider?.fields.map((f) => {
@@ -154,7 +153,7 @@ export default function GatewayForm({ providers, gateway }: Props) {
                             return (
                                 <Field
                                     key={f.key}
-                                    label={`${f.label}${f.required && !isEdit ? ' *' : ''}`}
+                                    label={`${f.label}${f.required ? ' *' : ''}`}
                                     error={form.errors[`credentials.${f.key}` as keyof typeof form.errors] as string}
                                 >
                                     <Input
@@ -162,8 +161,10 @@ export default function GatewayForm({ providers, gateway }: Props) {
                                         autoComplete="off"
                                         value={form.data.credentials[f.key] ?? ''}
                                         onChange={(e) => setCredential(f.key, e.target.value)}
-                                        placeholder={configured ? '•••••••• configured' : ''}
-                                        required={f.required && !isEdit}
+                                        placeholder={configured ? __('•••••••• configured') : ''}
+                                        // On edit a blank field keeps its saved value, so only
+                                        // a required field with nothing saved must be typed.
+                                        required={f.required && form.data.is_active && !configured}
                                     />
                                 </Field>
                             );
@@ -174,25 +175,26 @@ export default function GatewayForm({ providers, gateway }: Props) {
 
             {/* Webhook */}
             {activeProvider?.supports_webhook && (
-                <section className="rounded-lg border bg-card p-6">
-                    <h2 className="mb-4 text-base font-semibold">Webhook</h2>
-                    <Field label="Webhook secret" error={form.errors.webhook_secret}>
+                <section className="bg-card rounded-lg border p-6">
+                    <h2 className="mb-4 text-base font-semibold">{__('Webhook')}</h2>
+                    {form.data.provider === 'stripe' && stripeWebhook && <StripeWebhookSteps info={stripeWebhook} />}
+                    <Field label={__('Webhook secret')} error={form.errors.webhook_secret}>
                         <Input
                             type="password"
                             autoComplete="off"
                             value={form.data.webhook_secret}
                             onChange={(e) => form.setData('webhook_secret', e.target.value)}
-                            placeholder={gateway?.has_webhook_secret ? '•••••••• configured' : ''}
+                            placeholder={gateway?.has_webhook_secret ? __('•••••••• configured') : ''}
                         />
                     </Field>
                 </section>
             )}
 
             {/* Commercial settings */}
-            <section className="rounded-lg border bg-card p-6">
-                <h2 className="mb-4 text-base font-semibold">Fees, limits & coverage</h2>
+            <section className="bg-card rounded-lg border p-6">
+                <h2 className="mb-4 text-base font-semibold">{__('Fees, limits & coverage')}</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Transaction fee — percentage (%)" error={form.errors.fee_percent}>
+                    <Field label={__('Transaction fee — percentage (%)')} error={form.errors.fee_percent}>
                         <Input
                             type="number"
                             step="0.01"
@@ -201,7 +203,7 @@ export default function GatewayForm({ providers, gateway }: Props) {
                             onChange={(e) => form.setData('fee_percent', e.target.value)}
                         />
                     </Field>
-                    <Field label="Transaction fee — fixed" error={form.errors.fee_fixed}>
+                    <Field label={__('Transaction fee — fixed')} error={form.errors.fee_fixed}>
                         <Input
                             type="number"
                             step="0.01"
@@ -210,7 +212,7 @@ export default function GatewayForm({ providers, gateway }: Props) {
                             onChange={(e) => form.setData('fee_fixed', e.target.value)}
                         />
                     </Field>
-                    <Field label="Minimum amount" error={form.errors.min_amount}>
+                    <Field label={__('Minimum amount')} error={form.errors.min_amount}>
                         <Input
                             type="number"
                             step="0.01"
@@ -219,7 +221,7 @@ export default function GatewayForm({ providers, gateway }: Props) {
                             onChange={(e) => form.setData('min_amount', e.target.value)}
                         />
                     </Field>
-                    <Field label="Maximum amount" error={form.errors.max_amount}>
+                    <Field label={__('Maximum amount')} error={form.errors.max_amount}>
                         <Input
                             type="number"
                             step="0.01"
@@ -228,21 +230,21 @@ export default function GatewayForm({ providers, gateway }: Props) {
                             onChange={(e) => form.setData('max_amount', e.target.value)}
                         />
                     </Field>
-                    <Field label="Supported currencies (comma-separated)" error={form.errors.supported_currencies}>
+                    <Field label={__('Supported currencies (comma-separated)')} error={form.errors.supported_currencies}>
                         <Input
                             value={form.data.supported_currencies}
                             onChange={(e) => form.setData('supported_currencies', e.target.value)}
                             placeholder="USD, EUR, SAR"
                         />
                     </Field>
-                    <Field label="Supported countries (comma-separated)" error={form.errors.supported_countries}>
+                    <Field label={__('Supported countries (comma-separated)')} error={form.errors.supported_countries}>
                         <Input
                             value={form.data.supported_countries}
                             onChange={(e) => form.setData('supported_countries', e.target.value)}
                             placeholder="US, GB, SA"
                         />
                     </Field>
-                    <Field label="Sort order" error={form.errors.sort_order}>
+                    <Field label={__('Sort order')} error={form.errors.sort_order}>
                         <Input
                             type="number"
                             min="0"
@@ -258,50 +260,40 @@ export default function GatewayForm({ providers, gateway }: Props) {
                             type="checkbox"
                             checked={form.data.is_active}
                             onChange={(e) => form.setData('is_active', e.target.checked)}
-                            className="size-4 rounded border-input"
+                            className="border-input size-4 rounded"
                         />
-                        Active (available at checkout)
+                        {__('Active (available at checkout)')}
                     </label>
                     <label className="flex items-center gap-2 text-sm">
                         <input
                             type="checkbox"
                             checked={form.data.is_default}
                             onChange={(e) => form.setData('is_default', e.target.checked)}
-                            className="size-4 rounded border-input"
+                            className="border-input size-4 rounded"
                         />
-                        Set as the default gateway
+                        {__('Set as the default gateway')}
                     </label>
                 </div>
             </section>
 
             <div className="flex items-center justify-end gap-2">
                 <Button asChild variant="ghost">
-                    <Link href={route('admin.payment-gateways.index')}>Cancel</Link>
+                    <Link href={route('admin.payment-gateways.index')}>{__('Cancel')}</Link>
                 </Button>
                 <Button type="submit" disabled={form.processing}>
-                    {form.processing ? 'Saving…' : isEdit ? 'Save changes' : 'Create gateway'}
+                    {form.processing ? __('Saving…') : isEdit ? __('Save changes') : __('Create gateway')}
                 </Button>
             </div>
         </form>
     );
 }
 
-function Field({
-    label,
-    error,
-    children,
-    className = '',
-}: {
-    label: string;
-    error?: string;
-    children: React.ReactNode;
-    className?: string;
-}) {
+function Field({ label, error, children, className = '' }: { label: string; error?: string; children: React.ReactNode; className?: string }) {
     return (
         <div className={className}>
             <Label className="mb-1 block text-xs">{label}</Label>
             {children}
-            {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+            {error && <p className="text-destructive mt-1 text-xs">{error}</p>}
         </div>
     );
 }

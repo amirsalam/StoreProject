@@ -1,3 +1,5 @@
+import { useConfirmDialog } from '@/components/confirm-dialog';
+import { type StripeWebhookInfo } from '@/components/stripe-webhook-steps';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
@@ -5,6 +7,8 @@ import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle2, CreditCard, ExternalLink, Sparkles } from 'lucide-react';
+import PaymentGatewayCard, { type WorkspacePaymentGateway } from './payment-gateway-card';
+import { useTranslate } from '@/hooks/use-translate';
 
 interface Subscription {
     status: 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired';
@@ -33,6 +37,9 @@ interface BillingProps {
     plans: Plan[];
     usage: Record<string, { used: number; limit: number | null; remaining: number | null }>;
     is_stripe_configured: boolean;
+    can_manage_payments: boolean;
+    payment_gateway: WorkspacePaymentGateway | null;
+    stripe_webhook: StripeWebhookInfo | null;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -54,22 +61,46 @@ const STATUS_VARIANT: Record<Subscription['status'], 'default' | 'secondary' | '
     expired: 'outline',
 };
 
-export default function WorkspaceBillingIndex({ subscription, plans, usage, is_stripe_configured }: BillingProps) {
+export default function WorkspaceBillingIndex({
+    subscription,
+    plans,
+    usage,
+    is_stripe_configured,
+    can_manage_payments,
+    payment_gateway,
+    stripe_webhook,
+}: BillingProps) {
+    const { __ } = useTranslate();
     const { flash } = usePage<{ flash: { success: string | null; error: string | null } }>().props;
 
-    const switchTo = (planSlug: string, cycle: 'monthly' | 'annual') => {
-        router.post(route('workspace.billing.change'), { plan: planSlug, cycle });
-    };
+    const { ask, confirmDialog } = useConfirmDialog();
+
+    const switchTo = (plan: Plan, cycle: 'monthly' | 'annual') =>
+        ask({
+            title: __('Switch to :plan?', { plan: plan.name }),
+            description: __('Your workspace moves to the :plan plan, billed :cycle at :price.', {
+                plan: plan.name,
+                cycle: __(cycle),
+                price: `${__(money(cycle === 'annual' ? plan.annual_cents : plan.monthly_cents))}${cycle === 'annual' ? '/yr' : '/mo'}`,
+            }),
+            confirmLabel: __('Switch to :plan', { plan: plan.name }),
+            action: (finish) => router.post(route('workspace.billing.change'), { plan: plan.slug, cycle }, { onFinish: finish }),
+        });
 
     const portal = () => router.post(route('workspace.billing.portal'));
     const cancel = () => {
-        if (!confirm('Cancel your subscription at the end of the current period?')) return;
-        router.post(route('workspace.billing.cancel'));
+        ask({
+            title: __('Cancel your subscription?'),
+            description: __('It stays active until the end of the current billing period, then the workspace returns to the free plan.'),
+            confirmLabel: __('Cancel subscription'),
+            destructive: true,
+            action: (finish) => router.post(route('workspace.billing.cancel'), {}, { onFinish: finish }),
+        });
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Workspace · Billing" />
+            <Head title={__('Workspace · Billing')} />
 
             <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 {flash?.success && (
@@ -78,57 +109,56 @@ export default function WorkspaceBillingIndex({ subscription, plans, usage, is_s
                     </div>
                 )}
                 {flash?.error && (
-                    <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive">
-                        {flash.error}
-                    </div>
+                    <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-4 py-2 text-sm">{flash.error}</div>
                 )}
 
                 <div>
-                    <h1 className="font-display text-2xl font-semibold tracking-tight">Billing</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Manage your plan, view usage, and access invoices.
-                    </p>
+                    <h1 className="font-display text-2xl font-semibold tracking-tight">{__('Billing')}</h1>
+                    <p className="text-muted-foreground mt-1 text-sm">{__('Manage your plan, view usage, and access invoices.')}</p>
                 </div>
+
+                {/* PAYMENT GATEWAY — the Stripe keys this workspace's checkout charges with */}
+                {can_manage_payments && stripe_webhook && <PaymentGatewayCard gateway={payment_gateway} webhook={stripe_webhook} />}
 
                 {!is_stripe_configured && (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
                         <p className="mb-1 inline-flex items-center gap-1.5 font-medium">
-                            <AlertTriangle className="size-4" /> Stripe is not configured
+                            <AlertTriangle className="size-4" /> {__('Plan upgrades aren’t available yet')}
                         </p>
                         <p className="text-xs">
-                            Set <code className="font-mono">STRIPE_SECRET</code>, <code className="font-mono">STRIPE_WEBHOOK_SECRET</code>, and the per-plan price ids in <code className="font-mono">.env</code>. Until then, upgrade/cancel actions are disabled.
+                            {__('Changing your workspace plan is billed by the platform, whose billing isn’t connected on this server yet. This doesn’t affect your store’s own payment gateway above.')}
                         </p>
                     </div>
                 )}
 
                 {/* CURRENT SUBSCRIPTION */}
                 {subscription && (
-                    <section className="rounded-xl border bg-card p-5 shadow-sm sm:p-6">
+                    <section className="bg-card rounded-xl border p-5 shadow-sm sm:p-6">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
-                                <h2 className="inline-flex items-center gap-2 font-display text-base font-semibold tracking-tight">
-                                    <CreditCard className="size-4" /> Current plan
+                                <h2 className="font-display inline-flex items-center gap-2 text-base font-semibold tracking-tight">
+                                    <CreditCard className="size-4" /> {__('Current plan')}
                                 </h2>
                                 <div className="mt-2 flex items-baseline gap-2">
                                     <span className="font-display text-2xl font-semibold">{subscription.plan.name ?? '—'}</span>
                                     <Badge variant={STATUS_VARIANT[subscription.status]} className="capitalize">
-                                        {subscription.status.replace('_', ' ')}
+                                        {__(subscription.status.replace('_', ' '))}
                                     </Badge>
                                 </div>
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                    Billed {subscription.billing_cycle}.
+                                <p className="text-muted-foreground mt-1 text-xs">
+                                    {__('Billed :cycle.', { cycle: __(subscription.billing_cycle) })}
                                     {subscription.current_period_end && (
-                                        <> Renews {new Date(subscription.current_period_end).toLocaleDateString()}.</>
+                                        <> {__('Renews :date.', { date: new Date(subscription.current_period_end).toLocaleDateString() })}</>
                                     )}
                                     {subscription.cancel_at && (
-                                        <> Cancels on {new Date(subscription.cancel_at).toLocaleDateString()}.</>
+                                        <> {__('Cancels on :date.', { date: new Date(subscription.cancel_at).toLocaleDateString() })}</>
                                     )}
                                 </p>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {is_stripe_configured && (
                                     <Button variant="outline" size="sm" onClick={portal}>
-                                        <ExternalLink className="size-3.5" /> Manage in Stripe
+                                        <ExternalLink className="size-3.5" /> {__('Manage in Stripe')}
                                     </Button>
                                 )}
                                 {is_stripe_configured && subscription.status === 'active' && !subscription.cancel_at && (
@@ -138,7 +168,7 @@ export default function WorkspaceBillingIndex({ subscription, plans, usage, is_s
                                         onClick={cancel}
                                         className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                     >
-                                        Cancel subscription
+                                        {__('Cancel subscription')}
                                     </Button>
                                 )}
                             </div>
@@ -148,15 +178,15 @@ export default function WorkspaceBillingIndex({ subscription, plans, usage, is_s
                         <div className="mt-5 grid gap-3 border-t pt-4 sm:grid-cols-2 lg:grid-cols-4">
                             {Object.entries(usage).map(([resource, snap]) => (
                                 <div key={resource} className="space-y-1">
-                                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                        <span className="font-mono capitalize">{resource.replace('_', ' ')}</span>
+                                    <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                        <span className="font-mono capitalize">{__(resource.replace(/_/g, ' '))}</span>
                                         <span className="tabular-nums">
                                             {snap.used}
                                             {snap.limit !== null && <span className="text-muted-foreground/70"> / {snap.limit}</span>}
                                         </span>
                                     </div>
                                     {snap.limit !== null && (
-                                        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                                        <div className="bg-muted h-1.5 overflow-hidden rounded-full">
                                             <div
                                                 className={cn(
                                                     'h-full rounded-full transition-all',
@@ -174,7 +204,7 @@ export default function WorkspaceBillingIndex({ subscription, plans, usage, is_s
 
                 {/* PLAN PICKER */}
                 <section>
-                    <h2 className="mb-3 font-display text-base font-semibold tracking-tight">Plans</h2>
+                    <h2 className="font-display mb-3 text-base font-semibold tracking-tight">{__('Plans')}</h2>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         {plans.map((plan) => {
                             const isCurrent = subscription?.plan.slug === plan.slug;
@@ -183,39 +213,39 @@ export default function WorkspaceBillingIndex({ subscription, plans, usage, is_s
                                 <article
                                     key={plan.slug}
                                     className={cn(
-                                        'flex flex-col rounded-xl border bg-card p-5',
-                                        isCurrent ? 'border-primary/50 ring-1 ring-primary/30' : 'border-border',
+                                        'bg-card flex flex-col rounded-xl border p-5',
+                                        isCurrent ? 'border-primary/50 ring-primary/30 ring-1' : 'border-border',
                                     )}
                                 >
                                     <header className="mb-3">
-                                        <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                                        <h3 className="font-display text-muted-foreground text-sm font-semibold tracking-wider uppercase">
                                             {plan.name}
                                         </h3>
                                         <div className="mt-2 flex items-baseline gap-1">
-                                            <span className="font-display text-2xl font-semibold">{money(plan.monthly_cents)}</span>
-                                            {plan.monthly_cents > 0 && <span className="text-xs text-muted-foreground">/mo</span>}
+                                            <span className="font-display text-2xl font-semibold">{__(money(plan.monthly_cents))}</span>
+                                            {plan.monthly_cents > 0 && <span className="text-muted-foreground text-xs">{__('/mo')}</span>}
                                         </div>
-                                        {plan.description && (
-                                            <p className="mt-2 text-xs text-muted-foreground">{plan.description}</p>
-                                        )}
+                                        {plan.description && <p className="text-muted-foreground mt-2 text-xs">{__(plan.description)}</p>}
                                     </header>
                                     <ul className="mb-4 flex-1 space-y-1.5 text-xs">
                                         {plan.features.slice(0, 6).map((feat) => (
                                             <li key={feat} className="flex items-start gap-1.5">
-                                                <CheckCircle2 className="mt-0.5 size-3 shrink-0 text-primary" />
-                                                <span className="capitalize">{feat.replace(/_/g, ' ')}</span>
+                                                <CheckCircle2 className="text-primary mt-0.5 size-3 shrink-0" />
+                                                <span className="capitalize">{__(feat.replace(/_/g, ' '))}</span>
                                             </li>
                                         ))}
                                     </ul>
                                     {isCurrent ? (
-                                        <Button size="sm" disabled variant="secondary">Current plan</Button>
+                                        <Button size="sm" disabled variant="secondary">
+                                            {__('Current plan')}
+                                        </Button>
                                     ) : canSwitch ? (
-                                        <Button size="sm" onClick={() => switchTo(plan.slug, 'monthly')}>
-                                            <Sparkles /> Upgrade
+                                        <Button size="sm" onClick={() => switchTo(plan, 'monthly')}>
+                                            <Sparkles /> {__('Upgrade')}
                                         </Button>
                                     ) : (
                                         <Button size="sm" variant="outline" disabled>
-                                            {plan.slug === 'enterprise' ? 'Contact sales' : 'Unavailable'}
+                                            {plan.slug === 'enterprise' ? __('Contact sales') : __('Unavailable')}
                                         </Button>
                                     )}
                                 </article>
@@ -224,6 +254,8 @@ export default function WorkspaceBillingIndex({ subscription, plans, usage, is_s
                     </div>
                 </section>
             </div>
+
+            {confirmDialog}
         </AppLayout>
     );
 }

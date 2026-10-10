@@ -60,7 +60,7 @@ class UserController extends Controller
             && $data['role'] !== 'admin'
             && User::query()->role('admin')->count() <= 1
         ) {
-            return back()->withErrors(['role' => 'You are the only admin — promote another user first.']);
+            return back()->withErrors(['role' => __('You are the only admin — promote another user first.')]);
         }
 
         $user->syncRoles([$data['role']]);
@@ -69,6 +69,6 @@ class UserController extends Controller
         // reads correctly for callers that haven't migrated to roles.
         $user->forceFill(['is_admin' => $data['role'] === 'admin'])->save();
 
-        return back()->with('success', "Updated {$user->name}'s role to {$data['role']}.");
+        return back()->with('success', __('Updated :name\'s role to :role.', ['name' => $user->name, 'role' => $data['role']]));
     }
 }

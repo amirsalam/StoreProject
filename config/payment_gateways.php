@@ -183,15 +183,36 @@ return [
             'fields' => [],
         ],
 
+        // Wired to checkout by App\Domain\Payments\BankTransfer\BankTransferGateway:
+        // the buyer gets these details and the order number as reference; an
+        // admin marks the order paid in Admin → Orders. Needs an account
+        // number or an IBAN to be offered. Works in any currency.
         'bank_transfer' => [
             'label' => 'Bank Transfer',
             'logo' => '🏦',
             'supports_webhook' => false,
             'fields' => [
-                'account_name' => ['label' => 'Account Name', 'secret' => false, 'required' => false],
-                'account_number' => ['label' => 'Account Number', 'secret' => false, 'required' => false],
-                'iban' => ['label' => 'IBAN', 'secret' => false, 'required' => false],
-                'swift' => ['label' => 'SWIFT / BIC', 'secret' => false, 'required' => false],
+                'account_name' => ['label' => 'Account Name', 'secret' => false, 'required' => true],
+                'bank_name' => ['label' => 'Bank Name', 'secret' => false, 'required' => true],
+                'account_number' => ['label' => 'Account Number (RIB)', 'secret' => false, 'required' => true],
+                'iban' => ['label' => 'IBAN', 'secret' => false, 'required' => true],
+                'swift' => ['label' => 'SWIFT / BIC', 'secret' => false, 'required' => true],
+                'instructions' => ['label' => 'Instructions for the buyer', 'secret' => false, 'required' => false],
+            ],
+        ],
+
+        // Centre Monétique Interbancaire (Morocco) — hosted payment page,
+        // wired to checkout by App\Domain\Payments\Cmi\CmiGateway. Charges
+        // in MAD: USD prices are converted with `mad_rate`. The environment
+        // (sandbox/production) picks the CMI test or live platform.
+        'cmi' => [
+            'label' => 'CMI (Maroc)',
+            'logo' => '🇲🇦',
+            'supports_webhook' => false, // CMI's callback is verified with the Store Key hash
+            'fields' => [
+                'client_id' => ['label' => 'Client ID (Merchant ID)', 'secret' => false, 'required' => true],
+                'store_key' => ['label' => 'Store Key', 'secret' => true, 'required' => true],
+                'mad_rate' => ['label' => 'Exchange rate — 1 USD = ? MAD', 'secret' => false, 'required' => true],
             ],
         ],
 

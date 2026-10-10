@@ -5,6 +5,12 @@ namespace App\Http\Controllers;
 use App\Domain\Marketplace\CheckoutService;
 use App\Domain\Marketplace\EmptyCartException;
 use App\Domain\Marketplace\InvalidCouponException;
+use App\Domain\Marketplace\PaymentUnavailableException;
+use App\Domain\Payments\BankTransfer\BankTransferGateway;
+use App\Domain\Payments\Cmi\CmiGateway;
+use App\Domain\Payments\PaymentStatusSync;
+use App\Domain\Payments\PayPal\PayPalGateway;
+use App\Domain\Payments\StripeCredentials;
 use App\Http\Requests\Marketplace\PlaceOrderRequest;
 use App\Models\Order;
 use App\Services\CartService;
@@ -16,15 +22,20 @@ use Inertia\Response;
 
 /**
  * Checkout: turns the session cart into an order + a Stripe PaymentIntent,
- * then a confirmation page. The order starts `pending`; the shipped
- * StripeWebhookController -> OrderPaymentProcessor flips it to `paid` and
- * triggers fulfillment once Stripe confirms the charge.
+ * then a confirmation page. The order starts `pending`; StripeWebhookController
+ * queues payment events to ProcessPaymentWebhook -> OrderPaymentProcessor,
+ * which flips it to `paid` and triggers fulfillment once Stripe confirms the
+ * charge (a queue worker must be running).
  */
 class CheckoutController extends Controller
 {
     public function __construct(
         private readonly CartService $cart,
         private readonly CheckoutService $checkout,
+        private readonly StripeCredentials $stripe,
+        private readonly CmiGateway $cmi,
+        private readonly PayPalGateway $paypal,
+        private readonly BankTransferGateway $bank,
     ) {}
 
     public function show(Request $request): Response|RedirectResponse
@@ -48,15 +59,28 @@ class CheckoutController extends Controller
                 'line_total' => $row['line_total'],
             ])->values(),
             'subtotal' => $this->cart->subtotal(),
-            'currency' => 'USD',
+            'currency' => $currency = $this->cart->currency(),
             'buyer' => [
                 'name' => $user->name,
                 'email' => $user->email,
             ],
-            // pk_test_… — the public publishable key. Used by Stripe.js in the
-            // browser to mount the PaymentElement. Null if payments are not
-            // configured (the page then shows a "payments unavailable" state).
-            'stripeKey' => config('services.stripe.key'),
+            'countries' => config('countries'),
+            // pk_test_… — the store's public publishable key (Admin → Payment
+            // Gateways, else .env). Used by Stripe.js in the browser to mount
+            // the PaymentElement. Null if payments are not configured (the
+            // page then shows a "payments unavailable" state).
+            'stripeKey' => $this->stripe->keys()['publishable_key'],
+            // CMI (Morocco) as a second way to pay, when configured: the page
+            // shows the dirham amount the buyer will be charged (a MAD cart
+            // as is — rate null — a USD cart converted at the gateway's rate).
+            'cmi' => CmiGateway::supportsCurrency($currency) && ($cmi = $this->cmi->gateway()) ? [
+                'amount_mad' => $this->cmi->madAmount($this->cart->subtotal(), $cmi, $currency),
+                'rate' => $currency === 'MAD' ? null : $this->cmi->rate($cmi),
+            ] : null,
+            // PayPal, when an active gateway with REST credentials exists.
+            'paypal' => PayPalGateway::supportsCurrency($currency) && $this->paypal->gateway() !== null,
+            // Bank transfer, when bank details are set up — any currency.
+            'bankTransfer' => $this->bank->gateway() !== null,
         ]);
     }
 
@@ -77,6 +101,7 @@ class CheckoutController extends Controller
                 $request->user(),
                 $data,
                 $data['coupon_code'] ?? null,
+                $data['payment_method'] ?? CheckoutService::METHOD_STRIPE,
             );
         } catch (EmptyCartException $e) {
             if ($request->expectsJson()) {
@@ -90,6 +115,22 @@ class CheckoutController extends Controller
             }
 
             return back()->withErrors(['coupon_code' => $e->getMessage()])->withInput();
+        } catch (PaymentUnavailableException $e) {
+            // Stripe refused (e.g. bad keys) — the order was rolled back and
+            // the real error logged; the buyer gets a plain message. An admin
+            // also sees the gateway's own reason, so they can fix the setup.
+            $message = $e->getMessage();
+            if ($request->user()?->is_admin && $e->getPrevious()) {
+                $message .= ' '.__('Admin only — gateway said: :reason (check Admin → Payment Gateways).', [
+                    'reason' => mb_substr($e->getPrevious()->getMessage(), 0, 300),
+                ]);
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message, 'errors' => ['cart' => [$message]]], 503);
+            }
+
+            return back()->withErrors(['cart' => $message])->withInput();
         }
 
         $confirmationUrl = route('checkout.confirmation', $result->order->order_number);
@@ -102,17 +143,22 @@ class CheckoutController extends Controller
                 // confirmation.
                 'client_secret' => $result->clientSecret,
                 'confirmation_url' => $confirmationUrl,
+                // CMI: continue on CMI's hosted payment page.
+                'redirect_url' => $result->redirectUrl,
             ]);
         }
 
-        return redirect($confirmationUrl);
+        return redirect($result->redirectUrl ?? $confirmationUrl);
     }
 
-    public function confirmation(Request $request, Order $order): Response
+    public function confirmation(Request $request, Order $order, PaymentStatusSync $sync): Response
     {
         abort_unless($order->user_id === $request->user()->id, 403);
 
-        $order->load('items');
+        // Stripe sends the buyer back here after paying: confirm the payment
+        // with Stripe now instead of waiting for the webhook.
+        $sync->sync($order);
+        $order->refresh()->load('items');
 
         return Inertia::render('checkout/confirmation', [
             'order' => [
@@ -131,6 +177,21 @@ class CheckoutController extends Controller
                     'total_price' => (string) $item->total_price,
                 ]),
             ],
+            // Back from a declined/cancelled CMI payment: say so and offer to
+            // try again (the order stays pending until paid).
+            'paymentFailed' => $request->query('payment') === 'failed' && $order->status === Order::STATUS_PENDING,
+            'retryUrl' => $order->status !== Order::STATUS_PENDING ? null : match ($order->payment_method) {
+                CheckoutService::METHOD_CMI => route('checkout.cmi.redirect', $order->order_number),
+                CheckoutService::METHOD_PAYPAL => route('checkout.paypal.pay', $order->order_number),
+                default => null,
+            },
+            // Waiting for a bank transfer: where to send the money, quoting
+            // the order number.
+            'bankTransfer' => $order->status === Order::STATUS_PENDING
+                && $order->payment_method === CheckoutService::METHOD_BANK_TRANSFER
+                && ($bank = $this->bank->gateway())
+                ? $this->bank->details($bank)
+                : null,
         ]);
     }
 }
