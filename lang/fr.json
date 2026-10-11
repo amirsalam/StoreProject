@@ -1077,5 +1077,10 @@
     "The stored license could not be verified. Activate this installation again.": "La licence enregistrée n’a pas pu être vérifiée. Activez à nouveau cette installation.",
     "The license server has not been reachable for too long. Check this server’s internet connection.": "Le serveur de licences est injoignable depuis trop longtemps. Vérifiez la connexion internet de ce serveur.",
     "The license server could not be reached to renew the license. The installation keeps working until :date.": "Le serveur de licences est injoignable pour renouveler la licence. L’installation continue de fonctionner jusqu’au :date.",
-    "The license server’s answer could not be verified. Check APP_LICENSE_SERVER_URL, or update StoreProject.": "La réponse du serveur de licences n’a pas pu être vérifiée. Vérifiez APP_LICENSE_SERVER_URL ou mettez StoreProject à jour."
+    "The license server’s answer could not be verified. Check APP_LICENSE_SERVER_URL, or update StoreProject.": "La réponse du serveur de licences n’a pas pu être vérifiée. Vérifiez APP_LICENSE_SERVER_URL ou mettez StoreProject à jour.",
+    "This installation must be activated before this page can be used.": "Cette installation doit être activée avant de pouvoir utiliser cette page.",
+    "Temporarily unavailable": "Temporairement indisponible",
+    "This part of the site is temporarily unavailable. Please try again later.": "Cette partie du site est temporairement indisponible. Veuillez réessayer plus tard.",
+    "Back to the store": "Retour à la boutique",
+    "This installation is not licensed. Admin areas, vendor workspaces and checkout are disabled until it is activated.": "Cette installation n’est pas sous licence. L’administration, les espaces vendeurs et le paiement sont désactivés jusqu’à son activation."
 }

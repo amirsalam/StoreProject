@@ -116,37 +116,41 @@ Route::middleware(['auth'])->group(function () {
     Route::get('invoices/{invoice}', InvoiceDocumentController::class)->whereNumber('invoice')->name('invoices.show');
 
     // Product file uploads: a signed URL for cloud storage, or chunks to this server.
+    // Installation license required (vendor selling).
     Route::post('uploads/product-file', [ProductUploadController::class, 'store'])
-        ->middleware('throttle:30,1')
+        ->middleware(['throttle:30,1', 'app.licensed'])
         ->name('uploads.product-file');
     Route::post('uploads/product-file/{token}/chunk', [ProductUploadController::class, 'chunk'])
-        ->middleware('throttle:600,1')
+        ->middleware(['throttle:600,1', 'app.licensed'])
         ->where('token', '[A-Za-z0-9]{48}')
         ->name('uploads.product-file.chunk');
 
     // Checkout — cart -> order + Stripe PaymentIntent -> confirmation.
-    Route::get('checkout', [CheckoutController::class, 'show'])->name('checkout.show');
-    Route::post('checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    // STARTING a purchase needs the installation license; finishing one that
+    // is already paid (confirmation, PayPal return/cancel, CMI ok/fail/callback,
+    // Stripe webhook) never does, so no buyer is left stuck mid-payment.
+    Route::get('checkout', [CheckoutController::class, 'show'])->middleware('app.licensed')->name('checkout.show');
+    Route::post('checkout', [CheckoutController::class, 'store'])->middleware('app.licensed')->name('checkout.store');
     Route::get('checkout/{order:order_number}/confirmation', [CheckoutController::class, 'confirmation'])
         ->name('checkout.confirmation');
 
     // PayPal: the buyer's return (approved / cancelled) and "try again".
     Route::get('checkout/{order:order_number}/paypal/return', [PayPalController::class, 'return'])->name('checkout.paypal.return');
     Route::get('checkout/{order:order_number}/paypal/cancel', [PayPalController::class, 'cancel'])->name('checkout.paypal.cancel');
-    Route::get('checkout/{order:order_number}/paypal', [PayPalController::class, 'pay'])->name('checkout.paypal.pay');
+    Route::get('checkout/{order:order_number}/paypal', [PayPalController::class, 'pay'])->middleware('app.licensed')->name('checkout.paypal.pay');
 });
 
 // CMI hosted payment (Morocco). The redirect needs the buyer's session; the
 // return URLs and callback are POSTed by CMI, so they are CSRF-exempt (see
 // bootstrap/app.php) and verified by the Store Key hash instead of the session.
 Route::get('checkout/{order:order_number}/cmi', [CmiController::class, 'redirect'])
-    ->middleware('auth')
+    ->middleware(['auth', 'app.licensed'])
     ->name('checkout.cmi.redirect');
 Route::match(['get', 'post'], 'checkout/{order:order_number}/cmi/ok', [CmiController::class, 'ok'])->name('checkout.cmi.ok');
 Route::match(['get', 'post'], 'checkout/{order:order_number}/cmi/fail', [CmiController::class, 'fail'])->name('checkout.cmi.fail');
 Route::post('payments/cmi/callback', [CmiController::class, 'callback'])->name('payments.cmi.callback');
 
-Route::middleware(['auth'])
+Route::middleware(['auth', 'app.licensed'])
     ->prefix('workspace')
     ->name('workspace.')
     ->group(function () {
@@ -197,7 +201,8 @@ Route::post('webhooks/stripe', StripeWebhookController::class)->name('webhooks.s
 Route::get('invitations/{token}', [InvitationController::class, 'show'])->name('invitations.show');
 Route::post('invitations/{token}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
 
-Route::middleware(['auth', 'admin'])
+// `admin` runs before `app.licensed`, so non-admins get 403, never the license page.
+Route::middleware(['auth', 'admin', 'app.licensed'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
@@ -222,11 +227,15 @@ Route::middleware(['auth', 'admin'])
         // Installation license: activates THIS StoreProject install against
         // IndependentLicenseServer (not the product licenses above). Must stay
         // reachable while unlicensed.
-        Route::get('app-license', [AdminAppLicenseController::class, 'edit'])->name('app-license.edit');
+        Route::get('app-license', [AdminAppLicenseController::class, 'edit'])
+            ->withoutMiddleware('app.licensed')
+            ->name('app-license.edit');
         Route::post('app-license/activate', [AdminAppLicenseController::class, 'activate'])
+            ->withoutMiddleware('app.licensed')
             ->middleware('throttle:10,1')
             ->name('app-license.activate');
         Route::post('app-license/deactivate', [AdminAppLicenseController::class, 'deactivate'])
+            ->withoutMiddleware('app.licensed')
             ->middleware('throttle:10,1')
             ->name('app-license.deactivate');
 

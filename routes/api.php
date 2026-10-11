@@ -27,8 +27,11 @@ Route::prefix('v1/licenses')
  * /settings/api-tokens. Each request must carry the token as a bearer:
  *
  *   Authorization: Bearer <token>
+ *
+ * Requires the installation license (403 app_license_required otherwise).
+ * The product-license endpoints above deliberately do NOT.
  */
-Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+Route::prefix('v1')->middleware(['auth:sanctum', 'app.licensed'])->group(function () {
     Route::get('user', function (Request $request) {
         $user = $request->user();
         return [

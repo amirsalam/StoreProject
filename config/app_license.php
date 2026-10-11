@@ -32,6 +32,10 @@ return [
     // Tolerated clock difference with the license server, in seconds.
     'clock_skew_seconds' => 300,
 
+    // Runtime enforcement (EnsureAppLicensed). Turning it off is honored ONLY
+    // when APP_ENV is local or testing — in production it is always on.
+    'enforce' => env('APP_LICENSE_ENFORCE', true),
+
     // Reported to the server on activation / verification.
     'app_version' => env('APP_VERSION', '1.0.0'),
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureAppLicensed;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveTenant;
@@ -31,6 +32,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
+            // Installation license gate — applied per route group, never globally.
+            'app.licensed' => EnsureAppLicensed::class,
         ]);
 
         // Stripe POSTs to /webhooks/stripe without a CSRF token —

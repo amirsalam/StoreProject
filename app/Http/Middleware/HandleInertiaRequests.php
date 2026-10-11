@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\AppLicense\AppLicenseEvaluation;
+use App\Domain\AppLicense\AppLicenseEvaluator;
 use App\Domain\Plans\PlanGate;
 use App\Domain\Status\SystemStatus;
 use App\Services\BrandingService;
@@ -71,6 +73,8 @@ class HandleInertiaRequests extends Middleware
             'cart' => app(CartService::class)->summary(),
             'branding' => app(BrandingService::class)->summary(),
             'tenant' => fn () => $this->tenantSnapshot(),
+            // Installation license, for the admin banner only (null for everyone else).
+            'app_license' => fn () => $this->appLicenseBanner($request),
             // Footer status line; cached for a minute by SystemStatus.
             'system_status' => fn () => app(SystemStatus::class)->current()['overall'],
             'locale' => App::getLocale(),
@@ -82,6 +86,31 @@ class HandleInertiaRequests extends Middleware
                 ? (object) []
                 : (object) app('translator')->getLoader()->load(App::getLocale(), '*', '*'),
         ]);
+    }
+
+    /**
+     * Installation-license notice for admins: null when licensed (or for
+     * non-admins / when enforcement is off), otherwise the state to warn about.
+     *
+     * @return array{state: string, reason: string|null, grace_ends_at: string|null}|null
+     */
+    private function appLicenseBanner(Request $request): ?array
+    {
+        $user = $request->user();
+        if (! $user || ! ($user->hasRole('admin') || $user->is_admin) || ! EnsureAppLicensed::enforced()) {
+            return null;
+        }
+
+        $evaluation = app(AppLicenseEvaluator::class)->evaluate();
+        if ($evaluation->state === AppLicenseEvaluation::LICENSED) {
+            return null;
+        }
+
+        return [
+            'state' => $evaluation->state,
+            'reason' => $evaluation->reason,
+            'grace_ends_at' => $evaluation->graceEndsAt?->toIso8601String(),
+        ];
     }
 
     /**
