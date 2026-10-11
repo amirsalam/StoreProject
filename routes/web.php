@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AppLicenseController as AdminAppLicenseController;
 use App\Http\Controllers\Admin\BlogPostController as AdminBlogPostController;
 use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
@@ -217,6 +218,17 @@ Route::middleware(['auth', 'admin'])
         // Store-wide Extended License rule.
         Route::get('licensing', [AdminLicensingController::class, 'edit'])->name('licensing.edit');
         Route::put('licensing', [AdminLicensingController::class, 'update'])->name('licensing.update');
+
+        // Installation license: activates THIS StoreProject install against
+        // IndependentLicenseServer (not the product licenses above). Must stay
+        // reachable while unlicensed.
+        Route::get('app-license', [AdminAppLicenseController::class, 'edit'])->name('app-license.edit');
+        Route::post('app-license/activate', [AdminAppLicenseController::class, 'activate'])
+            ->middleware('throttle:10,1')
+            ->name('app-license.activate');
+        Route::post('app-license/deactivate', [AdminAppLicenseController::class, 'deactivate'])
+            ->middleware('throttle:10,1')
+            ->name('app-license.deactivate');
 
         // Where product files live (server disk or S3 / Google Cloud Storage / R2 …).
         Route::get('storage', [AdminFileStorageController::class, 'edit'])->name('storage.edit');

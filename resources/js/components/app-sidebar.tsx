@@ -25,6 +25,7 @@ import {
     Palette,
     Receipt,
     Send,
+    ShieldCheck,
     ShoppingBag,
     Store,
     TrendingUp,
@@ -140,6 +141,12 @@ const adminNavItems: NavItem[] = [
         title: 'Licensing',
         url: '/admin/licensing',
         icon: KeyRound,
+    },
+    {
+        // This StoreProject installation's own license (not product licenses).
+        title: 'Installation license',
+        url: '/admin/app-license',
+        icon: ShieldCheck,
     },
     {
         title: 'Email',

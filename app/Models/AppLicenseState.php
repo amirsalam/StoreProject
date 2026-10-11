@@ -23,6 +23,8 @@ class AppLicenseState extends Model
         'secret_key',
         'activation_id',
         'bound_domain',
+        'license_status',
+        'environment',
         'token',
         'token_expires_at',
         'last_checked_at',
