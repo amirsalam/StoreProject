@@ -1082,5 +1082,12 @@
     "Temporarily unavailable": "Temporairement indisponible",
     "This part of the site is temporarily unavailable. Please try again later.": "Cette partie du site est temporairement indisponible. Veuillez réessayer plus tard.",
     "Back to the store": "Retour à la boutique",
-    "This installation is not licensed. Admin areas, vendor workspaces and checkout are disabled until it is activated.": "Cette installation n’est pas sous licence. L’administration, les espaces vendeurs et le paiement sont désactivés jusqu’à son activation."
+    "This installation is not licensed. Admin areas, vendor workspaces and checkout are disabled until it is activated.": "Cette installation n’est pas sous licence. L’administration, les espaces vendeurs et le paiement sont désactivés jusqu’à son activation.",
+    "License confirmed by the license server.": "Licence confirmée par le serveur de licences.",
+    "This installation is not activated.": "Cette installation n’est pas activée.",
+    "APP_URL no longer matches the activated domain. Activate this installation again.": "APP_URL ne correspond plus au domaine activé. Activez à nouveau cette installation.",
+    "This installation is no longer activated on the license server (it may have been released or replaced). Activate it again.": "Cette installation n’est plus activée sur le serveur de licences (elle a peut-être été libérée ou remplacée). Activez-la à nouveau.",
+    "Last check": "Dernière vérification",
+    "Last check-in problem:": "Problème lors de la dernière vérification :",
+    "Check now": "Vérifier maintenant"
 }

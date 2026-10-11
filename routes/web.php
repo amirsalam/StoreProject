@@ -234,6 +234,10 @@ Route::middleware(['auth', 'admin', 'app.licensed'])
             ->withoutMiddleware('app.licensed')
             ->middleware('throttle:10,1')
             ->name('app-license.activate');
+        Route::post('app-license/refresh', [AdminAppLicenseController::class, 'refresh'])
+            ->withoutMiddleware('app.licensed')
+            ->middleware('throttle:10,1')
+            ->name('app-license.refresh');
         Route::post('app-license/deactivate', [AdminAppLicenseController::class, 'deactivate'])
             ->withoutMiddleware('app.licensed')
             ->middleware('throttle:10,1')

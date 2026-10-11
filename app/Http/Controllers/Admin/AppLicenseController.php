@@ -40,6 +40,17 @@ class AppLicenseController extends Controller
         return back()->with('success', __('This installation is now activated.'));
     }
 
+    /** "Check now": an immediate check-in, e.g. after a reinstatement. */
+    public function refresh(): RedirectResponse
+    {
+        return match ($outcome = $this->manager->refresh()) {
+            'refreshed' => back()->with('success', __('License confirmed by the license server.')),
+            'not_activated' => back()->with('error', __('This installation is not activated.')),
+            'domain_changed' => back()->with('error', __('APP_URL no longer matches the activated domain. Activate this installation again.')),
+            default => back()->with('error', AppLicenseMessages::for((string) $this->manager->status()->lastErrorCode ?: $outcome)),
+        };
+    }
+
     public function deactivate(): RedirectResponse
     {
         try {

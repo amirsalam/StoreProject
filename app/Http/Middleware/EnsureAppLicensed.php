@@ -3,10 +3,12 @@
 namespace App\Http\Middleware;
 
 use App\Domain\AppLicense\AppLicenseEvaluator;
+use App\Domain\AppLicense\AppLicenseManager;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 /**
  * Installation-license gate (alias `app.licensed`), applied ONLY to route
@@ -33,6 +35,16 @@ class EnsureAppLicensed
 
     public function handle(Request $request, Closure $next): Response
     {
+        // Check-ins must not depend on cron (many hosts never run the
+        // scheduler): when one is due, run it AFTER this response is sent.
+        app()->terminating(function () {
+            try {
+                app(AppLicenseManager::class)->refreshIfDue();
+            } catch (Throwable $e) {
+                report($e);
+            }
+        });
+
         if (! self::enforced() || $this->evaluator->evaluate()->allowsUse()) {
             return $next($request);
         }

@@ -65,6 +65,7 @@ final class AppLicenseStatus
             'last_success_at' => $this->lastSuccessAt,
             'last_checked_at' => $this->lastCheckedAt,
             'last_error_code' => $this->lastErrorCode,
+            'last_error_message' => $this->lastErrorCode ? AppLicenseMessages::for($this->lastErrorCode) : null,
             'server_configured' => $this->serverConfigured,
             // Local verdict (signature, binding, expiry, grace) — see AppLicenseEvaluator.
             'state' => $this->evaluation?->state,

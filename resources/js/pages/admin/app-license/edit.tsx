@@ -23,6 +23,7 @@ interface LicenseState {
     last_success_at: string | null;
     last_checked_at: string | null;
     last_error_code: string | null;
+    last_error_message: string | null;
     server_configured: boolean;
     state: 'not_activated' | 'licensed' | 'grace' | 'unlicensed' | null;
     state_reason: string | null;
@@ -93,6 +94,15 @@ export default function AppLicense({ license }: { license: LicenseState }) {
             preserveScroll: true,
             onSuccess: () => form.reset(),
         });
+    };
+
+    const [checking, setChecking] = useState(false);
+    const checkNow = () => {
+        router.post(
+            route('admin.app-license.refresh'),
+            {},
+            { preserveScroll: true, onStart: () => setChecking(true), onFinish: () => setChecking(false) },
+        );
     };
 
     const deactivate = () => {
@@ -182,12 +192,25 @@ export default function AppLicense({ license }: { license: LicenseState }) {
                                 <Row label={__('License status')}>{license.license_status ?? '—'}</Row>
                                 <Row label={__('Last successful check')}>{when(license.last_success_at)}</Row>
                                 {license.valid_until && <Row label={__('Renewal due')}>{when(license.valid_until)}</Row>}
+                                <Row label={__('Last check')}>{when(license.last_checked_at)}</Row>
                                 <Row label={__('Activation ID')}>
                                     <span className="font-mono text-xs">{license.activation_id}</span>
                                 </Row>
                             </>
                         )}
                     </dl>
+
+                    {license.last_error_message && license.state !== 'unlicensed' && (
+                        <p className="text-muted-foreground mt-3 text-sm">
+                            {__('Last check-in problem:')} {license.last_error_message}
+                        </p>
+                    )}
+
+                    {license.activated && (
+                        <Button variant="outline" size="sm" className="mt-4" disabled={checking} onClick={checkNow}>
+                            {__('Check now')}
+                        </Button>
+                    )}
                 </section>
 
                 {!license.activated || license.domain_changed ? (

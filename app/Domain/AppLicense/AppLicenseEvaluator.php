@@ -37,6 +37,13 @@ class AppLicenseEvaluator
             return new AppLicenseEvaluation(AppLicenseEvaluation::NOT_ACTIVATED);
         }
 
+        // The server explicitly refused at the last check-in: act now, do not
+        // wait for the (still validly signed) older token to run out. Cleared
+        // by the next successful check-in (e.g. after a reinstatement).
+        if (in_array($state->last_error_code, AppLicenseManager::LICENSE_REFUSALS, true)) {
+            return new AppLicenseEvaluation(AppLicenseEvaluation::UNLICENSED, $state->last_error_code);
+        }
+
         $domain = InstallationUrl::domain();
         if ($domain === null) {
             return new AppLicenseEvaluation(AppLicenseEvaluation::UNLICENSED, 'app_url_invalid');

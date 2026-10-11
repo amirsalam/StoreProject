@@ -23,6 +23,7 @@ final class AppLicenseMessages
             'not_configured' => 'The license server address is not configured (APP_LICENSE_SERVER_URL).',
             'rate_limited' => 'Too many attempts. Please wait a minute and try again.',
             'request_expired' => 'This server’s clock is wrong. Correct the system time and try again.',
+            'activation_not_found', 'installation_mismatch' => 'This installation is no longer activated on the license server (it may have been released or replaced). Activate it again.',
             'token_invalid' => 'The license server’s answer could not be verified. Check APP_LICENSE_SERVER_URL, or update StoreProject.',
             default => 'The license server could not be reached. Please try again in a few minutes.',
         });

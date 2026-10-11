@@ -32,3 +32,14 @@ Schedule::command('metrics:rollup --today')
     ->everyFifteenMinutes()
     ->withoutOverlapping(15)
     ->runInBackground();
+
+/**
+ * Installation license check-in. Runs hourly but only contacts the license
+ * server when a check-in is due (≈ daily; hourly retries after a failure).
+ * The minute comes from APP_KEY so installations don't all call at once.
+ * Licensed-area requests also trigger due check-ins, for hosts without cron.
+ */
+Schedule::command('app-license:verify --if-due')
+    ->cron(sprintf('%d * * * *', crc32((string) config('app.key')) % 60))
+    ->withoutOverlapping(10)
+    ->runInBackground();

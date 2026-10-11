@@ -1082,5 +1082,12 @@
     "Temporarily unavailable": "غير متاح مؤقتًا",
     "This part of the site is temporarily unavailable. Please try again later.": "هذا الجزء من الموقع غير متاح مؤقتًا. يرجى المحاولة لاحقًا.",
     "Back to the store": "العودة إلى المتجر",
-    "This installation is not licensed. Admin areas, vendor workspaces and checkout are disabled until it is activated.": "هذا التثبيت غير مرخّص. لوحة الإدارة ومساحات البائعين والدفع معطّلة حتى يتم تفعيله."
+    "This installation is not licensed. Admin areas, vendor workspaces and checkout are disabled until it is activated.": "هذا التثبيت غير مرخّص. لوحة الإدارة ومساحات البائعين والدفع معطّلة حتى يتم تفعيله.",
+    "License confirmed by the license server.": "أكّد خادم التراخيص الترخيص.",
+    "This installation is not activated.": "هذا التثبيت غير مُفعَّل.",
+    "APP_URL no longer matches the activated domain. Activate this installation again.": "لم يعد APP_URL يطابق النطاق المُفعَّل. فعّل هذا التثبيت من جديد.",
+    "This installation is no longer activated on the license server (it may have been released or replaced). Activate it again.": "لم يعد هذا التثبيت مُفعّلًا على خادم التراخيص (ربما تم تحريره أو استبداله). فعّله من جديد.",
+    "Last check": "آخر تحقق",
+    "Last check-in problem:": "مشكلة آخر تحقق:",
+    "Check now": "تحقّق الآن"
 }
