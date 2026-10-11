@@ -54,4 +54,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Never write a submitted installation license key into the session
+        // (old input after a validation error) — sessions live in the database.
+        $exceptions->dontFlash(['license_key']);
     })->create();
