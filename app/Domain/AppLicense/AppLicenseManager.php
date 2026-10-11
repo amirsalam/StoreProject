@@ -6,20 +6,20 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Activation and deactivation of THIS installation (admin actions).
- *
- * Signed-token verification and runtime enforcement come in later steps;
- * the state stored here is what they will build on.
+ * A token is only stored after AppLicenseTokenVerifier accepted it.
  */
 class AppLicenseManager
 {
     public function __construct(
         private readonly AppLicenseClient $client,
         private readonly AppLicenseStateRepository $state,
+        private readonly AppLicenseTokenVerifier $verifier,
+        private readonly AppLicenseEvaluator $evaluator,
     ) {}
 
     public function status(): AppLicenseStatus
     {
-        return AppLicenseStatus::from($this->state->current(), InstallationUrl::domain());
+        return AppLicenseStatus::from($this->state->current(), InstallationUrl::domain(), $this->evaluator->evaluate());
     }
 
     /**
@@ -50,6 +50,18 @@ class AppLicenseManager
             throw $e;
         }
 
+        // Never store an answer we cannot verify (wrong server, wrong keys,
+        // tampering): the installation stays unactivated.
+        try {
+            $this->verifier->verify($result->token, $domain, $identity->installationId, (string) $result->activationId);
+        } catch (InvalidLicenseToken $e) {
+            $failure = new LicenseServerException('token_invalid', "The license server's token was rejected ({$e->reason}).");
+            $this->recordFailure($failure, 'activation');
+            Log::error('Installation license token rejected at activation', ['reason' => $e->reason]);
+
+            throw $failure;
+        }
+
         $this->state->update([
             'activation_id' => $result->activationId,
             'bound_domain' => $result->domain,
@@ -62,6 +74,7 @@ class AppLicenseManager
             'last_error_code' => null,
         ]);
 
+        $this->evaluator->forget();
         Log::info('Installation license activated', ['activation' => $result->activationId, 'domain' => $result->domain]);
     }
 
@@ -100,6 +113,7 @@ class AppLicenseManager
             'last_error_code' => null,
         ]);
 
+        $this->evaluator->forget();
         Log::info('Installation license deactivated', ['activation' => $current->activation_id]);
     }
 

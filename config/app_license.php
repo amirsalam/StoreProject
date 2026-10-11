@@ -17,8 +17,20 @@ return [
     // License server base URL. HTTPS is required outside local/testing.
     'server_url' => env('APP_LICENSE_SERVER_URL'),
 
+    // Expected token issuer ("iss"): the license server's own APP_URL.
+    // Defaults to server_url; set it only if the two differ.
+    'issuer' => env('APP_LICENSE_ISSUER', env('APP_LICENSE_SERVER_URL')),
+
     // Product slug registered on the license server (the token audience).
     'product' => 'storeproject',
+
+    // Optional cap (days after the refresh deadline) on how long the app keeps
+    // working while the license server is unreachable. It can only SHORTEN the
+    // grace period signed into the token (grace_exp), never extend it.
+    'max_grace_days' => env('APP_LICENSE_MAX_GRACE_DAYS'),
+
+    // Tolerated clock difference with the license server, in seconds.
+    'clock_skew_seconds' => 300,
 
     // Reported to the server on activation / verification.
     'app_version' => env('APP_VERSION', '1.0.0'),

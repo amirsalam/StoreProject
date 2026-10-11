@@ -24,6 +24,31 @@ interface LicenseState {
     last_checked_at: string | null;
     last_error_code: string | null;
     server_configured: boolean;
+    state: 'not_activated' | 'licensed' | 'grace' | 'unlicensed' | null;
+    state_reason: string | null;
+    valid_until: string | null;
+    grace_ends_at: string | null;
+}
+
+const STATE_BADGE: Record<string, { label: string; className: string }> = {
+    licensed: { label: 'Licensed', className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' },
+    grace: { label: 'Offline grace period', className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' },
+    unlicensed: { label: 'Not licensed', className: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' },
+};
+
+/** Why the installation is not licensed (AppLicenseEvaluator reasons). */
+function reasonText(reason: string | null): string {
+    if (!reason) return 'The license could not be confirmed.';
+    if (reason.startsWith('token_')) return 'The stored license could not be verified. Activate this installation again.';
+    return (
+        {
+            license_suspended: 'This license is suspended. Please contact support.',
+            license_revoked: 'This license has been revoked.',
+            license_expired: 'This license has expired. Renew it to continue.',
+            grace_expired: 'The license server has not been reachable for too long. Check this server’s internet connection.',
+            app_url_invalid: 'APP_URL is not a valid address. Fix it in the .env file first.',
+        }[reason] ?? 'The license could not be confirmed.'
+    );
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -122,14 +147,29 @@ export default function AppLicense({ license }: { license: LicenseState }) {
                 <section className="rounded-xl border p-5">
                     <div className="mb-3 flex items-center justify-between gap-2">
                         <h2 className="font-semibold">{__('Status')}</h2>
-                        {license.activated ? (
-                            <Badge className="border-transparent bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                                {__('Activated')}
+                        {license.state && STATE_BADGE[license.state] ? (
+                            <Badge className={`border-transparent ${STATE_BADGE[license.state].className}`}>
+                                {__(STATE_BADGE[license.state].label)}
                             </Badge>
                         ) : (
                             <Badge variant="secondary">{__('Not activated')}</Badge>
                         )}
                     </div>
+
+                    {license.state === 'grace' && (
+                        <div className="mb-3">
+                            <Notice tone="warning">
+                                {__('The license server could not be reached to renew the license. The installation keeps working until :date.', {
+                                    date: when(license.grace_ends_at),
+                                })}
+                            </Notice>
+                        </div>
+                    )}
+                    {license.state === 'unlicensed' && (
+                        <div className="mb-3">
+                            <Notice tone="error">{__(reasonText(license.state_reason))}</Notice>
+                        </div>
+                    )}
 
                     <dl>
                         <Row label={__('This site (APP_URL)')}>{license.current_domain ?? '—'}</Row>
@@ -141,6 +181,7 @@ export default function AppLicense({ license }: { license: LicenseState }) {
                                 </Row>
                                 <Row label={__('License status')}>{license.license_status ?? '—'}</Row>
                                 <Row label={__('Last successful check')}>{when(license.last_success_at)}</Row>
+                                {license.valid_until && <Row label={__('Renewal due')}>{when(license.valid_until)}</Row>}
                                 <Row label={__('Activation ID')}>
                                     <span className="font-mono text-xs">{license.activation_id}</span>
                                 </Row>

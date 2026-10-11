@@ -23,11 +23,13 @@ final class AppLicenseStatus
         public readonly ?string $lastCheckedAt,
         public readonly ?string $lastErrorCode,
         public readonly bool $serverConfigured,
+        public readonly ?AppLicenseEvaluation $evaluation = null,
     ) {}
 
-    public static function from(?AppLicenseState $state, ?string $currentDomain): self
+    public static function from(?AppLicenseState $state, ?string $currentDomain, ?AppLicenseEvaluation $evaluation = null): self
     {
         return new self(
+            evaluation: $evaluation,
             activated: (bool) $state?->activation_id,
             activationId: $state?->activation_id,
             boundDomain: $state?->bound_domain,
@@ -64,6 +66,11 @@ final class AppLicenseStatus
             'last_checked_at' => $this->lastCheckedAt,
             'last_error_code' => $this->lastErrorCode,
             'server_configured' => $this->serverConfigured,
+            // Local verdict (signature, binding, expiry, grace) — see AppLicenseEvaluator.
+            'state' => $this->evaluation?->state,
+            'state_reason' => $this->evaluation?->reason,
+            'valid_until' => $this->evaluation?->token?->expiresAt->toIso8601String(),
+            'grace_ends_at' => $this->evaluation?->graceEndsAt?->toIso8601String(),
         ];
     }
 }

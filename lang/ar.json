@@ -1068,5 +1068,14 @@
     "APP_URL is not a valid address. Fix it in the .env file first.": "قيمة APP_URL ليست عنوانًا صالحًا. صحّحها في ملف ‎.env أولًا.",
     "Too many attempts. Please wait a minute and try again.": "محاولات كثيرة جدًا. انتظر دقيقة ثم حاول مرة أخرى.",
     "This server’s clock is wrong. Correct the system time and try again.": "ساعة هذا الخادم غير مضبوطة. صحّح وقت النظام وحاول مرة أخرى.",
-    "The license server could not be reached. Please try again in a few minutes.": "تعذّر الوصول إلى خادم التراخيص. حاول مرة أخرى بعد بضع دقائق."
+    "The license server could not be reached. Please try again in a few minutes.": "تعذّر الوصول إلى خادم التراخيص. حاول مرة أخرى بعد بضع دقائق.",
+    "Licensed": "مرخّص",
+    "Offline grace period": "فترة سماح دون اتصال",
+    "Not licensed": "غير مرخّص",
+    "Renewal due": "موعد التجديد",
+    "The license could not be confirmed.": "تعذّر تأكيد الترخيص.",
+    "The stored license could not be verified. Activate this installation again.": "تعذّر التحقق من الترخيص المحفوظ. فعّل هذا التثبيت من جديد.",
+    "The license server has not been reachable for too long. Check this server’s internet connection.": "تعذّر الوصول إلى خادم التراخيص لمدة طويلة جدًا. تحقق من اتصال هذا الخادم بالإنترنت.",
+    "The license server could not be reached to renew the license. The installation keeps working until :date.": "تعذّر الوصول إلى خادم التراخيص لتجديد الترخيص. سيستمر التثبيت في العمل حتى :date.",
+    "The license server’s answer could not be verified. Check APP_LICENSE_SERVER_URL, or update StoreProject.": "تعذّر التحقق من ردّ خادم التراخيص. تحقق من APP_LICENSE_SERVER_URL أو حدّث StoreProject."
 }

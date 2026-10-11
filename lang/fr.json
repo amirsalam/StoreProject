@@ -1068,5 +1068,14 @@
     "APP_URL is not a valid address. Fix it in the .env file first.": "APP_URL n’est pas une adresse valide. Corrigez-la d’abord dans le fichier .env.",
     "Too many attempts. Please wait a minute and try again.": "Trop de tentatives. Patientez une minute puis réessayez.",
     "This server’s clock is wrong. Correct the system time and try again.": "L’horloge de ce serveur est incorrecte. Corrigez l’heure système puis réessayez.",
-    "The license server could not be reached. Please try again in a few minutes.": "Le serveur de licences est injoignable. Réessayez dans quelques minutes."
+    "The license server could not be reached. Please try again in a few minutes.": "Le serveur de licences est injoignable. Réessayez dans quelques minutes.",
+    "Licensed": "Sous licence",
+    "Offline grace period": "Période de grâce hors ligne",
+    "Not licensed": "Sans licence",
+    "Renewal due": "Renouvellement prévu",
+    "The license could not be confirmed.": "La licence n’a pas pu être confirmée.",
+    "The stored license could not be verified. Activate this installation again.": "La licence enregistrée n’a pas pu être vérifiée. Activez à nouveau cette installation.",
+    "The license server has not been reachable for too long. Check this server’s internet connection.": "Le serveur de licences est injoignable depuis trop longtemps. Vérifiez la connexion internet de ce serveur.",
+    "The license server could not be reached to renew the license. The installation keeps working until :date.": "Le serveur de licences est injoignable pour renouveler la licence. L’installation continue de fonctionner jusqu’au :date.",
+    "The license server’s answer could not be verified. Check APP_LICENSE_SERVER_URL, or update StoreProject.": "La réponse du serveur de licences n’a pas pu être vérifiée. Vérifiez APP_LICENSE_SERVER_URL ou mettez StoreProject à jour."
 }

@@ -15,7 +15,7 @@ use Tests\TestCase;
 
 class AppLicensePageTest extends TestCase
 {
-    use RefreshDatabase;
+    use MintsLicenseTokens, RefreshDatabase;
 
     private const SERVER = 'https://license.test';
 
@@ -27,6 +27,7 @@ class AppLicensePageTest extends TestCase
     {
         parent::setUp();
         config(['app_license.server_url' => self::SERVER, 'app.url' => 'https://www.shop.example.com']);
+        $this->trustTestSigningKey(self::SERVER);
         $this->admin = User::factory()->admin()->create();
     }
 
@@ -38,6 +39,18 @@ class AppLicensePageTest extends TestCase
             'activation' => ['id' => '01k0000000000000000000000b', 'domain' => 'shop.example.com', 'environment' => 'production', 'status' => 'active'],
             'license' => ['id' => '01k0000000000000000000000a', 'status' => 'active', 'expires_at' => null],
         ], $overrides);
+    }
+
+    /** A fake license server that signs a genuine token for whoever activates. */
+    private function signingServer(array $claims = []): \Closure
+    {
+        return fn (Request $r) => Http::response($this->activated([
+            'token' => $this->mintToken(array_merge([
+                'iid' => $r['installation_id'],
+                'act' => '01k0000000000000000000000b',
+                'dom' => 'shop.example.com',
+            ], $claims)),
+        ]), 201);
     }
 
     private function fakeServerError(string $code, int $status): void
@@ -81,7 +94,7 @@ class AppLicensePageTest extends TestCase
 
     public function test_activating_stores_the_activation()
     {
-        Http::fake([self::SERVER.'/api/v1/licenses/activate' => Http::response($this->activated(), 201)]);
+        Http::fake([self::SERVER.'/api/v1/licenses/activate' => $this->signingServer()]);
 
         $this->actingAs($this->admin)->from('/admin/app-license')
             ->post('/admin/app-license/activate', ['license_key' => self::KEY])
@@ -107,7 +120,7 @@ class AppLicensePageTest extends TestCase
 
     public function test_the_license_key_is_never_stored()
     {
-        Http::fake([self::SERVER.'/*' => Http::response($this->activated(), 201)]);
+        Http::fake([self::SERVER.'/*' => $this->signingServer()]);
 
         $this->actingAs($this->admin)->post('/admin/app-license/activate', ['license_key' => self::KEY]);
 
@@ -203,7 +216,7 @@ class AppLicensePageTest extends TestCase
             ->where('license.bound_domain', 'old-shop.com')
             ->where('license.current_domain', 'shop.example.com'));
 
-        Http::fake([self::SERVER.'/*' => Http::response($this->activated(), 201)]);
+        Http::fake([self::SERVER.'/*' => $this->signingServer()]);
         $this->actingAs($this->admin)->post('/admin/app-license/activate', ['license_key' => self::KEY])->assertSessionHasNoErrors();
 
         $state = AppLicenseState::sole();
@@ -246,6 +259,46 @@ class AppLicensePageTest extends TestCase
         $this->actingAs($this->admin)->post('/admin/app-license/deactivate')->assertSessionHas('success');
 
         $this->assertNull(AppLicenseState::sole()->activation_id);
+    }
+
+    // --- token verification at activation (Step 16) -------------------------------------------------------------
+
+    public function test_activation_shows_the_verified_licensed_state()
+    {
+        Http::fake([self::SERVER.'/*' => $this->signingServer()]);
+
+        $this->actingAs($this->admin)->post('/admin/app-license/activate', ['license_key' => self::KEY])->assertSessionHasNoErrors();
+
+        $this->actingAs($this->admin)->get('/admin/app-license')->assertInertia(fn (Assert $page) => $page
+            ->where('license.state', 'licensed')
+            ->where('license.state_reason', null)
+            ->where('license.valid_until', fn ($value) => is_string($value)));
+    }
+
+    public function test_an_unverifiable_server_answer_is_never_stored()
+    {
+        $stranger = sodium_crypto_sign_secretkey(sodium_crypto_sign_keypair());
+        $cases = [
+            'signed by an unknown key' => fn (Request $r) => Http::response($this->activated([
+                'token' => $this->mintToken(['iid' => $r['installation_id']], secret: $stranger),
+            ]), 201),
+            'token for another installation' => $this->signingServer(['iid' => '00000000-0000-4000-8000-000000000009']),
+            'token for another domain' => $this->signingServer(['dom' => 'elsewhere.com']),
+            'not a token at all' => Http::response($this->activated(['token' => 'aGVhZGVy.cGF5bG9hZA.c2ln']), 201),
+        ];
+
+        foreach ($cases as $case => $responder) {
+            Http::swap(new Factory(app('events')));
+            Http::fake([self::SERVER.'/*' => $responder]);
+
+            $this->actingAs($this->admin)->post('/admin/app-license/activate', ['license_key' => self::KEY])
+                ->assertSessionHasErrors(['license_key' => 'The license server’s answer could not be verified. Check APP_LICENSE_SERVER_URL, or update StoreProject.']);
+
+            $state = AppLicenseState::sole();
+            $this->assertNull($state->activation_id, $case);
+            $this->assertNull($state->token, $case);
+            $this->assertSame('token_invalid', $state->last_error_code, $case);
+        }
     }
 
     // --- separation from product licensing --------------------------------------------------------------------

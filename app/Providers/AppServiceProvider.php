@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\AppLicense\AppLicenseEvaluator;
 use App\Domain\Licensing\LicenseActivationService;
 use App\Services\MailSettings;
 use App\Services\SocialLoginSettings;
@@ -19,6 +20,9 @@ class AppServiceProvider extends ServiceProvider
         // One TenantContext per request. ResolveTenant middleware fills
         // it; everything downstream reads from it via the tenant() helper.
         $this->app->singleton(TenantContext::class);
+
+        // Installation license evaluation is memoized per request / job.
+        $this->app->scoped(AppLicenseEvaluator::class);
     }
 
     public function boot(): void
