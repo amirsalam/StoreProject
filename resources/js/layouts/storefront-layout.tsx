@@ -156,7 +156,7 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
 }
 
 function SiteFooter() {
-    const { system_status } = usePage<SharedData>().props;
+    const { system_status, branding } = usePage<SharedData>().props;
     const { t } = useTranslate();
     const healthy = system_status !== 'degraded';
 
@@ -225,7 +225,7 @@ function SiteFooter() {
                 </div>
 
                 <div className="mt-14 border-t border-border/60 pt-8 text-xs text-muted-foreground">
-                    <p>{t('footer.copy', { year: new Date().getFullYear() })}</p>
+                    <p>{t('footer.copy', { year: new Date().getFullYear(), brand: branding?.title ?? 'StoreProject' })}</p>
                 </div>
             </Container>
         </footer>

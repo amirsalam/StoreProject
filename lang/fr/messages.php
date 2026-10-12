@@ -1028,7 +1028,7 @@ return [
         'tagline' => 'La marketplace mono-vendeur pour scripts, APIs, modèles et SaaS — pensée pour les créateurs qui livrent.',
         'status_ok' => 'Tous les systèmes opérationnels',
         'status_degraded' => 'Certains systèmes dégradés — voir l’état',
-        'copy' => '© :year StoreProject. Tous droits réservés.',
+        'copy' => '© :year :brand. Tous droits réservés.',
         'columns' => [
             'product' => [
                 'title' => 'Produit',

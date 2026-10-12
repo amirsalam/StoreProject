@@ -1028,7 +1028,7 @@ return [
         'tagline' => 'The single-vendor marketplace for scripts, APIs, templates, and SaaS — built for makers who ship.',
         'status_ok' => 'All systems operational',
         'status_degraded' => 'Some systems degraded — see status',
-        'copy' => '© :year StoreProject. All rights reserved.',
+        'copy' => '© :year :brand. All rights reserved.',
         'columns' => [
             'product' => [
                 'title' => 'Product',
