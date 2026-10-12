@@ -134,7 +134,7 @@ export default function AppLicense({ license }: { license: LicenseState }) {
                         {__('Installation license')}
                     </h1>
                     <p className="text-muted-foreground mt-1 text-sm">
-                        {__('Activate this StoreProject installation with the license key you received when you bought it.')}
+                        {__('Activate this Dragon Pro installation with the license key you received when you bought it.')}
                     </p>
                 </div>
 

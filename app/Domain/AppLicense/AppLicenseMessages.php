@@ -11,7 +11,7 @@ final class AppLicenseMessages
     public static function for(string $code): string
     {
         return __(match ($code) {
-            'invalid_license' => 'This license key is not valid for StoreProject. Check it and try again.',
+            'invalid_license' => 'This license key is not valid for Dragon Pro. Check it and try again.',
             'license_suspended' => 'This license is suspended. Please contact support.',
             'license_revoked' => 'This license has been revoked.',
             'license_expired' => 'This license has expired. Renew it to continue.',
@@ -24,7 +24,7 @@ final class AppLicenseMessages
             'rate_limited' => 'Too many attempts. Please wait a minute and try again.',
             'request_expired' => 'This server’s clock is wrong. Correct the system time and try again.',
             'activation_not_found', 'installation_mismatch' => 'This installation is no longer activated on the license server (it may have been released or replaced). Activate it again.',
-            'token_invalid' => 'The license server’s answer could not be verified. Check APP_LICENSE_SERVER_URL, or update StoreProject.',
+            'token_invalid' => 'The license server’s answer could not be verified. Check APP_LICENSE_SERVER_URL, or update Dragon Pro.',
             default => 'The license server could not be reached. Please try again in a few minutes.',
         });
     }

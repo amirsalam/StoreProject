@@ -134,7 +134,7 @@ class AppLicensePageTest extends TestCase
 
         $this->actingAs($this->admin)->from('/admin/app-license')
             ->post('/admin/app-license/activate', ['license_key' => self::KEY])
-            ->assertSessionHasErrors(['license_key' => 'This license key is not valid for StoreProject. Check it and try again.']);
+            ->assertSessionHasErrors(['license_key' => 'This license key is not valid for Dragon Pro. Check it and try again.']);
 
         $this->assertNull(AppLicenseState::sole()->activation_id);
         $this->assertSame('invalid_license', AppLicenseState::sole()->last_error_code);
@@ -292,7 +292,7 @@ class AppLicensePageTest extends TestCase
             Http::fake([self::SERVER.'/*' => $responder]);
 
             $this->actingAs($this->admin)->post('/admin/app-license/activate', ['license_key' => self::KEY])
-                ->assertSessionHasErrors(['license_key' => 'The license server’s answer could not be verified. Check APP_LICENSE_SERVER_URL, or update StoreProject.']);
+                ->assertSessionHasErrors(['license_key' => 'The license server’s answer could not be verified. Check APP_LICENSE_SERVER_URL, or update Dragon Pro.']);
 
             $state = AppLicenseState::sole();
             $this->assertNull($state->activation_id, $case);

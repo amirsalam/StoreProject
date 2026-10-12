@@ -10,7 +10,7 @@ php artisan app-license:status
 
 | Message | What to do |
 |---|---|
-| *This license key is not valid for StoreProject. Check it and try again.* | Copy the key again exactly (`SP-` + 6 groups). Contact support if it still fails. |
+| *This license key is not valid for Dragon Pro. Check it and try again.* | Copy the key again exactly (`SP-` + 6 groups). Contact support if it still fails. |
 | *This license is already active on another domain…* | Deactivate it on the old installation first ([moving domains](activation.md#moving-to-another-domain-or-server)), or ask support to release it. |
 | *This license has moved domains too often recently…* | Contact support to approve the move. |
 | *This site address (APP_URL) cannot be activated…* | Set `APP_URL` to your real domain name (not an IP address or an internal name like `.lan`). |
