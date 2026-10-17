@@ -41,11 +41,13 @@ class VendorController extends Controller
             return redirect()->route('workspace.vendor.edit');
         }
 
-        $this->vendors->registerForUser($request->user(), $request->validated());
+        $vendor = $this->vendors->registerForUser($request->user(), $request->validated());
 
         return redirect()
             ->route('workspace.vendor.edit')
-            ->with('success', __('Your store is live. Add your details below.'));
+            ->with('success', $vendor->isActive()
+                ? __('Your store is live. Add your details below.')
+                : __('Your store has been submitted for review. Add your details while you wait.'));
     }
 
     public function update(UpdateVendorProfileRequest $request): RedirectResponse

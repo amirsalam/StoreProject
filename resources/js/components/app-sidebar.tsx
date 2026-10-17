@@ -98,6 +98,11 @@ const adminNavItems: NavItem[] = [
         icon: Package,
     },
     {
+        title: 'Vendors',
+        url: '/admin/vendors',
+        icon: Store,
+    },
+    {
         title: 'Orders',
         url: '/admin/orders',
         icon: Receipt,

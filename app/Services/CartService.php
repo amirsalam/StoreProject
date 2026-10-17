@@ -128,7 +128,7 @@ class CartService
 
         $products = Product::query()
             ->whereIn('id', array_unique(array_map(fn ($key) => $this->productId((string) $key), array_keys($items))))
-            ->where('status', Product::STATUS_PUBLISHED)
+            ->listed()
             ->get()
             ->keyBy('id');
 
@@ -171,9 +171,14 @@ class CartService
         return $first ? strtoupper($first['product']->currency) : $default;
     }
 
+    /**
+     * Counts only purchasable lines, so the badge never shows an item
+     * that has since become unlisted (unpublished, or its vendor
+     * suspended) and that checkout would therefore drop.
+     */
     public function count(): int
     {
-        return (int) collect($this->raw())->sum('quantity');
+        return (int) $this->lineItems()->sum('quantity');
     }
 
     public function subtotal(): float
@@ -188,10 +193,14 @@ class CartService
      */
     public function summary(): array
     {
+        // One lineItems() pass for all three figures — shared on every page.
+        $lines = $this->lineItems();
+        $first = $lines->first();
+
         return [
-            'count' => $this->count(),
-            'subtotal' => $this->subtotal(),
-            'currency' => $this->currency(),
+            'count' => (int) $lines->sum('quantity'),
+            'subtotal' => round($lines->sum('line_total'), 2),
+            'currency' => $first ? strtoupper($first['product']->currency) : 'USD',
         ];
     }
 

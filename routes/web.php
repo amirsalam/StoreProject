@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\PaymentGatewayController as AdminPaymentGatewayCo
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\SocialLoginController as AdminSocialLoginController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\VendorController as AdminVendorController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
@@ -210,6 +211,15 @@ Route::middleware(['auth', 'admin', 'app.licensed'])
         Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
         // Bank transfer received → paid (fulfilment, email, invoice).
         Route::post('orders/{order}/mark-paid', [AdminOrderController::class, 'markPaid'])->name('orders.mark-paid');
+
+        // Vendor moderation queue (marketplace doc §11/§17).
+        Route::get('vendors', [AdminVendorController::class, 'index'])->name('vendors.index');
+        Route::put('vendors/approval-mode', [AdminVendorController::class, 'updateApprovalMode'])->name('vendors.approval-mode');
+        Route::post('vendors/{vendor:id}/approve', [AdminVendorController::class, 'approve'])->name('vendors.approve');
+        Route::post('vendors/{vendor:id}/reject', [AdminVendorController::class, 'reject'])->name('vendors.reject');
+        Route::post('vendors/{vendor:id}/suspend', [AdminVendorController::class, 'suspend'])->name('vendors.suspend');
+        Route::post('vendors/{vendor:id}/reinstate', [AdminVendorController::class, 'reinstate'])->name('vendors.reinstate');
+        Route::post('vendors/{vendor:id}/verify', [AdminVendorController::class, 'verify'])->name('vendors.verify');
 
         // Outgoing email (SMTP) — replaces MAIL_* in .env.
         Route::get('mail', [AdminMailSettingsController::class, 'edit'])->name('mail.edit');

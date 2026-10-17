@@ -54,7 +54,7 @@ class CartController extends Controller
 
         $product = Product::query()
             ->where('id', $data['product_id'])
-            ->where('status', Product::STATUS_PUBLISHED)
+            ->listed()
             ->firstOrFail();
 
         try {

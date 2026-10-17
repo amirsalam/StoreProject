@@ -21,7 +21,7 @@ class ProductController extends Controller
 
         $query = Product::query()
             ->with('category:id,name,slug')
-            ->where('status', Product::STATUS_PUBLISHED);
+            ->listed();
 
         if ($filters['search'] !== '') {
             $term = '%'.$filters['search'].'%';
@@ -66,7 +66,7 @@ class ProductController extends Controller
 
     public function show(Product $product): Response
     {
-        abort_unless($product->status === Product::STATUS_PUBLISHED, 404);
+        abort_unless($product->isListed(), 404);
 
         $product->load(['category:id,name,slug', 'vendor:id,name,slug,status'])
             // Own Extended price, or the store-wide default (Admin → Licensing).
@@ -80,7 +80,7 @@ class ProductController extends Controller
             ->get();
 
         $relatedProducts = Product::query()
-            ->where('status', Product::STATUS_PUBLISHED)
+            ->listed()
             ->where('id', '!=', $product->id)
             ->when($product->category_id, fn ($q) => $q->where('category_id', $product->category_id))
             ->with('category:id,name,slug')
