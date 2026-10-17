@@ -6,6 +6,7 @@ import { type BreadcrumbItem } from '@/types';
 
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { useTranslate } from '@/hooks/use-translate';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -15,13 +16,14 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Appearance() {
+    const { __ } = useTranslate();
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Appearance settings" />
+            <Head title={__('Appearance settings')} />
 
             <SettingsLayout>
                 <div className="space-y-6">
-                    <HeadingSmall title="Appearance settings" description="Update your account's appearance settings" />
+                    <HeadingSmall title={__('Appearance settings')} description={__("Update your account's appearance settings")} />
                     <AppearanceTabs />
                 </div>
             </SettingsLayout>

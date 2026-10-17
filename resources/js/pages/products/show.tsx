@@ -1,17 +1,13 @@
 import ProductCard from '@/components/product-card';
+import ProductMedia from '@/components/product-media';
+import ProductPurchaseBox from '@/components/product-purchase-box';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Container } from '@/components/ui/container';
+import { useTranslate } from '@/hooks/use-translate';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import { type Product, type ProductType, type Review } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { Star } from 'lucide-react';
-
-const TYPE_LABEL: Record<ProductType, string> = {
-    digital_download: 'Digital download',
-    subscription: 'Subscription',
-    api_access: 'API access',
-    license: 'License',
-};
+import { Pencil, Star } from 'lucide-react';
 
 interface ProductShowProps {
     product: Product;
@@ -19,29 +15,21 @@ interface ProductShowProps {
     relatedProducts: Product[];
     averageRating: number;
     reviewsCount: number;
+    /** Set for admins and the product's seller: their edit page. */
+    editUrl: string | null;
 }
 
-function formatPrice(amount: string | null | undefined, currency = 'USD') {
-    if (amount == null) return null;
-    const value = parseFloat(amount);
-    try {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value);
-    } catch {
-        return `$${value.toFixed(2)}`;
-    }
-}
-
-export default function ProductShow({ product, reviews, relatedProducts, averageRating, reviewsCount }: ProductShowProps) {
-    const onSale = product.sale_price !== null && parseFloat(product.sale_price ?? '0') < parseFloat(product.price);
-    const price = formatPrice(product.sale_price ?? product.price, product.currency);
-    const oldPrice = onSale ? formatPrice(product.price, product.currency) : null;
+export default function ProductShow({ product, reviews, relatedProducts, averageRating, reviewsCount, editUrl }: ProductShowProps) {
+    const { t } = useTranslate();
+    const typeLabel = (type: ProductType) => t(`product.types.${type}`);
 
     return (
         <StorefrontLayout>
             <Head title={product.title} />
 
-            <nav className="mb-6 text-sm text-muted-foreground">
-                <Link href={route('products.index')} className="hover:underline">Products</Link>
+            <Container className="py-8 sm:py-12">
+                <nav className="mb-6 text-sm text-muted-foreground">
+                <Link href={route('products.index')} className="hover:underline">{t('nav.products')}</Link>
                 {product.category && (
                     <>
                         <span className="mx-2">/</span>
@@ -55,26 +43,25 @@ export default function ProductShow({ product, reviews, relatedProducts, average
                 )}
             </nav>
 
-            <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+            <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:gap-8 xl:grid-cols-[1fr_380px]">
                 <div className="space-y-6">
-                    <div className="aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-muted to-muted/40 flex items-center justify-center text-2xl text-muted-foreground">
-                        {product.thumbnail ? (
-                            <img src={product.thumbnail} alt={product.title} className="size-full object-cover" />
-                        ) : (
-                            <span className="opacity-60">{product.title.slice(0, 2).toUpperCase()}</span>
-                        )}
-                    </div>
+                    <ProductMedia product={product} />
 
                     <div className="space-y-3">
                         <div className="flex items-center gap-2">
-                            <Badge variant="secondary">{TYPE_LABEL[product.type]}</Badge>
+                            <Badge variant="secondary">{typeLabel(product.type)}</Badge>
                             {product.version && <span className="text-xs text-muted-foreground">v{product.version}</span>}
                         </div>
                         <h1 className="text-3xl font-semibold tracking-tight">{product.title}</h1>
+                        {product.vendor && product.vendor.status === 'active' && (
+                            <Link href={route('store.show', product.vendor.slug)} className="text-sm text-muted-foreground hover:text-foreground">
+                                {t('product.sold_by')} <span className="font-medium text-foreground">{product.vendor.name}</span>
+                            </Link>
+                        )}
                         {reviewsCount > 0 && (
                             <div className="flex items-center gap-2 text-sm">
                                 <RatingStars value={averageRating} />
-                                <span className="text-muted-foreground">{averageRating} ({reviewsCount} reviews)</span>
+                                <span className="text-muted-foreground">{averageRating} ({reviewsCount} {t('product.reviews').toLowerCase()})</span>
                             </div>
                         )}
                         {product.short_description && (
@@ -91,21 +78,21 @@ export default function ProductShow({ product, reviews, relatedProducts, average
                     )}
 
                     <section className="space-y-4 pt-4 border-t">
-                        <h2 className="text-xl font-semibold">Reviews</h2>
+                        <h2 className="text-xl font-semibold">{t('product.reviews')}</h2>
                         {reviews.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No reviews yet.</p>
+                            <p className="text-sm text-muted-foreground">{t('product.no_reviews')}</p>
                         ) : (
                             <ul className="space-y-4">
                                 {reviews.map((review) => (
                                     <li key={review.id} className="rounded-lg border bg-card p-4">
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="text-sm font-medium">{review.user?.name ?? 'Anonymous'}</span>
+                                            <span className="text-sm font-medium">{review.user?.name ?? '—'}</span>
                                             <RatingStars value={review.rating} />
                                         </div>
                                         {review.title && <p className="font-medium mb-1">{review.title}</p>}
                                         {review.comment && <p className="text-sm text-muted-foreground">{review.comment}</p>}
                                         {review.is_verified_purchase && (
-                                            <Badge variant="outline" className="mt-2 text-xs">Verified purchase</Badge>
+                                            <Badge variant="outline" className="mt-2 text-xs">{t('product.verified_purchase')}</Badge>
                                         )}
                                     </li>
                                 ))}
@@ -115,32 +102,31 @@ export default function ProductShow({ product, reviews, relatedProducts, average
                 </div>
 
                 <aside>
-                    <div className="sticky top-24 rounded-xl border bg-card p-6 shadow-sm">
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-bold">{price}</span>
-                            {oldPrice && <span className="text-muted-foreground line-through">{oldPrice}</span>}
-                        </div>
-                        {product.license_type && (
-                            <p className="mt-1 text-xs text-muted-foreground">License: {product.license_type}</p>
-                        )}
-                        <Button className="mt-4 w-full" size="lg" disabled>
-                            Add to cart
-                        </Button>
-                        <p className="mt-2 text-center text-xs text-muted-foreground">Checkout coming soon</p>
+                    <div className="sticky top-24 space-y-4">
+                        <ProductPurchaseBox product={product} />
 
-                        <dl className="mt-6 space-y-2 text-sm border-t pt-4">
+                        {editUrl && (
+                            <a
+                                href={editUrl}
+                                className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed p-3 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                            >
+                                <Pencil className="size-4" /> {t('product.edit_prices')}
+                            </a>
+                        )}
+
+                        <dl className="space-y-2 rounded-xl border bg-card p-5 text-sm shadow-sm">
                             <div className="flex justify-between">
-                                <dt className="text-muted-foreground">Type</dt>
-                                <dd>{TYPE_LABEL[product.type]}</dd>
+                                <dt className="text-muted-foreground">{t('product.type')}</dt>
+                                <dd>{typeLabel(product.type)}</dd>
                             </div>
                             {product.version && (
                                 <div className="flex justify-between">
-                                    <dt className="text-muted-foreground">Version</dt>
+                                    <dt className="text-muted-foreground">{t('product.version')}</dt>
                                     <dd>{product.version}</dd>
                                 </div>
                             )}
                             <div className="flex justify-between">
-                                <dt className="text-muted-foreground">Sales</dt>
+                                <dt className="text-muted-foreground">{t('product.sales')}</dt>
                                 <dd>{product.sales_count}</dd>
                             </div>
                         </dl>
@@ -150,7 +136,7 @@ export default function ProductShow({ product, reviews, relatedProducts, average
 
             {relatedProducts.length > 0 && (
                 <section className="mt-12 space-y-4">
-                    <h2 className="text-xl font-semibold">Related products</h2>
+                    <h2 className="text-xl font-semibold">{t('product.related')}</h2>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         {relatedProducts.map((p) => (
                             <ProductCard key={p.id} product={p} />
@@ -158,6 +144,7 @@ export default function ProductShow({ product, reviews, relatedProducts, average
                     </div>
                 </section>
             )}
+            </Container>
         </StorefrontLayout>
     );
 }

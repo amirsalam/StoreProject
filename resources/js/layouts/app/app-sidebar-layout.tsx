@@ -1,4 +1,5 @@
 import { AppContent } from '@/components/app-content';
+import { AppLicenseBanner } from '@/components/app-license-banner';
 import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
@@ -10,6 +11,7 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: { child
             <AppSidebar />
             <AppContent variant="sidebar">
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
+                <AppLicenseBanner />
                 {children}
             </AppContent>
         </AppShell>

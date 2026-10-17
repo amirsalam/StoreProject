@@ -1,12 +1,86 @@
 import { SVGAttributes } from 'react';
 
+/**
+ * StoreProject mark — a friendly rounded shopping bag with a 4-point
+ * spark inside, signifying "premium digital goods marketplace".
+ *
+ * Renders in currentColor so it adopts the surrounding text color in any
+ * context (white-on-dark, dark-on-white, inverted CTA strip, etc.). For
+ * the colorful brand mark used on marketing surfaces, see <AppLogoMark />
+ * below.
+ */
 export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
     return (
-        <svg {...props} viewBox="0 0 40 42" xmlns="http://www.w3.org/2000/svg">
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            {...props}
+        >
+            {/* handles */}
             <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M17.2 5.63325L8.6 0.855469L0 5.63325V32.1434L16.2 41.1434L32.4 32.1434V23.699L40 19.4767V9.85547L31.4 5.07769L22.8 9.85547V18.2999L17.2 21.411V5.63325ZM38 18.2999L32.4 21.411V15.2545L38 12.1434V18.2999ZM36.9409 10.4439L31.4 13.5221L25.8591 10.4439L31.4 7.36561L36.9409 10.4439ZM24.8 18.2999V12.1434L30.4 15.2545V21.411L24.8 18.2999ZM23.8 20.0323L29.3409 23.1105L16.2 30.411L10.6591 27.3328L23.8 20.0323ZM7.6 27.9212L15.2 32.1434V38.2999L2 30.9666V7.92116L7.6 11.0323V27.9212ZM8.6 9.29991L3.05913 6.22165L8.6 3.14339L14.1409 6.22165L8.6 9.29991ZM30.4 24.8101L17.2 32.1434V38.2999L30.4 30.9666V24.8101ZM9.6 11.0323L15.2 7.92117V22.5221L9.6 25.6333V11.0323Z"
+                d="M8.5 8.25V6.5a3.5 3.5 0 0 1 7 0v1.75"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+            />
+            {/* bag body */}
+            <path
+                d="M5.75 8.25h12.5l-1 11a2.25 2.25 0 0 1-2.24 2.05H8.99A2.25 2.25 0 0 1 6.75 19.25l-1-11Z"
+                fill="currentColor"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+            />
+            {/* spark — drawn in the wrapper color (foreground) so it reads
+                as a cutout in the bag. Works in both light/dark when this
+                icon is rendered inside the standard bg-foreground box. */}
+            <path
+                d="M12 12l.62 1.65 1.65.62-1.65.62L12 16.54l-.62-1.65-1.65-.62 1.65-.62L12 12Z"
+                className="fill-foreground"
+            />
+        </svg>
+    );
+}
+
+/**
+ * Brand-colored variant used on marketing surfaces (landing hero, CTA
+ * strip, social cards). Renders with the indigo→fuchsia gradient
+ * regardless of surrounding text color.
+ */
+export function AppLogoMark(props: SVGAttributes<SVGElement>) {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            {...props}
+        >
+            <defs>
+                <linearGradient id="sp-brand-grad" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#6366F1" />
+                    <stop offset="55%" stopColor="#A855F7" />
+                    <stop offset="100%" stopColor="#EC4899" />
+                </linearGradient>
+            </defs>
+            <path
+                d="M8.5 8.25V6.5a3.5 3.5 0 0 1 7 0v1.75"
+                stroke="url(#sp-brand-grad)"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+            />
+            <path
+                d="M5.75 8.25h12.5l-1 11a2.25 2.25 0 0 1-2.24 2.05H8.99A2.25 2.25 0 0 1 6.75 19.25l-1-11Z"
+                fill="url(#sp-brand-grad)"
+                stroke="url(#sp-brand-grad)"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+            />
+            <path
+                d="M12 12l.62 1.65 1.65.62-1.65.62L12 16.54l-.62-1.65-1.65-.62 1.65-.62L12 12Z"
+                fill="white"
             />
         </svg>
     );

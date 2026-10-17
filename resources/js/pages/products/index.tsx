@@ -1,5 +1,6 @@
 import ProductCard from '@/components/product-card';
 import { Button } from '@/components/ui/button';
+import { Container } from '@/components/ui/container';
 import { Input } from '@/components/ui/input';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import { type Category, type Paginated, type Product, type ProductType } from '@/types';
@@ -60,26 +61,27 @@ export default function ProductsIndex({ products, categories, types, filters }: 
         <StorefrontLayout>
             <Head title="Products" />
 
-            <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-semibold tracking-tight">Browse products</h1>
-                    <p className="text-sm text-muted-foreground">
-                        {products.total} {products.total === 1 ? 'product' : 'products'} available
-                    </p>
+            <Container className="py-8 sm:py-12">
+                <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+                    <div>
+                        <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">Browse products</h1>
+                        <p className="text-sm text-muted-foreground">
+                            {products.total} {products.total === 1 ? 'product' : 'products'} available
+                        </p>
+                    </div>
+                    <form onSubmit={submitSearch} className="flex w-full gap-2 sm:w-auto">
+                        <Input
+                            type="search"
+                            placeholder="Search products..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full sm:w-64"
+                        />
+                        <Button type="submit">Search</Button>
+                    </form>
                 </div>
-                <form onSubmit={submitSearch} className="flex gap-2">
-                    <Input
-                        type="search"
-                        placeholder="Search products..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-64"
-                    />
-                    <Button type="submit">Search</Button>
-                </form>
-            </div>
 
-            <div className="grid gap-8 md:grid-cols-[220px_1fr]">
+                <div className="grid gap-8 md:grid-cols-[220px_1fr] xl:grid-cols-[240px_1fr]">
                 <aside className="space-y-6 text-sm">
                     <FilterSection title="Type">
                         {types.map((t) => (
@@ -140,7 +142,7 @@ export default function ProductsIndex({ products, categories, types, filters }: 
                             No products match these filters.
                         </div>
                     ) : (
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                             {products.data.map((product) => (
                                 <ProductCard key={product.id} product={product} />
                             ))}
@@ -156,6 +158,7 @@ export default function ProductsIndex({ products, categories, types, filters }: 
                     )}
                 </section>
             </div>
+            </Container>
         </StorefrontLayout>
     );
 }
